@@ -2,7 +2,7 @@
     <ul class="psv-tree">
         <li 
             class="psv-tree-node"
-            v-for="item in items"
+            v-for="item in filteredItems"
             :key="item.id"
             :class="{ 'psv-tree-node-expanded': item.expanded, 'psv-tree-node-collapsed': !item.expanded, 'psv-tree-node-leaf': item.isLeaf, 'psv-tree-node-selected': item.selected }"
         >
@@ -27,6 +27,11 @@ export default {
     props: [
         'items',
     ],
+    computed: {
+        filteredItems() {
+            return this.items.filter(item => item.visible !== false);
+        }
+    },
     methods: {
         clickNode(item) {
             if (!item.isLeaf) {
