@@ -50,7 +50,7 @@ export class NotificationService extends EventMixin {
     }
 
     static notify(message, type=NotificationType.Default, timeout=10) {
-        return NotificationService.getInstance().addNotification(message, timeout);
+        return NotificationService.getInstance().addNotification(message, type, timeout);
     }
 
     static getInstance() {

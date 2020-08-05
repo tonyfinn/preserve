@@ -37,7 +37,7 @@ export default {
         if (servers.length == 0) {
             this.loaded = true;
         } else {
-            const connection = connectionManager.connectToServers(servers).then((conResult) => {
+            connectionManager.connectToServers(servers).then((conResult) => {
                 if(conResult.State !== 'SignedIn') {
                     return Promise.reject("Not signed in previously");
                 }

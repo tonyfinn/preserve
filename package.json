@@ -15,11 +15,16 @@
   "devDependencies": {
     "@vue/compiler-sfc": "3.0.0-rc.3",
     "css-loader": "^3.6.0",
+    "eslint": "^7.6.0",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-plugin-vue": "^6.2.2",
     "file-loader": "^6.0.0",
     "html-webpack-plugin": "^4.3.0",
     "mini-css-extract-plugin": "^0.9.0",
     "node-sass": "^4.14.1",
+    "prettier": "^2.0.5",
     "sass-loader": "^9.0.2",
+    "style-loader": "^1.2.1",
     "terser-webpack-plugin": "^3.0.7",
     "vue-loader": "^16.0.0-beta.4",
     "webpack": "^4.43.0",
@@ -29,9 +34,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "webpack",
+    "lint": "eslint . --ext .js,.ts,.vue",
     "start": "webpack-dev-server --hot"
   },
   "author": "Tony Finn <dev@tonyfinn.com>",
   "license": "GPL-3.0-or-later"
 }
- 

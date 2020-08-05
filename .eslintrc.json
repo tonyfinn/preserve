@@ -1,0 +1,34 @@
+{
+    "env": {
+        "browser": true,
+        "es2020": true
+    },
+    "ignorePatterns": [
+        "dist/*.js",
+        "node_modules/*.js"
+    ],
+    "overrides": [
+        {
+            "files": ["webpack.config.js"],
+            "env": {
+                "node": true,
+                "browser": false
+            }
+        }
+    ],
+    "extends": [
+        "eslint:recommended",
+        "plugin:vue/essential",
+        "prettier",
+        "prettier/vue"
+    ],
+    "parserOptions": {
+        "ecmaVersion": 11,
+        "sourceType": "module"
+    },
+    "plugins": [
+        "vue"
+    ],
+    "rules": {
+    }
+}
