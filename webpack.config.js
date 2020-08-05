@@ -1,6 +1,6 @@
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const { VueLoaderPlugin } = require("vue-loader");
+const { VueLoaderPlugin } = require('vue-loader');
 const TerserPlugin = require('terser-webpack-plugin');
 
 const devMode = process.env.NODE_ENV !== 'production';
@@ -21,12 +21,14 @@ module.exports = {
             {
                 test: /\.scss$/,
                 use: [
-                    devMode ? 'style-loader' : {
-                        loader: MiniCssExtractPlugin.loader,
-                        options: {
-                            hmr: devMode,
-                        }
-                    },
+                    devMode
+                        ? 'style-loader'
+                        : {
+                              loader: MiniCssExtractPlugin.loader,
+                              options: {
+                                  hmr: devMode,
+                              },
+                          },
                     'css-loader',
                     'sass-loader',
                 ],
@@ -35,7 +37,7 @@ module.exports = {
                 test: /\.js$/,
                 loader: 'babel-loader',
             }*/
-        ]
+        ],
     },
     plugins: [
         new MiniCssExtractPlugin({
@@ -51,5 +53,5 @@ module.exports = {
     optimization: {
         usedExports: true,
         minimizer: [new TerserPlugin()],
-    }
-}
+    },
+};

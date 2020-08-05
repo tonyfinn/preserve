@@ -4,17 +4,17 @@ export const NotificationType = {
     Default: 0,
     Success: 1,
     Error: 2,
-}
+};
 
 export class NotificationService extends EventMixin {
-    constructor() { 
+    constructor() {
         super();
         this.nextId = 0;
         this.notifications = [];
         this.changeHandlers = [];
     }
 
-    addNotification(message, type=NotificationType.Default, timeout=10) {
+    addNotification(message, type = NotificationType.Default, timeout = 10) {
         const id = this.nextId++;
         const notification = {
             id,
@@ -27,7 +27,7 @@ export class NotificationService extends EventMixin {
         this.trigger('change');
 
         notification.expiryTimeout = setTimeout(() => {
-            this.notifications = this.notifications.filter(x => x.id !== id);
+            this.notifications = this.notifications.filter((x) => x.id !== id);
             notification.expiryTimeout = null;
             this.trigger('expire', notification);
             this.trigger('change');
@@ -37,8 +37,8 @@ export class NotificationService extends EventMixin {
     }
 
     removeNotification(id) {
-        const notification = this.notifications.find(x => x.id === id);
-        this.notifications = this.notifications.filter(x => x.id !== id);
+        const notification = this.notifications.find((x) => x.id === id);
+        this.notifications = this.notifications.filter((x) => x.id !== id);
         clearTimeout(notification.expiryTimeout);
         notification.expiryTimeout = null;
         this.trigger('expire', notification);
@@ -49,8 +49,12 @@ export class NotificationService extends EventMixin {
         return [...this.notifications];
     }
 
-    static notify(message, type=NotificationType.Default, timeout=10) {
-        return NotificationService.getInstance().addNotification(message, type, timeout);
+    static notify(message, type = NotificationType.Default, timeout = 10) {
+        return NotificationService.getInstance().addNotification(
+            message,
+            type,
+            timeout
+        );
     }
 
     static getInstance() {

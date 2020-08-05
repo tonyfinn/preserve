@@ -8,7 +8,7 @@ export default class EventMixin {
         const id = this.nextHandlerId++;
         handler = {
             id,
-            fn: handler
+            fn: handler,
         };
 
         if (this.eventHandlers[eventName]) {
@@ -20,14 +20,16 @@ export default class EventMixin {
 
     off(eventName, handlerId) {
         if (this.eventHandlers[eventName]) {
-            this.eventHandlers[eventName] = this.eventHandlers[eventName].filter(x => x.id !== handlerId);
+            this.eventHandlers[eventName] = this.eventHandlers[
+                eventName
+            ].filter((x) => x.id !== handlerId);
         }
     }
 
     trigger(eventName, ...params) {
         if (this.eventHandlers[eventName]) {
             for (const handler of this.eventHandlers[eventName]) {
-                handler.fn(...params)
+                handler.fn(...params);
             }
         }
     }

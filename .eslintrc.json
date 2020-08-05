@@ -3,10 +3,7 @@
         "browser": true,
         "es2020": true
     },
-    "ignorePatterns": [
-        "dist/*.js",
-        "node_modules/*.js"
-    ],
+    "ignorePatterns": ["dist/*.js", "node_modules/*.js"],
     "overrides": [
         {
             "files": ["webpack.config.js"],
@@ -26,9 +23,6 @@
         "ecmaVersion": 11,
         "sourceType": "module"
     },
-    "plugins": [
-        "vue"
-    ],
-    "rules": {
-    }
+    "plugins": ["vue"],
+    "rules": {}
 }

@@ -20,29 +20,29 @@ export default {
     },
     props: {
         library: Library,
-    }
-}
+    },
+};
 </script>
 
 <style lang="scss">
-    #playback-screen {
-        display: grid;
-        grid-template-rows: minmax(0, 1fr) auto;
-        grid-template-columns: 30em 1fr;
-    }
+#playback-screen {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+    grid-template-columns: 30em 1fr;
+}
 
-    #music-library {
-        grid-row: 1;
-        grid-column: 1;
-    }
+#music-library {
+    grid-row: 1;
+    grid-column: 1;
+}
 
-    #playlist {
-        grid-row: 1;
-        grid-column: 2;
-    }
+#playlist {
+    grid-row: 1;
+    grid-column: 2;
+}
 
-    #playback-controls {
-        grid-row: 2;
-        grid-column: 1 / 3;
-    }
+#playback-controls {
+    grid-row: 2;
+    grid-column: 1 / 3;
+}
 </style>

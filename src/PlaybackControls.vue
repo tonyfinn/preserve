@@ -8,12 +8,12 @@
 </template>
 
 <style lang="scss">
-    @import './styles/colors.scss';
-    @import "./styles/dims.scss";
+@import './styles/colors.scss';
+@import './styles/dims.scss';
 
-    #playback-controls {
-        background-color: $colors-primary;
-        text-align: center;
-        padding: $dims-padding;
-    }
+#playback-controls {
+    background-color: $colors-primary;
+    text-align: center;
+    padding: $dims-padding;
+}
 </style>

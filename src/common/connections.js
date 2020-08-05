@@ -7,8 +7,15 @@ const CAPABILITIES = {
     SupportsMediaControl: false,
 };
 
-const APP_NAME = "Preserve";
-const APP_VERSION = "0.1.0";
+const APP_NAME = 'Preserve';
+const APP_VERSION = '0.1.0';
 
-const credentialProvider = new Credentials("preserve_auth");
-export const connectionManager = new ConnectionManager(credentialProvider, APP_NAME, APP_VERSION, "Preserve Client #abcde", "ABCDE", CAPABILITIES);
+const credentialProvider = new Credentials('preserve_auth');
+export const connectionManager = new ConnectionManager(
+    credentialProvider,
+    APP_NAME,
+    APP_VERSION,
+    'Preserve Client #abcde',
+    'ABCDE',
+    CAPABILITIES
+);

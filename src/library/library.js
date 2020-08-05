@@ -5,39 +5,52 @@ export default class Library {
     constructor(connectionManager) {
         this.connectionManager = connectionManager;
         this.serverId = this.connectionManager.getLastUsedServer().Id;
-        this.apiClient = this.connectionManager.getOrCreateApiClient(this.serverId);
+        this.apiClient = this.connectionManager.getOrCreateApiClient(
+            this.serverId
+        );
         const userId = this.apiClient.getCurrentUserId();
         this.loaded = false;
         this.tracks = [];
         this.albums = [];
         this.artists = [];
-        const artistLoading = this.apiClient.getArtists(userId)
-            .then(artistsResult => artistsResult.Items.map(this.mapArtist));
-        const albumLoading = this.apiClient.getItems(userId, {recursive: true, IncludeItemTypes: "MusicAlbum"})
-            .then(albumResult => albumResult.Items.map(this.mapAlbum));
-        const trackLoading = this.apiClient.getItems(userId, {recursive: true, IncludeItemTypes: "Audio"})
-            .then(trackResult => trackResult.Items.map(this.mapTrack));
+        const artistLoading = this.apiClient
+            .getArtists(userId)
+            .then((artistsResult) => artistsResult.Items.map(this.mapArtist));
+        const albumLoading = this.apiClient
+            .getItems(userId, {
+                recursive: true,
+                IncludeItemTypes: 'MusicAlbum',
+            })
+            .then((albumResult) => albumResult.Items.map(this.mapAlbum));
+        const trackLoading = this.apiClient
+            .getItems(userId, { recursive: true, IncludeItemTypes: 'Audio' })
+            .then((trackResult) => trackResult.Items.map(this.mapTrack));
 
-        this.loadingPromise = Promise.all([artistLoading, albumLoading, trackLoading])
-            .then(([artists, albums, tracks]) => {
-                this.artists = artists;
-                this.albums = albums;
-                this.tracks = tracks;
+        this.loadingPromise = Promise.all([
+            artistLoading,
+            albumLoading,
+            trackLoading,
+        ]).then(([artists, albums, tracks]) => {
+            this.artists = artists;
+            this.albums = albums;
+            this.tracks = tracks;
 
-                this.buildSyntheticAlbums(tracks).forEach(album => this.albums.push(album));
-                this.artistLookup = this.buildLookup(this.artists);
-                this.albumLookup = this.buildLookup(this.albums);
-                this.trackLookup = this.buildLookup(this.tracks);
+            this.buildSyntheticAlbums(tracks).forEach((album) =>
+                this.albums.push(album)
+            );
+            this.artistLookup = this.buildLookup(this.artists);
+            this.albumLookup = this.buildLookup(this.albums);
+            this.trackLookup = this.buildLookup(this.tracks);
 
-                this.loaded = true;
-            });
-        
+            this.loaded = true;
+        });
+
         window.library = this;
     }
 
     buildLookup(items) {
         const lookup = {};
-        for(const item of items) {
+        for (const item of items) {
             lookup[item.id] = item;
         }
         return lookup;
@@ -45,12 +58,14 @@ export default class Library {
 
     buildSyntheticAlbums(tracks) {
         const syntheticAlbums = {};
-        for(const track of tracks) {
-            if(!track.album.id) {
-                const primaryArtistId = track.albumArtists.entries().next().value || UNKNOWN_ARTIST_NAME;
+        for (const track of tracks) {
+            if (!track.album.id) {
+                const primaryArtistId =
+                    track.albumArtists.entries().next().value ||
+                    UNKNOWN_ARTIST_NAME;
                 const albumName = track.album.name || UNKNOWN_ALBUM_NAME;
                 track.album.id = `synth-${primaryArtistId}-${albumName}`;
-                if(!syntheticAlbums[track.album.id]) {
+                if (!syntheticAlbums[track.album.id]) {
                     const album = this.albumFromTrack(track);
                     syntheticAlbums[track.album.id] = album;
                 }
@@ -60,12 +75,9 @@ export default class Library {
     }
 
     buildArtistSearchItems(artists) {
-
         const searchItems = [];
         for (const artist of artists) {
-            const searchText = [
-                artist.name, 
-            ].join(' ');
+            const searchText = [artist.name].join(' ');
             searchItems.push({
                 searchText,
                 type: 'artist',
@@ -89,14 +101,18 @@ export default class Library {
             id: album.Id,
             name: album.Name,
             serverId: album.ServerId,
-            albumArtists: new Set(album.AlbumArtists.map(aa => ({
-                id: aa.Id,
-                name: aa.Name || UNKNOWN_ARTIST_NAME,
-            }))),
-            artists: new Set(album.ArtistItems.map(aa => ({
-                id: aa.Id,
-                name: aa.Name || UNKNOWN_ARTIST_NAME,
-            }))),
+            albumArtists: new Set(
+                album.AlbumArtists.map((aa) => ({
+                    id: aa.Id,
+                    name: aa.Name || UNKNOWN_ARTIST_NAME,
+                }))
+            ),
+            artists: new Set(
+                album.ArtistItems.map((aa) => ({
+                    id: aa.Id,
+                    name: aa.Name || UNKNOWN_ARTIST_NAME,
+                }))
+            ),
             albumArtId: album.ImageTags.Primary,
             year: album.ProductionYear,
             type: 'album',
@@ -115,7 +131,7 @@ export default class Library {
             year: track.year,
             type: 'album',
             synthetic: true,
-        }
+        };
     }
 
     mapTrack(track) {
@@ -123,16 +139,20 @@ export default class Library {
             id: track.Id,
             name: track.Name,
             serverId: track.ServerId,
-            artists: new Set(track.ArtistItems.map(artist => ({
-                id: artist.Id,
-                name: artist.Name || UNKNOWN_ARTIST_NAME,
-            }))),
+            artists: new Set(
+                track.ArtistItems.map((artist) => ({
+                    id: artist.Id,
+                    name: artist.Name || UNKNOWN_ARTIST_NAME,
+                }))
+            ),
             trackNumber: track.IndexNumber,
             discNumber: track.ParentIndexNumber,
-            albumArtists: new Set(track.AlbumArtists.map(aa => ({
-                id: aa.Id,
-                name: aa.Name || UNKNOWN_ARTIST_NAME,
-            }))),
+            albumArtists: new Set(
+                track.AlbumArtists.map((aa) => ({
+                    id: aa.Id,
+                    name: aa.Name || UNKNOWN_ARTIST_NAME,
+                }))
+            ),
             albumArtId: track.AlbumPrimaryImageTag,
             year: track.ProductionYear,
             album: {

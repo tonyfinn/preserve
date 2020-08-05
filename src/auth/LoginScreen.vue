@@ -4,19 +4,24 @@
 
         <form @submit.prevent="login">
             <label for="server-name">Server Name</label>
-            <input id="server-name" v-model="serverName" type="text" placeholder="https://example.com">
+            <input
+                id="server-name"
+                v-model="serverName"
+                type="text"
+                placeholder="https://example.com"
+            />
             <label for="username">Username</label>
-            <input type="text" v-model="username" placeholder="Username">
+            <input type="text" v-model="username" placeholder="Username" />
             <label for="username">Password</label>
-            <input type="password" v-model="password" placeholder="Password">
-            <input type="submit" value="Login">
+            <input type="password" v-model="password" placeholder="Password" />
+            <input type="submit" value="Login" />
         </form>
     </div>
 </template>
 
 <script>
-import { connectionManager } from "../common/connections";
-import { NotificationService, NotificationType } from "../common/notifications";
+import { connectionManager } from '../common/connections';
+import { NotificationService, NotificationType } from '../common/notifications';
 
 export default {
     data: function () {
@@ -41,7 +46,10 @@ export default {
             } else if (result.State === 'Unavailable') {
                 this.message = 'Could not connect to server';
                 return;
-            } else if (result.State !== 'SignedIn' && result.State !== 'ServerSignIn') {
+            } else if (
+                result.State !== 'SignedIn' &&
+                result.State !== 'ServerSignIn'
+            ) {
                 this.message = `Server in unknown state ${result.State}`;
                 return;
             }
@@ -49,21 +57,29 @@ export default {
             this.apiClient = result.ApiClient;
 
             try {
-                await this.apiClient.authenticateUserByName(this.username, this.password);
+                await this.apiClient.authenticateUserByName(
+                    this.username,
+                    this.password
+                );
                 this.loginSuccess = true;
-                NotificationService.notify('Successfully logged in', NotificationType.Success);
-            } catch(e) {
-                NotificationService.notify('Failed to authenticate. Username or password incorrect', NotificationType.Error);
+                NotificationService.notify(
+                    'Successfully logged in',
+                    NotificationType.Success
+                );
+            } catch (e) {
+                NotificationService.notify(
+                    'Failed to authenticate. Username or password incorrect',
+                    NotificationType.Error
+                );
                 return;
             }
-        }
-    }
-}
+        },
+    },
+};
 </script>
 
 <style lang="scss">
-
-@import "../styles/colors.scss";
+@import '../styles/colors.scss';
 
 #login-form {
     width: 30em;
@@ -83,7 +99,8 @@ export default {
 }
 
 #login-form {
-    label, input {
+    label,
+    input {
         display: block;
         width: 100%;
     }
