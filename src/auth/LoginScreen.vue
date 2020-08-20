@@ -23,7 +23,18 @@
 import { connectionManager } from '../common/connections';
 import { NotificationService, NotificationType } from '../common/notifications';
 import { defineComponent } from 'vue';
-import { ApiClient } from 'jellyfin-apiclient';
+import {
+    ApiClient,
+    ServerConnectionResult,
+    LoggedInConnectionResult,
+    LoggedOutConnectionResult,
+} from 'jellyfin-apiclient';
+
+function isSignedInState(
+    result: ServerConnectionResult
+): result is LoggedInConnectionResult | LoggedOutConnectionResult {
+    return result.State == 'SignedIn' || result.State === 'ServerSignIn';
+}
 
 export default defineComponent({
     data: function () {
@@ -48,36 +59,31 @@ export default defineComponent({
             } else if (result.State === 'Unavailable') {
                 this.message = 'Could not connect to server';
                 return;
-            } else if (
-                result.State !== 'SignedIn' &&
-                result.State !== 'ServerSignIn'
-            ) {
-                const state = (result as any).State;
-                this.message = `Server in unknown state ${state}`;
-                return;
-            }
+            } else if (isSignedInState(result)) {
+                if (result.ApiClient) {
+                    this.apiClient = result.ApiClient;
 
-            if (result.ApiClient) {
-                this.apiClient = result.ApiClient;
-
-                try {
-                    await this.apiClient.authenticateUserByName(
-                        this.username,
-                        this.password
-                    );
-                    this.loginSuccess = true;
-                    NotificationService.notify(
-                        'Successfully logged in',
-                        NotificationType.Success
-                    );
-                } catch (e) {
-                    NotificationService.notify(
-                        'Failed to authenticate. Username or password incorrect',
-                        NotificationType.Error
-                    );
-                    return;
+                    try {
+                        await this.apiClient.authenticateUserByName(
+                            this.username,
+                            this.password
+                        );
+                        this.loginSuccess = true;
+                        NotificationService.notify(
+                            'Successfully logged in',
+                            NotificationType.Success
+                        );
+                    } catch (e) {
+                        NotificationService.notify(
+                            'Failed to authenticate. Username or password incorrect',
+                            NotificationType.Error
+                        );
+                        return;
+                    }
                 }
             } else {
+                const state = result.State;
+                this.message = `Server in unknown state ${state}`;
                 return;
             }
         },

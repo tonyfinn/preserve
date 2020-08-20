@@ -180,6 +180,7 @@ export default defineComponent({
     },
     methods: {
         updateTreeView: debounced(function (
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             this: any,
             libraryTree: LibraryTree,
             searchText: string

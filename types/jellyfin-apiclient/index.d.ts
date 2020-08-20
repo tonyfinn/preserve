@@ -128,7 +128,8 @@ declare module 'jellyfin-apiclient' {
         | OutdatedConnectionResult
         | FailedConnectionResult
         | LoggedInConnectionResult
-        | LoggedOutConnectionResult;
+        | LoggedOutConnectionResult
+        | ConnectionResult;
 
     interface ServerSelectResult extends ConnectionResult {
         State: 'ServerSelection';
@@ -140,7 +141,8 @@ declare module 'jellyfin-apiclient' {
         | FailedConnectionResult
         | LoggedInConnectionResult
         | LoggedOutConnectionResult
-        | ServerSelectResult;
+        | ServerSelectResult
+        | ConnectionResult;
 
     type ServerInfo = LocalServerInfo | ManualServerInfo | RemoteServerInfo;
 

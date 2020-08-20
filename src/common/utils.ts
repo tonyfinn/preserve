@@ -1,4 +1,7 @@
-export function debounced<F extends (...args: any[]) => void>(
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type VoidFunction = (...args: any[]) => void;
+
+export function debounced<F extends VoidFunction>(
     f: F,
     timeout = 50
 ): (this: ThisParameterType<F>, ...args: Parameters<F>) => void {

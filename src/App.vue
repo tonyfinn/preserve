@@ -26,6 +26,7 @@ import Library from './library/library';
 import { NotificationType, NotificationService } from './common/notifications';
 import NotificationToast from './common/NotificationToast.vue';
 import { defineComponent } from 'vue';
+import { LoggedInConnectionResult } from 'jellyfin-apiclient';
 
 export default defineComponent({
     components: {
@@ -48,10 +49,10 @@ export default defineComponent({
             connectionManager
                 .connectToServers(servers)
                 .then((conResult) => {
-                    if (conResult.State !== 'SignedIn') {
-                        return Promise.reject('Not signed in previously');
+                    if (conResult.State === 'SignedIn') {
+                        return conResult as LoggedInConnectionResult;
                     }
-                    return conResult;
+                    return Promise.reject('Not signed in previously');
                 })
                 .then((conResult) => {
                     const server = conResult.Servers[0];
