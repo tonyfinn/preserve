@@ -8,6 +8,10 @@ const devMode = process.env.NODE_ENV !== 'production';
 module.exports = {
     mode: devMode ? 'development' : 'production',
     devtool: devMode ? 'inline-source-map' : 'source-map',
+    resolve: {
+        extensions: ['.ts', '.js', '.vue'],
+    },
+    entry: './src/index.ts',
     module: {
         rules: [
             {
@@ -33,10 +37,11 @@ module.exports = {
                     'sass-loader',
                 ],
             },
-            /**{
-                test: /\.js$/,
-                loader: 'babel-loader',
-            }*/
+            {
+                test: /\.ts$/,
+                loader: 'ts-loader',
+                options: { appendTsSuffixTo: [/\.vue$/] },
+            },
         ],
     },
     plugins: [

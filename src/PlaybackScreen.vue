@@ -6,13 +6,14 @@
     </div>
 </template>
 
-<script>
+<script lang="ts">
 import MusicLibrary from './library/MusicLibrary.vue';
 import Library from './library/library';
 import PlaybackControls from './PlaybackControls.vue';
 import PlayList from './PlayList.vue';
+import { defineComponent } from 'vue';
 
-export default {
+export default defineComponent({
     components: {
         MusicLibrary,
         PlaybackControls,
@@ -21,7 +22,7 @@ export default {
     props: {
         library: Library,
     },
-};
+});
 </script>
 
 <style lang="scss">

@@ -10,7 +10,7 @@
         <psv-tree
             v-if="loaded"
             class="library-tree"
-            @toggleExpand="toggleExpand"
+            @toggle-expand="toggleExpand"
             :items="treeItems"
         ></psv-tree>
         <p v-if="!loaded">
@@ -19,12 +19,15 @@
     </section>
 </template>
 
-<script>
-import Library from './library';
+<script lang="ts">
+import Library, { Album, Artist, Track } from './library';
 import { debounced } from '../common/utils';
-import PsvTree from '../tree/PsvTree.vue';
+import PsvTree, { TreeItem } from '../tree/PsvTree.vue';
+import { defineComponent } from 'vue';
 
-function sortTracks(a, b) {
+type LibraryTree = Array<Artist>;
+
+function sortTracks(a: TreeItem<Track>, b: TreeItem<Track>): number {
     const aDisc = a.data.discNumber || -1;
     const bDisc = b.data.discNumber || -1;
     const aTrack = a.data.trackNumber || -1;
@@ -45,7 +48,7 @@ function sortTracks(a, b) {
     return a.name > b.name ? 1 : 0;
 }
 
-function sortAlbums(a, b) {
+function sortAlbums(a: TreeItem<Album>, b: TreeItem<Album>): number {
     const aYear = a.data.year;
     const bYear = b.data.year;
 
@@ -58,7 +61,10 @@ function sortAlbums(a, b) {
     }
 }
 
-function artistTreeNode(artist, searchRegex) {
+function artistTreeNode(
+    artist: Artist,
+    searchRegex: RegExp | null
+): TreeItem<Artist> {
     const children = [];
     let childMatch = false;
     const ownMatch = !searchRegex || searchRegex.test(artist.name);
@@ -77,14 +83,20 @@ function artistTreeNode(artist, searchRegex) {
         id: artist.id,
         name: artist.name,
         isLeaf: false,
-        expanded: artist.expanded,
+        expanded: false,
+        selected: false,
         data: artist,
         visible: ownMatch || childMatch,
         children,
     };
 }
 
-function albumTreeNode(artist, album, parentMatch, searchRegex) {
+function albumTreeNode(
+    artist: Artist,
+    album: Album,
+    parentMatch: boolean,
+    searchRegex: RegExp | null
+): TreeItem<Album> {
     const children = [];
     let childMatch = false;
     const ownMatch = !searchRegex || searchRegex.test(album.name);
@@ -108,51 +120,70 @@ function albumTreeNode(artist, album, parentMatch, searchRegex) {
         id: album.id,
         name: album.name,
         isLeaf: false,
-        expanded: album.expanded,
+        expanded: false,
+        selected: false,
         data: album,
         visible: parentMatch || ownMatch || childMatch,
         children: children,
     };
 }
 
-function trackTreeNode(artist, album, track, parentMatch, searchRegex) {
+function trackTreeNode(
+    artist: Artist,
+    album: Album,
+    track: Track,
+    parentMatch: boolean,
+    searchRegex: RegExp | null
+): TreeItem<Track> {
     return {
-        track: track.id,
+        id: track.id,
         name: track.name,
         isLeaf: true,
+        expanded: false,
+        selected: false,
         data: track,
         visible: parentMatch || !searchRegex || searchRegex.test(track.name),
     };
 }
 
-function treeViewFromLibrary(libraryTree, searchRegex) {
+function treeViewFromLibrary(
+    libraryTree: LibraryTree,
+    searchRegex: RegExp | null
+): Array<TreeItem<Artist>> {
     console.time('buildLibraryTree');
     let tree = libraryTree.map((artist) => artistTreeNode(artist, searchRegex));
     console.timeEnd('buildLibraryTree');
     return tree;
 }
 
-export default {
+export default defineComponent({
     components: { PsvTree },
     data() {
         return {
             searchText: '',
-            artists: [],
-            treeItems: [],
+            treeItems: [] as Array<TreeItem<Artist>>,
             loaded: false,
             selectedItems: [],
+            libraryTree: [] as LibraryTree,
         };
     },
     watch: {
-        searchText(newText) {
+        searchText(newText: string): void {
             this.updateTreeView(this.libraryTree, newText.trim());
         },
     },
     props: {
-        library: Library,
+        library: {
+            type: Library,
+            required: true,
+        },
     },
     methods: {
-        updateTreeView: debounced(function (libraryTree, searchText) {
+        updateTreeView: debounced(function (
+            this: any,
+            libraryTree: LibraryTree,
+            searchText: string
+        ) {
             const trimmedText = searchText.trim();
             const emptySearch = trimmedText === '';
             this.treeItems = treeViewFromLibrary(
@@ -160,11 +191,11 @@ export default {
                 emptySearch ? null : new RegExp(trimmedText, 'i')
             );
         }),
-        toggleExpand(item) {
+        toggleExpand(item: TreeItem<unknown>) {
             console.log(item);
             item.expanded = !item.expanded;
         },
-        toggleSelect(item) {
+        toggleSelect(item: TreeItem<unknown>) {
             console.log(item);
             item.selected = !item.selected;
         },
@@ -176,11 +207,11 @@ export default {
             this.library.getTracks(),
         ]);
 
-        const artistLookup = {};
-        const looseArtistLookup = {};
+        const artistLookup = new Map<string, Artist>();
+        const looseArtistLookup = new Map<string, Artist>();
 
-        const albumLookup = {};
-        const looseAlbumLookup = {};
+        const albumLookup = new Map<string, Album>();
+        const looseAlbumLookup = new Map<string, Album>();
 
         const libraryTree = [];
 
@@ -196,9 +227,9 @@ export default {
                 artist
             );
             if (artist.id) {
-                artistLookup[artist.id] = artistNode;
+                artistLookup.set(artist.id, artistNode);
             } else {
-                looseArtistLookup[artist.name] = artistNode;
+                looseArtistLookup.set(artist.name, artistNode);
             }
             libraryTree.push(artistNode);
         }
@@ -215,15 +246,16 @@ export default {
             );
 
             if (album.id) {
-                albumLookup[album.id] = albumNode;
+                albumLookup.set(album.id, albumNode);
             } else {
-                looseAlbumLookup[album.name] = albumNode;
+                looseAlbumLookup.set(album.name, albumNode);
             }
 
             for (const albumArtist of album.albumArtists) {
                 const aa =
-                    artistLookup[albumArtist.id] ||
-                    looseArtistLookup[albumArtist.name];
+                    (albumArtist.id && artistLookup.get(albumArtist.id)) ||
+                    (albumArtist.name &&
+                        looseArtistLookup.get(albumArtist.name));
                 if (!aa) {
                     console.warn(
                         'Could not find album artist %s (%s)',
@@ -245,7 +277,8 @@ export default {
                 track
             );
             const album =
-                albumLookup[t.album.id] || looseAlbumLookup[t.album.name];
+                (t.album.id && albumLookup.get(t.album.id)) ||
+                (t.album.name && looseAlbumLookup.get(t.album.name));
             if (!album) {
                 console.warn(
                     'Could not find album %s (%s)',
@@ -260,10 +293,10 @@ export default {
 
         this.libraryTree = libraryTree;
 
-        this.treeItems = treeViewFromLibrary(libraryTree);
+        this.treeItems = treeViewFromLibrary(libraryTree, null);
         this.loaded = true;
     },
-};
+});
 </script>
 
 <style lang="scss">

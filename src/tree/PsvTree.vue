@@ -16,8 +16,8 @@
             </header>
             <template v-if="item.isLeaf">{{ item.name }}</template>
             <psv-tree
-                @toggleSelect="$emit('toggleSelect', $event)"
-                @toggleExpand="$emit('toggleExpand', $event)"
+                @toggle-select="$emit('toggle-select', $event)"
+                @toggle-expand="$emit('toggle-expand', $event)"
                 v-if="item.expanded && !item.isLeaf"
                 :items="item.children"
             >
@@ -26,24 +26,43 @@
     </ul>
 </template>
 
-<script>
-export default {
+<script lang="ts">
+import { defineComponent, PropType } from 'vue';
+
+export interface TreeItem<T> {
+    id: string;
+    name: string;
+    expanded: boolean;
+    isLeaf: boolean;
+    selected: boolean;
+    visible: boolean;
+    children?: Array<TreeItem<unknown>>;
+    data: T;
+}
+
+export default defineComponent({
     name: 'psv-tree',
-    props: ['items'],
+    emits: ['toggle-select', 'toggle-expand'],
+    props: {
+        items: {
+            type: Array as PropType<Array<TreeItem<unknown>>>,
+            required: true,
+        },
+    },
     computed: {
-        filteredItems() {
+        filteredItems(): Array<TreeItem<unknown>> {
             return this.items.filter((item) => item.visible !== false);
         },
     },
     methods: {
-        clickNode(item) {
+        clickNode(item: TreeItem<unknown>) {
             if (!item.isLeaf) {
-                this.$emit('toggleExpand', item);
+                this.$emit('toggle-expand', item);
             }
-            this.$emit('toggleSelect', item);
+            this.$emit('toggle-select', item);
         },
     },
-};
+});
 </script>
 
 <style lang="scss">

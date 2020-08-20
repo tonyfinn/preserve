@@ -13,26 +13,37 @@
     </div>
 </template>
 
-<script>
-import { NotificationService, NotificationType } from './notifications';
+<script lang="ts">
+import {
+    NotificationService,
+    NotificationType,
+    Notification,
+} from './notifications';
+import { defineComponent } from 'vue';
 
-export default {
-    created() {
+interface NotificationDisplay {
+    id: number;
+    message: string;
+    nClass: Array<string>;
+}
+
+export default defineComponent({
+    created(): void {
         const service = NotificationService.getInstance();
         this.renderNotifications();
-        service.on('change', () => {
+        service.onChange.on(() => {
             this.renderNotifications();
         });
     },
 
     data() {
         return {
-            notifications: [],
+            notifications: [] as Array<NotificationDisplay>,
         };
     },
 
     methods: {
-        notificationClass(ty) {
+        notificationClass(ty: NotificationType): string {
             switch (ty) {
                 case NotificationType.Success:
                     return 'notification-success';
@@ -43,23 +54,26 @@ export default {
             }
         },
 
-        removeNotification(id) {
+        removeNotification(id: number): void {
             NotificationService.getInstance().removeNotification(id);
         },
 
-        renderNotifications() {
+        renderNotifications(): void {
             this.notifications = NotificationService.getInstance()
                 .getNotifications()
-                .map((n) => {
+                .map((n: Notification) => {
                     return {
                         id: n.id,
                         message: n.message,
-                        nClass: ['notification', this.notificationClass(n.ty)],
+                        nClass: [
+                            'notification',
+                            this.notificationClass(n.type),
+                        ],
                     };
                 });
         },
     },
-};
+});
 </script>
 
 <style lang="scss" scoped>

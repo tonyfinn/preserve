@@ -18,15 +18,16 @@
     </div>
 </template>
 
-<script>
+<script lang="ts">
 import PlaybackScreen from './PlaybackScreen.vue';
 import LoginScreen from './auth/LoginScreen.vue';
 import { connectionManager } from './common/connections';
 import Library from './library/library';
 import { NotificationType, NotificationService } from './common/notifications';
 import NotificationToast from './common/NotificationToast.vue';
+import { defineComponent } from 'vue';
 
-export default {
+export default defineComponent({
     components: {
         LoginScreen,
         PlaybackScreen,
@@ -36,7 +37,7 @@ export default {
         return {
             loggedIn: false,
             loaded: false,
-            library: null,
+            library: null as null | Library,
         };
     },
     created() {
@@ -80,7 +81,7 @@ export default {
             });
         },
     },
-};
+});
 </script>
 
 <style lang="scss">

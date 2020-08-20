@@ -19,11 +19,13 @@
     </div>
 </template>
 
-<script>
+<script lang="ts">
 import { connectionManager } from '../common/connections';
 import { NotificationService, NotificationType } from '../common/notifications';
+import { defineComponent } from 'vue';
+import { ApiClient } from 'jellyfin-apiclient';
 
-export default {
+export default defineComponent({
     data: function () {
         return {
             username: '',
@@ -31,11 +33,11 @@ export default {
             serverName: '',
             message: '',
             loginSuccess: false,
-            apiClient: null,
+            apiClient: null as null | ApiClient,
         };
     },
     methods: {
-        async login() {
+        async login(): Promise<void> {
             const result = await connectionManager.connectToServer({
                 RemoteAddress: this.serverName,
             });
@@ -50,32 +52,37 @@ export default {
                 result.State !== 'SignedIn' &&
                 result.State !== 'ServerSignIn'
             ) {
-                this.message = `Server in unknown state ${result.State}`;
+                const state = (result as any).State;
+                this.message = `Server in unknown state ${state}`;
                 return;
             }
 
-            this.apiClient = result.ApiClient;
+            if (result.ApiClient) {
+                this.apiClient = result.ApiClient;
 
-            try {
-                await this.apiClient.authenticateUserByName(
-                    this.username,
-                    this.password
-                );
-                this.loginSuccess = true;
-                NotificationService.notify(
-                    'Successfully logged in',
-                    NotificationType.Success
-                );
-            } catch (e) {
-                NotificationService.notify(
-                    'Failed to authenticate. Username or password incorrect',
-                    NotificationType.Error
-                );
+                try {
+                    await this.apiClient.authenticateUserByName(
+                        this.username,
+                        this.password
+                    );
+                    this.loginSuccess = true;
+                    NotificationService.notify(
+                        'Successfully logged in',
+                        NotificationType.Success
+                    );
+                } catch (e) {
+                    NotificationService.notify(
+                        'Failed to authenticate. Username or password incorrect',
+                        NotificationType.Error
+                    );
+                    return;
+                }
+            } else {
                 return;
             }
         },
     },
-};
+});
 </script>
 
 <style lang="scss">

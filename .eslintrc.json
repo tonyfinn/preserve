@@ -10,19 +10,27 @@
             "env": {
                 "node": true,
                 "browser": false
+            },
+            "rules": {
+                "@typescript-eslint/no-var-requires": "off"
             }
         }
     ],
     "extends": [
         "eslint:recommended",
         "plugin:vue/essential",
+        "plugin:@typescript-eslint/recommended",
         "prettier",
-        "prettier/vue"
+        "prettier/vue",
+        "prettier/@typescript-eslint"
     ],
+    "root": true,
+    "parser": "vue-eslint-parser",
     "parserOptions": {
         "ecmaVersion": 11,
-        "sourceType": "module"
+        "sourceType": "module",
+        "parser": "@typescript-eslint/parser"
     },
-    "plugins": ["vue"],
+    "plugins": ["@typescript-eslint", "vue"],
     "rules": {}
 }
