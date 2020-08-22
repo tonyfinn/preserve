@@ -21,25 +21,18 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
+import { Track } from './library/library';
 
 export default defineComponent({
     data() {
         return {
-            tracks: [
-                {
-                    title: 'American Idiot',
-                    artist: 'Green Day',
-                    album: 'American Idiot',
-                    id: 1,
-                },
-                {
-                    title: 'Boulevard of Broken Dreams',
-                    artist: 'Green Day',
-                    album: 'American Idiot',
-                    id: 2,
-                },
-            ],
+            tracks: [] as Array<Track>,
         };
+    },
+    method: {
+        addTrack(item: Track) {
+            this.tracks.push(item);
+        },
     },
 });
 </script>

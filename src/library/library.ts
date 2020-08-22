@@ -20,6 +20,7 @@ interface ItemStub {
 export interface Artist extends Item {
     name: string;
     albums: Set<Album>;
+    type: 'artist';
 }
 
 export interface Album extends Item {
@@ -30,6 +31,7 @@ export interface Album extends Item {
     albumArtists: Set<ItemStub>;
     tracks: Set<Track>;
     albumArtId?: string;
+    type: 'album';
 }
 
 export interface Track extends Item {
@@ -41,7 +43,10 @@ export interface Track extends Item {
     albumArtId?: string;
     trackNumber: number;
     discNumber: number;
+    type: 'track';
 }
+
+export type LibraryItem = Artist | Album | Track;
 
 type ItemLookup<T extends Item> = Map<string, T>;
 
@@ -63,6 +68,7 @@ export default class Library {
     artistLookup: ItemLookup<Artist>;
     albumLookup: ItemLookup<Album>;
     trackLookup: ItemLookup<Track>;
+    static instance: Library;
 
     constructor(connectionManager: Jellyfin.ConnectionManager) {
         this.connectionManager = connectionManager;
@@ -114,6 +120,7 @@ export default class Library {
         });
 
         window.library = this;
+        Library.instance = this;
     }
 
     buildLookup<T extends Item>(items: Array<T>): ItemLookup<T> {
@@ -242,5 +249,14 @@ export default class Library {
     async getTracks(): Promise<Array<Track>> {
         await this.loadingPromise;
         return this.tracks;
+    }
+
+    static createInstance(connectionManager: Jellyfin.ConnectionManager): void {
+        const library = new Library(connectionManager);
+        Library.instance = library;
+    }
+
+    static getInstance(): Library | null {
+        return Library.instance || null;
     }
 }

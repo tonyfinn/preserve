@@ -11,7 +11,14 @@ module.exports = {
     resolve: {
         extensions: ['.ts', '.js', '.vue'],
     },
-    entry: './src/index.ts',
+    entry: {
+        main: './src/index.ts',
+        libraryTreeBuilder: './src/library/libraryTreeBuilder.worker.ts',
+    },
+    output: {
+        filename: '[name].js',
+        path: __dirname + '/dist'
+    },
     module: {
         rules: [
             {
@@ -28,11 +35,11 @@ module.exports = {
                     devMode
                         ? 'style-loader'
                         : {
-                              loader: MiniCssExtractPlugin.loader,
-                              options: {
-                                  hmr: devMode,
-                              },
-                          },
+                            loader: MiniCssExtractPlugin.loader,
+                            options: {
+                                hmr: devMode,
+                            },
+                        },
                     'css-loader',
                     'sass-loader',
                 ],
@@ -52,6 +59,7 @@ module.exports = {
         new HtmlWebpackPlugin({
             title: 'Preserve',
             hash: !devMode,
+            excludeChunks: ['libraryTreebuilder.worker'],
         }),
         new VueLoaderPlugin(),
     ],

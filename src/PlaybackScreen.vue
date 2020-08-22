@@ -1,14 +1,14 @@
 <template>
     <div id="playback-screen">
-        <music-library :library="library"></music-library>
-        <play-list></play-list>
+        <music-library :library="library" @activate-item="activateItem"></music-library>
+        <play-list ref="playlist"></play-list>
         <playback-controls></playback-controls>
     </div>
 </template>
 
 <script lang="ts">
 import MusicLibrary from './library/MusicLibrary.vue';
-import Library from './library/library';
+import Library, { LibraryItem } from './library/library';
 import PlaybackControls from './PlaybackControls.vue';
 import PlayList from './PlayList.vue';
 import { defineComponent } from 'vue';
@@ -21,6 +21,24 @@ export default defineComponent({
     },
     props: {
         library: Library,
+    },
+    methods: {
+        activateItem(item: LibraryItem) {
+            const playlist = this.$refs.playlist as typeof PlayList;
+            if (item.type === 'track') {
+                playlist.addTrack(item);
+            } else if (item.type === 'album') {
+                for (const track of item.tracks) {
+                    playlist.addTrack(track);
+                }
+            } else if (item.type === 'artist') {
+                for (const album of item.albums) {
+                    for (const track of album.tracks) {
+                        playlist.addTrack(track);
+                    }
+                }
+            }
+        },
     },
 });
 </script>

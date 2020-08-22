@@ -1,169 +1,51 @@
 <template>
     <section id="music-library">
         <div class="search-controls">
-            <input
-                type="text"
-                v-model="searchText"
-                placeholder="Search your library"
-            />
+            <input type="text" v-model="searchText" placeholder="Search your library" />
         </div>
         <psv-tree
             v-if="loaded"
             class="library-tree"
-            @toggle-expand="toggleExpand"
             :items="treeItems"
+            @activate-item="$emit('queue-item', $event.item)"
         ></psv-tree>
-        <p v-if="!loaded">
-            Loading...
-        </p>
+        <p v-if="!loaded">Loading...</p>
     </section>
 </template>
 
 <script lang="ts">
-import Library, { Album, Artist, Track } from './library';
+import Library, { Album, Artist, LibraryItem } from './library';
 import { debounced } from '../common/utils';
-import PsvTree, { TreeItem } from '../tree/PsvTree.vue';
+import { PsvTree, TreeItem } from '../tree';
 import { defineComponent } from 'vue';
+
+import LibraryTreeBuilder from 'worker-loader!./libraryTreeBuilder.worker';
 
 type LibraryTree = Array<Artist>;
 
-function sortTracks(a: TreeItem<Track>, b: TreeItem<Track>): number {
-    const aDisc = a.data.discNumber || -1;
-    const bDisc = b.data.discNumber || -1;
-    const aTrack = a.data.trackNumber || -1;
-    const bTrack = b.data.trackNumber || -1;
-
-    if (aDisc - bDisc != 0) {
-        return aDisc - bDisc;
-    }
-
-    if (aTrack - bTrack != 0) {
-        return aTrack - bTrack;
-    }
-
-    if (a.name < b.name) {
-        return -1;
-    }
-
-    return a.name > b.name ? 1 : 0;
-}
-
-function sortAlbums(a: TreeItem<Album>, b: TreeItem<Album>): number {
-    const aYear = a.data.year;
-    const bYear = b.data.year;
-
-    if (aYear - bYear != 0) {
-        return aYear - bYear;
-    } else if (a.name < b.name) {
-        return -1;
-    } else {
-        return a.name > b.name ? 1 : 0;
-    }
-}
-
-function artistTreeNode(
-    artist: Artist,
-    searchRegex: RegExp | null
-): TreeItem<Artist> {
-    const children = [];
-    let childMatch = false;
-    const ownMatch = !searchRegex || searchRegex.test(artist.name);
-
-    for (const album of artist.albums) {
-        const albumNode = albumTreeNode(artist, album, ownMatch, searchRegex);
-        children.push(albumNode);
-        if (albumNode.visible) {
-            childMatch = true;
-        }
-    }
-
-    children.sort(sortAlbums);
-
-    return {
-        id: artist.id,
-        name: artist.name,
-        isLeaf: false,
-        expanded: false,
-        selected: false,
-        data: artist,
-        visible: ownMatch || childMatch,
-        children,
-    };
-}
-
-function albumTreeNode(
-    artist: Artist,
-    album: Album,
-    parentMatch: boolean,
-    searchRegex: RegExp | null
-): TreeItem<Album> {
-    const children = [];
-    let childMatch = false;
-    const ownMatch = !searchRegex || searchRegex.test(album.name);
-    for (const track of album.tracks) {
-        const trackNode = trackTreeNode(
-            artist,
-            album,
-            track,
-            parentMatch || ownMatch,
-            searchRegex
-        );
-        children.push(trackNode);
-        if (trackNode.visible) {
-            childMatch = true;
-        }
-    }
-
-    children.sort(sortTracks);
-
-    return {
-        id: album.id,
-        name: album.name,
-        isLeaf: false,
-        expanded: false,
-        selected: false,
-        data: album,
-        visible: parentMatch || ownMatch || childMatch,
-        children: children,
-    };
-}
-
-function trackTreeNode(
-    artist: Artist,
-    album: Album,
-    track: Track,
-    parentMatch: boolean,
-    searchRegex: RegExp | null
-): TreeItem<Track> {
-    return {
-        id: track.id,
-        name: track.name,
-        isLeaf: true,
-        expanded: false,
-        selected: false,
-        data: track,
-        visible: parentMatch || !searchRegex || searchRegex.test(track.name),
-    };
-}
-
 function treeViewFromLibrary(
-    libraryTree: LibraryTree,
+    artists: Array<Artist>,
     searchRegex: RegExp | null
-): Array<TreeItem<Artist>> {
-    console.time('buildLibraryTree');
-    let tree = libraryTree.map((artist) => artistTreeNode(artist, searchRegex));
-    console.timeEnd('buildLibraryTree');
-    return tree;
+): Promise<Array<TreeItem<LibraryItem>>> {
+    return new Promise((resolve) => {
+        const libraryTreeWorker = new LibraryTreeBuilder();
+        console.log(artists);
+        libraryTreeWorker.postMessage({ artists, searchRegex });
+        libraryTreeWorker.addEventListener('message', (evt: MessageEvent) => {
+            resolve(evt.data);
+            libraryTreeWorker.terminate();
+        });
+    });
 }
 
 export default defineComponent({
     components: { PsvTree },
+    events: ['queue-item'],
     data() {
         return {
             searchText: '',
-            treeItems: [] as Array<TreeItem<Artist>>,
+            treeItems: [] as Array<TreeItem<LibraryItem>>,
             loaded: false,
-            selectedItems: [],
             libraryTree: [] as LibraryTree,
         };
     },
@@ -187,25 +69,23 @@ export default defineComponent({
         ) {
             const trimmedText = searchText.trim();
             const emptySearch = trimmedText === '';
-            this.treeItems = treeViewFromLibrary(
+            treeViewFromLibrary(
                 libraryTree,
                 emptySearch ? null : new RegExp(trimmedText, 'i')
-            );
+            ).then((items) => {
+                this.treeItems = items;
+            });
         }),
-        toggleExpand(item: TreeItem<unknown>) {
-            console.log(item);
-            item.expanded = !item.expanded;
-        },
-        toggleSelect(item: TreeItem<unknown>) {
-            console.log(item);
-            item.selected = !item.selected;
-        },
     },
     async created() {
+        const library = Library.getInstance();
+        if (!library) {
+            return;
+        }
         const [artists, albums, tracks] = await Promise.all([
-            this.library.getArtists(),
-            this.library.getAlbums(),
-            this.library.getTracks(),
+            library.getArtists(),
+            library.getAlbums(),
+            library.getTracks(),
         ]);
 
         const artistLookup = new Map<string, Artist>();
@@ -292,10 +172,16 @@ export default defineComponent({
             }
         }
 
-        this.libraryTree = libraryTree;
+        console.time('renderLibraryTree');
 
-        this.treeItems = treeViewFromLibrary(libraryTree, null);
-        this.loaded = true;
+        treeViewFromLibrary(libraryTree, null).then((items) => {
+            console.timeLog('renderLibraryTree');
+            this.treeItems = items;
+            this.loaded = true;
+            console.timeEnd('renderLibraryTree');
+        });
+
+        this.libraryTree = libraryTree;
     },
 });
 </script>

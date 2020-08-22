@@ -4,16 +4,11 @@
             <h1>Preserve</h1>
             <button v-if="loggedIn" @click="logout()">Logout</button>
         </header>
-        <playback-screen
-            v-if="loaded && loggedIn"
-            :library="library"
-            class="screen-root"
-        ></playback-screen>
-        <login-screen
-            v-if="loaded && !loggedIn"
-            class="screen-root"
-        ></login-screen>
-        <div id="loading-spinner" v-if="!loaded"><p>Loading...</p></div>
+        <playback-screen v-if="loaded && loggedIn" class="screen-root"></playback-screen>
+        <login-screen v-if="loaded && !loggedIn" class="screen-root"></login-screen>
+        <div id="loading-spinner" v-if="!loaded">
+            <p>Loading...</p>
+        </div>
         <notification-toast class="notification-outlet"></notification-toast>
     </div>
 </template>
@@ -38,7 +33,6 @@ export default defineComponent({
         return {
             loggedIn: false,
             loaded: false,
-            library: null as null | Library,
         };
     },
     created() {
@@ -59,9 +53,9 @@ export default defineComponent({
                     return server;
                 })
                 .then((server) => {
+                    Library.createInstance(connectionManager);
                     this.loggedIn = server.AccessToken !== null;
                     this.loaded = true;
-                    this.library = new Library(connectionManager);
                     NotificationService.notify(
                         `Logged in to ${server.Name}`,
                         NotificationType.Success,
