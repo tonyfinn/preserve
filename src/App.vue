@@ -4,7 +4,7 @@
             <h1>Preserve</h1>
             <button v-if="loggedIn" @click="logout()">Logout</button>
         </header>
-        <playback-screen v-if="loaded && loggedIn" class="screen-root"></playback-screen>
+        <playback-screen v-if="loaded && loggedIn" :library="library" class="screen-root"></playback-screen>
         <login-screen v-if="loaded && !loggedIn" class="screen-root"></login-screen>
         <div id="loading-spinner" v-if="!loaded">
             <p>Loading...</p>
@@ -17,7 +17,7 @@
 import PlaybackScreen from './PlaybackScreen.vue';
 import LoginScreen from './auth/LoginScreen.vue';
 import { connectionManager } from './common/connections';
-import Library from './library/library';
+import { Library } from './library';
 import { NotificationType, NotificationService } from './common/notifications';
 import NotificationToast from './common/NotificationToast.vue';
 import { defineComponent } from 'vue';
@@ -33,6 +33,7 @@ export default defineComponent({
         return {
             loggedIn: false,
             loaded: false,
+            library: null as Library | null,
         };
     },
     created() {
@@ -53,7 +54,7 @@ export default defineComponent({
                     return server;
                 })
                 .then((server) => {
-                    Library.createInstance(connectionManager);
+                    this.library = Library.createInstance(connectionManager);
                     this.loggedIn = server.AccessToken !== null;
                     this.loaded = true;
                     NotificationService.notify(

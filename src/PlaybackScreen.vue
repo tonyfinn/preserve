@@ -1,39 +1,50 @@
 <template>
     <div id="playback-screen">
         <music-library :library="library" @activate-item="activateItem"></music-library>
-        <play-list ref="playlist"></play-list>
-        <playback-controls></playback-controls>
+        <play-list ref="playlist" :player="player"></play-list>
+        <playback-footer :player="player"></playback-footer>
     </div>
 </template>
 
 <script lang="ts">
 import MusicLibrary from './library/MusicLibrary.vue';
-import Library, { LibraryItem } from './library/library';
-import PlaybackControls from './PlaybackControls.vue';
+import { AudioPlayer } from './player';
+import { Library, LibraryItem, sortAlbums, sortTracks } from './library';
+import PlaybackFooter from './PlaybackFooter.vue';
 import PlayList from './PlayList.vue';
 import { defineComponent } from 'vue';
+import { sorted } from './common/utils';
 
 export default defineComponent({
     components: {
         MusicLibrary,
-        PlaybackControls,
+        PlaybackFooter,
         PlayList,
     },
     props: {
-        library: Library,
+        library: {
+            type: Library,
+            required: true,
+        },
+    },
+    data() {
+        return {
+            player: AudioPlayer.getOrCreateInstance(this.library),
+        };
     },
     methods: {
         activateItem(item: LibraryItem) {
+            console.log('Activating', item);
             const playlist = this.$refs.playlist as typeof PlayList;
             if (item.type === 'track') {
                 playlist.addTrack(item);
             } else if (item.type === 'album') {
-                for (const track of item.tracks) {
+                for (const track of sorted(item.tracks, sortTracks)) {
                     playlist.addTrack(track);
                 }
             } else if (item.type === 'artist') {
-                for (const album of item.albums) {
-                    for (const track of album.tracks) {
+                for (const album of sorted(item.albums, sortAlbums)) {
+                    for (const track of sorted(album.tracks, sortTracks)) {
                         playlist.addTrack(track);
                     }
                 }
@@ -47,7 +58,7 @@ export default defineComponent({
 #playback-screen {
     display: grid;
     grid-template-rows: minmax(0, 1fr) auto;
-    grid-template-columns: 30em 1fr;
+    grid-template-columns: minmax(25%, 30em) minmax(75%, 1fr);
 }
 
 #music-library {
@@ -60,7 +71,7 @@ export default defineComponent({
     grid-column: 2;
 }
 
-#playback-controls {
+#playback-footer {
     grid-row: 2;
     grid-column: 1 / 3;
 }

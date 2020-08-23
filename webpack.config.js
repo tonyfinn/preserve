@@ -13,10 +13,10 @@ module.exports = {
     },
     entry: {
         main: './src/index.ts',
-        libraryTreeBuilder: './src/library/libraryTreeBuilder.worker.ts',
+        "tree-builder": './src/library/tree-builder.worker.ts',
     },
     output: {
-        filename: '[name].js',
+        filename: devMode ? '[name].js' : '[name].[hash].js',
         path: __dirname + '/dist'
     },
     module: {
@@ -45,10 +45,32 @@ module.exports = {
                 ],
             },
             {
+                test: /\.css$/,
+                use: [
+                    devMode
+                        ? 'style-loader'
+                        : {
+                            loader: MiniCssExtractPlugin.loader,
+                            options: {
+                                hmr: devMode,
+                            },
+                        },
+                    'css-loader',
+                ],
+            },
+            {
                 test: /\.ts$/,
                 loader: 'ts-loader',
                 options: { appendTsSuffixTo: [/\.vue$/] },
             },
+            {
+                test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+                loader: 'url-loader?limit=10000&mimetype=application/font-woff'
+            },
+            {
+                test: /\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+                loader: 'file-loader'
+            }
         ],
     },
     plugins: [
@@ -59,7 +81,7 @@ module.exports = {
         new HtmlWebpackPlugin({
             title: 'Preserve',
             hash: !devMode,
-            excludeChunks: ['libraryTreebuilder.worker'],
+            excludeChunks: ['tree-builder.worker'],
         }),
         new VueLoaderPlugin(),
     ],

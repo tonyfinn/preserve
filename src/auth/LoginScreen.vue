@@ -24,7 +24,6 @@ import { connectionManager } from '../common/connections';
 import { NotificationService, NotificationType } from '../common/notifications';
 import { defineComponent } from 'vue';
 import {
-    ApiClient,
     ServerConnectionResult,
     LoggedInConnectionResult,
     LoggedOutConnectionResult,
@@ -44,7 +43,6 @@ export default defineComponent({
             serverName: '',
             message: '',
             loginSuccess: false,
-            apiClient: null as null | ApiClient,
         };
     },
     methods: {
@@ -61,10 +59,10 @@ export default defineComponent({
                 return;
             } else if (isSignedInState(result)) {
                 if (result.ApiClient) {
-                    this.apiClient = result.ApiClient;
+                    const apiClient = result.ApiClient;
 
                     try {
-                        await this.apiClient.authenticateUserByName(
+                        await apiClient.authenticateUserByName(
                             this.username,
                             this.password
                         );

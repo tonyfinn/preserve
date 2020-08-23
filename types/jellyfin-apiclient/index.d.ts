@@ -58,6 +58,7 @@ declare module 'jellyfin-apiclient' {
         Album: string;
         IndexNumber: number;
         ParentIndexNumber: number;
+        RunTimeTicks: number;
         Type: 'Audio';
     }
 
@@ -185,15 +186,18 @@ declare module 'jellyfin-apiclient' {
     }
 
     class ApiClient {
+        accessToken(): string;
         authenticateUserByName(
             username: string,
             password: string
         ): Promise<AuthenticateUserResult>;
+        deviceId(): string;
         getCurrentUserId(): string;
         getItems<T extends Item>(
             userId: string,
             filter: unknown
         ): Promise<QueryResult<T>>;
         getArtists(userId: string): Promise<QueryResult<Artist>>;
+        getUrl(name: string, params?: { [name: string]: string }, serverAddress?: string): string;
     }
 }

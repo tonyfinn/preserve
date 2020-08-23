@@ -115,7 +115,7 @@ export default defineComponent({
 }
 
 .psv-tree-node--selected {
-    background-color: $colors-primary;
+    background-color: $colors-selected;
 }
 
 .psv-tree-node header,
@@ -123,7 +123,7 @@ export default defineComponent({
     cursor: pointer;
 
     &:hover {
-        background-color: lighten($colors-background, 10%);
+        background-color: $colors-highlight;
     }
 }
 

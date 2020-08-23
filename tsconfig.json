@@ -1,10 +1,14 @@
 {
     "compilerOptions": {
+        "esModuleInterop": true,
         "sourceMap": true,
-        "target": "ESNext",
+        "target": "ES2018",
         "module": "ESNext",
         "strict": true,
         "moduleResolution": "node",
-        "typeRoots": ["types", "node_modules/@types"]
+        "typeRoots": [
+            "types",
+            "node_modules/@types"
+        ]
     }
 }

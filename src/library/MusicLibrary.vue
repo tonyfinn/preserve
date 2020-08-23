@@ -7,19 +7,19 @@
             v-if="loaded"
             class="library-tree"
             :items="treeItems"
-            @activate-item="$emit('queue-item', $event.item)"
+            @activate-item="$emit('activate-item', $event)"
         ></psv-tree>
         <p v-if="!loaded">Loading...</p>
     </section>
 </template>
 
 <script lang="ts">
-import Library, { Album, Artist, LibraryItem } from './library';
+import { Album, Artist, Library, LibraryItem } from '.';
 import { debounced } from '../common/utils';
 import { PsvTree, TreeItem } from '../tree';
 import { defineComponent } from 'vue';
 
-import LibraryTreeBuilder from 'worker-loader!./libraryTreeBuilder.worker';
+import LibraryTreeBuilder from 'worker-loader!./tree-builder.worker';
 
 type LibraryTree = Array<Artist>;
 
@@ -40,7 +40,7 @@ function treeViewFromLibrary(
 
 export default defineComponent({
     components: { PsvTree },
-    events: ['queue-item'],
+    events: ['activate-item'],
     data() {
         return {
             searchText: '',
@@ -97,16 +97,13 @@ export default defineComponent({
         const libraryTree = [];
 
         for (const artist of artists) {
-            const artistNode = Object.assign(
-                {
-                    albums: new Set(),
-                    filteredAlbums: new Set(),
-                    expanded: false,
-                    selected: false,
-                    visible: true,
-                },
-                artist
-            );
+            const artistNode = Object.assign({}, artist, {
+                albums: [],
+                filteredAlbums: [],
+                expanded: false,
+                selected: false,
+                visible: true,
+            });
             if (artist.id) {
                 artistLookup.set(artist.id, artistNode);
             } else {
@@ -116,15 +113,12 @@ export default defineComponent({
         }
 
         for (const album of albums) {
-            const albumNode = Object.assign(
-                {
-                    tracks: new Set(),
-                    expanded: false,
-                    selected: false,
-                    visible: true,
-                },
-                album
-            );
+            const albumNode = Object.assign({}, album, {
+                tracks: [],
+                expanded: false,
+                selected: false,
+                visible: true,
+            });
 
             if (album.id) {
                 albumLookup.set(album.id, albumNode);
@@ -144,13 +138,14 @@ export default defineComponent({
                         albumArtist.name
                     );
                 } else {
-                    aa.albums.add(albumNode);
+                    aa.albums.push(albumNode);
                 }
             }
         }
 
         for (const track of tracks) {
             const t = Object.assign(
+                {},
                 {
                     visible: true,
                     selected: false,
@@ -168,7 +163,7 @@ export default defineComponent({
                     t
                 );
             } else {
-                album.tracks.add(t);
+                album.tracks.push(t);
             }
         }
 
@@ -206,6 +201,9 @@ export default defineComponent({
 }
 
 #music-library > .psv-tree {
+    text-overflow: ellipsis;
+    overflow-wrap: anywhere;
+    overflow-x: hidden;
     overflow-y: auto;
 }
 </style>

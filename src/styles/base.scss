@@ -9,9 +9,17 @@
 html {
     background-color: $colors-background;
     color: $colors-text;
+    font-family: Calibri, Helvetica, Arial, sans-serif;
 }
 
 body {
     height: 100vh;
     width: 100vw;
+}
+
+
+@media not speech {
+    .sr-only {
+        display: none;
+    }
 }

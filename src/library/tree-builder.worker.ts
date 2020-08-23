@@ -1,32 +1,12 @@
 import { TreeItem } from "../tree/tree-item";
-import { Track, Album, LibraryItem, Artist } from "./library";
+import { Track, Album, LibraryItem, Artist, sortAlbums, sortTracks } from ".";
 
-function sortTracks(a: TreeItem<Track>, b: TreeItem<Track>): number {
-    const aDisc = a.data.discNumber || -1;
-    const bDisc = b.data.discNumber || -1;
-    const aTrack = a.data.trackNumber || -1;
-    const bTrack = b.data.trackNumber || -1;
-
-    if (aDisc - bDisc != 0) {
-        return aDisc - bDisc;
-    }
-
-    if (aTrack - bTrack != 0) {
-        return aTrack - bTrack;
-    }
-
-    return a.name === b.name ? 0 : a.name > b.name ? 1 : -1;
+function sortTrackNodes(a: TreeItem<Track>, b: TreeItem<Track>): number {
+    return sortTracks(a.data, b.data);
 }
 
-function sortAlbums(a: TreeItem<Album>, b: TreeItem<Album>): number {
-    const aYear = a.data.year;
-    const bYear = b.data.year;
-
-    if (aYear - bYear != 0) {
-        return aYear - bYear;
-    } else {
-        return a.name === b.name ? 0 : a.name > b.name ? 1 : -1;
-    }
+function sortAlbumNodes(a: TreeItem<Album>, b: TreeItem<Album>): number {
+    return sortAlbums(a.data, b.data);
 }
 
 function artistTreeNode(
@@ -45,7 +25,7 @@ function artistTreeNode(
         }
     }
 
-    (children as Array<TreeItem<Album>>).sort(sortAlbums);
+    (children as Array<TreeItem<Album>>).sort(sortAlbumNodes);
 
     return {
         id: artist.id,
@@ -83,7 +63,7 @@ function albumTreeNode(
         }
     }
 
-    (children as Array<TreeItem<Track>>).sort(sortTracks);
+    (children as Array<TreeItem<Track>>).sort(sortTrackNodes);
 
     return {
         id: album.id,
