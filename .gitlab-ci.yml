@@ -1,0 +1,11 @@
+image: node:12
+
+stages:
+    - build
+
+build:
+    stage: build
+    artifacts:
+        - dist/*.tar.gz
+    script:
+        - npm install && npm run package:prod

@@ -1,6 +1,6 @@
 {
     "name": "preserve",
-    "version": "1.0.0",
+    "version": "0.1.0",
     "description": "Dense Media Player for Jellyfin",
     "main": "index.js",
     "dependencies": {
@@ -39,8 +39,11 @@
         "worker-loader": "^3.0.1"
     },
     "scripts": {
+        "clean": "rm -rf dist/",
         "test": "echo \"Error: no test specified\" && exit 1",
         "build": "webpack",
+        "build:prod": "npm run clean && NODE_ENV=production npm run build",
+        "package:prod": "npm run build:prod && tar -czvf dist/preverse-$npm_package_version.tar.gz --transform=s/dist/preserve-$npm_package_version/g dist/*",
         "lint:eslint": "eslint . --ext .js,.ts,.vue",
         "lint:prettier": "prettier --check .",
         "lint": "npm run lint:eslint && npm run lint:prettier",
