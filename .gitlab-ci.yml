@@ -1,11 +1,22 @@
 image: node:12
 
 stages:
-    - build
+    - check
+    - package
 
-build:
-    stage: build
-    artifacts:
-        - dist/*.tar.gz
+
+check:
+    stage: check
     script:
-        - npm install && npm run package:prod
+        - npm ci && npm run lint
+
+package:
+    stage: package
+    rules:
+        -
+            when: manual
+    artifacts:
+        paths:
+            - dist/*.tar.gz
+    script:
+        - npm ci && npm run package:prod
