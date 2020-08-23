@@ -28,8 +28,10 @@ export function debounced<F extends VoidFunction>(
     };
 }
 
-
-export function sorted<T>(a: Array<T>, sortFunction?: (a: T, b: T) => number): Array<T> {
+export function sorted<T>(
+    a: Array<T>,
+    sortFunction?: (a: T, b: T) => number
+): Array<T> {
     const output = [...a];
     output.sort(sortFunction);
     return output;

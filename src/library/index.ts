@@ -57,7 +57,6 @@ declare global {
     }
 }
 
-
 export function sortTracks(a: Track, b: Track): number {
     const aDisc = a.discNumber || -1;
     const bDisc = b.discNumber || -1;
@@ -88,7 +87,7 @@ export function sortAlbums(a: Album, b: Album): number {
 
 export function artistNames(t: Track): string {
     if (t.artists && t.artists.size > 0) {
-        return [...t.artists].map(a => a.name).join('; ');
+        return [...t.artists].map((a) => a.name).join('; ');
     }
     return 'Unknown Artist';
 }
@@ -247,14 +246,14 @@ export class Library {
             DeviceId: this.apiClient.deviceId(),
             api_key: this.apiClient.accessToken(),
             PlaySessionId: new Date().getTime().toString(),
-            MaxStreamingBitrate: "140000000",
-            Container: "opus,mp3|mp3,aac,m4a,m4b|aac,flac,webma,webm,wav,ogg",
-            TranscodingContainer: "ts",
-            TranscodingProtocol: "hls",
-            AudioCodec: "aac",
-            StartTimeTicks: "0",
-            EnableRedirection: "true",
-            EnableRemoteMedia: "false",
+            MaxStreamingBitrate: '140000000',
+            Container: 'opus,mp3|mp3,aac,m4a,m4b|aac,flac,webma,webm,wav,ogg',
+            TranscodingContainer: 'ts',
+            TranscodingProtocol: 'hls',
+            AudioCodec: 'aac',
+            StartTimeTicks: '0',
+            EnableRedirection: 'true',
+            EnableRemoteMedia: 'false',
         });
     }
 
@@ -306,7 +305,9 @@ export class Library {
         return this.tracks;
     }
 
-    static createInstance(connectionManager: Jellyfin.ConnectionManager): Library {
+    static createInstance(
+        connectionManager: Jellyfin.ConnectionManager
+    ): Library {
         const library = new Library(connectionManager);
         Library.instance = library;
         return library;

@@ -13,11 +13,11 @@ module.exports = {
     },
     entry: {
         main: './src/index.ts',
-        "tree-builder": './src/library/tree-builder.worker.ts',
+        'tree-builder': './src/library/tree-builder.worker.ts',
     },
     output: {
         filename: devMode ? '[name].js' : '[name].[hash].js',
-        path: __dirname + '/dist'
+        path: __dirname + '/dist',
     },
     module: {
         rules: [
@@ -35,11 +35,11 @@ module.exports = {
                     devMode
                         ? 'style-loader'
                         : {
-                            loader: MiniCssExtractPlugin.loader,
-                            options: {
-                                hmr: devMode,
-                            },
-                        },
+                              loader: MiniCssExtractPlugin.loader,
+                              options: {
+                                  hmr: devMode,
+                              },
+                          },
                     'css-loader',
                     'sass-loader',
                 ],
@@ -50,11 +50,11 @@ module.exports = {
                     devMode
                         ? 'style-loader'
                         : {
-                            loader: MiniCssExtractPlugin.loader,
-                            options: {
-                                hmr: devMode,
-                            },
-                        },
+                              loader: MiniCssExtractPlugin.loader,
+                              options: {
+                                  hmr: devMode,
+                              },
+                          },
                     'css-loader',
                 ],
             },
@@ -65,12 +65,12 @@ module.exports = {
             },
             {
                 test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-                loader: 'url-loader?limit=10000&mimetype=application/font-woff'
+                loader: 'url-loader?limit=10000&mimetype=application/font-woff',
             },
             {
                 test: /\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-                loader: 'file-loader'
-            }
+                loader: 'file-loader',
+            },
         ],
     },
     plugins: [

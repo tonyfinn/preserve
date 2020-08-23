@@ -1,5 +1,5 @@
-import { TreeItem } from "../tree/tree-item";
-import { Track, Album, LibraryItem, Artist, sortAlbums, sortTracks } from ".";
+import { TreeItem } from '../tree/tree-item';
+import { Track, Album, LibraryItem, Artist, sortAlbums, sortTracks } from '.';
 
 function sortTrackNodes(a: TreeItem<Track>, b: TreeItem<Track>): number {
     return sortTracks(a.data, b.data);
@@ -107,7 +107,7 @@ function treeViewFromLibrary(
     return tree;
 }
 
-const ctx: Worker = self as unknown as Worker;
+const ctx: Worker = (self as unknown) as Worker;
 
 ctx.addEventListener('message', function (evt: MessageEvent) {
     if (!evt.data.artists) {
@@ -118,4 +118,4 @@ ctx.addEventListener('message', function (evt: MessageEvent) {
     const searchRegex = evt.data.searchRegex as RegExp | null;
     const tree = treeViewFromLibrary(artists, searchRegex);
     ctx.postMessage(tree);
-})
+});

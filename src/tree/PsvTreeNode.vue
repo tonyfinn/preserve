@@ -17,7 +17,7 @@
                 @click.exact="selectItem(item)"
                 @click.ctrl.exact="appendSelection(item)"
                 @click.shift.exact="extendSelection(item)"
-                @dblclick="$emit('activate-item', {item})"
+                @dblclick="$emit('activate-item', { item })"
             >
                 <h2>
                     <span class="expander" @click.stop="toggleExpand(item)">
@@ -32,8 +32,10 @@
                 @click.exact="selectItem(item)"
                 @click.ctrl.exact="appendSelection(item)"
                 @click.shift.exact="extendSelection(item)"
-                @dblclick="$emit('activate-item', {item})"
-            >{{ item.name }}</p>
+                @dblclick="$emit('activate-item', { item })"
+            >
+                {{ item.name }}
+            </p>
             <psv-tree-node
                 @toggle-select-item="$emit('toggle-select-item', $event)"
                 @toggle-expand-item="$emit('toggle-expand-item', $event)"

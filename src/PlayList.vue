@@ -19,7 +19,9 @@
                     @mousedown.ctrl.prevent
                     @mousedown.shift.prevent
                     @click.ctrl.exact.prevent.stop="appendSelectItem(track)"
-                    @click.shift.exact.prevent.stop="extendSelectItem(track, index)"
+                    @click.shift.exact.prevent.stop="
+                        extendSelectItem(track, index)
+                    "
                     @dblclick.prevent.stop="playTrack(index)"
                 >
                     <td>{{ track.data.name }}</td>

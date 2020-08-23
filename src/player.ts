@@ -1,8 +1,8 @@
-import { Library, Track, artistNames } from "./library";
-import EventEmitter from "./common/events";
-import PlayQueue from "./play-queue";
+import { Library, Track, artistNames } from './library';
+import EventEmitter from './common/events';
+import PlayQueue from './play-queue';
 
-import Hls from "hls.js";
+import Hls from 'hls.js';
 
 export enum PlaybackEventType {
     Play,
@@ -17,47 +17,47 @@ interface PlayBackEventBase {
 }
 
 interface PlayEvent {
-    type: PlaybackEventType.Play,
-    track: Track,
+    type: PlaybackEventType.Play;
+    track: Track;
 }
 
 interface PauseEvent {
-    type: PlaybackEventType.Pause,
+    type: PlaybackEventType.Pause;
 }
 
 interface ResumeEvent {
-    type: PlaybackEventType.Resume,
+    type: PlaybackEventType.Resume;
 }
 
 interface TimeEvent {
-    type: PlaybackEventType.Time,
-    time: number,
+    type: PlaybackEventType.Time;
+    time: number;
 }
 
 interface EndEvent {
-    type: PlaybackEventType.End
+    type: PlaybackEventType.End;
 }
 
 declare global {
     class MediaSession {
         metadata: MediaMetadata;
-        playbackState: "none" | "paused" | "playing";
+        playbackState: 'none' | 'paused' | 'playing';
         setActionHandler(evt: string, handler: () => void): void;
     }
     interface Navigator {
         mediaSession?: MediaSession;
     }
     class MediaMetadata {
-        constructor(opts: {
-            title?: string,
-            artist?: string,
-            album?: string
-        });
+        constructor(opts: { title?: string; artist?: string; album?: string });
     }
 }
 
-
-export type PlaybackEvent = PlayEvent | PauseEvent | ResumeEvent | EndEvent | TimeEvent;
+export type PlaybackEvent =
+    | PlayEvent
+    | PauseEvent
+    | ResumeEvent
+    | EndEvent
+    | TimeEvent;
 
 export class AudioPlayer {
     element: HTMLAudioElement;
@@ -90,17 +90,17 @@ export class AudioPlayer {
             this.playbackEvent.trigger({
                 type: PlaybackEventType.Time,
                 time: this.element.currentTime,
-            })
+            });
         });
         this.element.addEventListener('play', () => {
             this.playbackEvent.trigger({
                 type: PlaybackEventType.Resume,
-            })
+            });
         });
         this.element.addEventListener('pause', () => {
             this.playbackEvent.trigger({
                 type: PlaybackEventType.Pause,
-            })
+            });
         });
         this.element.addEventListener('error', () => {
             console.error('Playback error: ', this.element.error);
@@ -123,11 +123,11 @@ export class AudioPlayer {
 
         window.addEventListener('keydown', (evt) => {
             console.log(evt);
-            if (evt.key === "MediaPause") {
+            if (evt.key === 'MediaPause') {
                 this._pause();
-            } else if (evt.key === "MediaPlay") {
+            } else if (evt.key === 'MediaPlay') {
                 this._play();
-            } else if (evt.key === "MediaPlayPause") {
+            } else if (evt.key === 'MediaPlayPause') {
                 this.togglePlay();
             } else {
                 return;
@@ -170,9 +170,9 @@ export class AudioPlayer {
             navigator.mediaSession.metadata = new MediaMetadata({
                 title: track.name,
                 album: track.album.name,
-                artist: artistNames(track)
+                artist: artistNames(track),
             });
-            navigator.mediaSession.playbackState = "playing";
+            navigator.mediaSession.playbackState = 'playing';
         }
         this.playbackEvent.trigger({
             type: PlaybackEventType.Play,
@@ -189,7 +189,7 @@ export class AudioPlayer {
             manifestLoadingTimeOut: 20000,
             xhrSetup: function (xhr) {
                 xhr.withCredentials = true;
-            }
+            },
         });
         this.hls.loadSource(playbackUrl);
         this.hls.attachMedia(this.element);
@@ -219,21 +219,21 @@ export class AudioPlayer {
 
     previousTrack(): void {
         const prevTrack = this.playQueue?.previousTrack({
-            repeat: this.repeat
+            repeat: this.repeat,
         });
         if (prevTrack) {
             this.playTrack(prevTrack);
         } else {
             this.playing = false;
             this.playbackEvent.trigger({
-                type: PlaybackEventType.End
+                type: PlaybackEventType.End,
             });
         }
     }
 
     nextTrack(): void {
         const nextTrack = this.playQueue?.nextTrack({
-            repeat: this.repeat
+            repeat: this.repeat,
         });
         if (nextTrack) {
             this.playTrack(nextTrack);
@@ -241,7 +241,7 @@ export class AudioPlayer {
             this.element.pause();
             this.playing = false;
             this.playbackEvent.trigger({
-                type: PlaybackEventType.End
+                type: PlaybackEventType.End,
             });
         }
     }
@@ -255,7 +255,7 @@ export class AudioPlayer {
             this.element.play();
             this.playing = true;
             if (navigator.mediaSession) {
-                navigator.mediaSession.playbackState = "playing";
+                navigator.mediaSession.playbackState = 'playing';
             }
             this.playbackEvent.trigger({
                 type: PlaybackEventType.Resume,
@@ -267,7 +267,7 @@ export class AudioPlayer {
         this.element.pause();
         this.playing = false;
         if (navigator.mediaSession) {
-            navigator.mediaSession.playbackState = "paused";
+            navigator.mediaSession.playbackState = 'paused';
         }
         this.playbackEvent.trigger({
             type: PlaybackEventType.Pause,
@@ -287,7 +287,10 @@ export class AudioPlayer {
         // Fisher-Yates shuffle
         for (let i = shuffleOrder.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
-            [shuffleOrder[i], shuffleOrder[j]] = [shuffleOrder[j], shuffleOrder[i]];
+            [shuffleOrder[i], shuffleOrder[j]] = [
+                shuffleOrder[j],
+                shuffleOrder[i],
+            ];
         }
         this.shuffleOrder = shuffleOrder;
     }

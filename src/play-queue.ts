@@ -1,5 +1,5 @@
-import { Track } from "./library";
-import EventEmitter from "./common/events";
+import { Track } from './library';
+import EventEmitter from './common/events';
 
 export enum QueueEventType {
     AddTrack,
@@ -31,9 +31,7 @@ export default class PlayQueue {
         this.onChange = new EventEmitter();
     }
 
-    previousTrack(options: {
-        repeat: boolean
-    }): Track | null {
+    previousTrack(options: { repeat: boolean }): Track | null {
         const prevIndex = Math.max(0, this.index - 1);
         if (this.tracks.length === 0) {
             return null;
@@ -49,9 +47,7 @@ export default class PlayQueue {
         }
     }
 
-    nextTrack(options: {
-        repeat: boolean
-    }): Track | null {
+    nextTrack(options: { repeat: boolean }): Track | null {
         const nextIndex = this.index + 1;
         if (this.tracks.length === 0) {
             return null;
@@ -85,7 +81,7 @@ export default class PlayQueue {
         this.tracks = this.tracks.concat(tracks);
         this.onChange.trigger({
             type: QueueEventType.AddTrack,
-            tracks: tracks
+            tracks: tracks,
         });
     }
 
@@ -93,7 +89,7 @@ export default class PlayQueue {
         this.tracks.splice(position, 0, ...newTracks);
         this.onChange.trigger({
             type: QueueEventType.AddTrack,
-            tracks: newTracks
+            tracks: newTracks,
         });
     }
 

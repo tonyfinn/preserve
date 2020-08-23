@@ -4,8 +4,15 @@
             <h1>Preserve</h1>
             <button v-if="loggedIn" @click="logout()">Logout</button>
         </header>
-        <playback-screen v-if="loaded && loggedIn" :library="library" class="screen-root"></playback-screen>
-        <login-screen v-if="loaded && !loggedIn" class="screen-root"></login-screen>
+        <playback-screen
+            v-if="loaded && loggedIn"
+            :library="library"
+            class="screen-root"
+        ></playback-screen>
+        <login-screen
+            v-if="loaded && !loggedIn"
+            class="screen-root"
+        ></login-screen>
         <div id="loading-spinner" v-if="!loaded">
             <p>Loading...</p>
         </div>

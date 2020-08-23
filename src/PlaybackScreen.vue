@@ -1,6 +1,9 @@
 <template>
     <div id="playback-screen">
-        <music-library :library="library" @activate-item="activateItem"></music-library>
+        <music-library
+            :library="library"
+            @activate-item="activateItem"
+        ></music-library>
         <play-list ref="playlist" :player="player"></play-list>
         <playback-footer :player="player"></playback-footer>
     </div>

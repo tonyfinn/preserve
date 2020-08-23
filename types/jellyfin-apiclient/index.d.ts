@@ -198,6 +198,10 @@ declare module 'jellyfin-apiclient' {
             filter: unknown
         ): Promise<QueryResult<T>>;
         getArtists(userId: string): Promise<QueryResult<Artist>>;
-        getUrl(name: string, params?: { [name: string]: string }, serverAddress?: string): string;
+        getUrl(
+            name: string,
+            params?: { [name: string]: string },
+            serverAddress?: string
+        ): string;
     }
 }

@@ -2,13 +2,13 @@
     <footer id="playback-footer">
         <section class="now-playing" v-if="activeTrack">
             <div class="track-information">
-                <span class="track-title">{{trackName}}</span>
-                <span class="artist-title">{{artistName}}</span>
-                <span class="album-title">{{albumName}}</span>
+                <span class="track-title">{{ trackName }}</span>
+                <span class="artist-title">{{ artistName }}</span>
+                <span class="album-title">{{ albumName }}</span>
             </div>
             <div class="playback-information">
-                <span class="current-time">{{formatTime(currentTime)}}</span>
-                <span class="duration">{{formatTime(duration)}}</span>
+                <span class="current-time">{{ formatTime(currentTime) }}</span>
+                <span class="duration">{{ formatTime(duration) }}</span>
             </div>
         </section>
         <section class="playback-controls button-group">
@@ -26,10 +26,18 @@
             </button>
         </section>
         <section class="extra-controls button-group">
-            <button title="Shuffle" :class="{active: shuffle}" @click="toggleShuffle">
+            <button
+                title="Shuffle"
+                :class="{ active: shuffle }"
+                @click="toggleShuffle"
+            >
                 <i class="fi-shuffle" title="Shuffle"></i>
             </button>
-            <button title="Repeat" :class="{active: repeat}" @click="toggleRepeat">
+            <button
+                title="Repeat"
+                :class="{ active: repeat }"
+                @click="toggleRepeat"
+            >
                 <i class="fi-loop" title="Repeat"></i>
             </button>
         </section>

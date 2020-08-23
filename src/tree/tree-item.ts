@@ -21,7 +21,7 @@ export interface TreeItemNode<T> extends TreeItemCommon<T> {
 export enum SelectionType {
     Replace,
     Append,
-    Extend
+    Extend,
 }
 
 export interface TreeItemEvent<T> {

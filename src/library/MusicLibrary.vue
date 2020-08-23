@@ -1,7 +1,11 @@
 <template>
     <section id="music-library">
         <div class="search-controls">
-            <input type="text" v-model="searchText" placeholder="Search your library" />
+            <input
+                type="text"
+                v-model="searchText"
+                placeholder="Search your library"
+            />
         </div>
         <psv-tree
             v-if="loaded"
