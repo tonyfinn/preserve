@@ -144,7 +144,9 @@ export default defineComponent({
         },
         handleKeyDown(e: KeyboardEvent) {
             if (e.key === 'Delete') {
-                console.log('Delete pressed');
+                const itemsToRemove = this.selectedItems.map((x) => x.data);
+                this.activeQueue.remove(itemsToRemove);
+                this.selectedItems = [];
             }
         },
     },

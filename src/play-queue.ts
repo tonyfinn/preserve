@@ -2,21 +2,21 @@ import { Track } from './library';
 import EventEmitter from './common/events';
 
 export enum QueueEventType {
-    AddTrack,
-    RemoveTrack,
+    AddItems,
+    RemoveItems,
 }
 
-interface AddTrackEvent {
-    type: QueueEventType.AddTrack;
-    tracks: Array<Track>;
+interface AddItemsEvent {
+    type: QueueEventType.AddItems;
+    items: Array<PlayQueueItem>;
 }
 
-interface RemoveTrackEvent {
-    type: QueueEventType.RemoveTrack;
-    tracks: Array<Track>;
+interface RemoveItemsEvent {
+    type: QueueEventType.RemoveItems;
+    items: Array<PlayQueueItem>;
 }
 
-export type QueueEvent = AddTrackEvent | RemoveTrackEvent;
+export type QueueEvent = AddItemsEvent | RemoveItemsEvent;
 
 export interface PlayQueueItem {
     track: Track;
@@ -99,8 +99,8 @@ export default class PlayQueue {
         const trackItems = this._makeTrackItems(tracks);
         this.queueItems = this.queueItems.concat(trackItems);
         this.onChange.trigger({
-            type: QueueEventType.AddTrack,
-            tracks: tracks,
+            type: QueueEventType.AddItems,
+            items: trackItems,
         });
     }
 
@@ -108,8 +108,27 @@ export default class PlayQueue {
         const trackItems = this._makeTrackItems(newTracks);
         this.queueItems.splice(position, 0, ...trackItems);
         this.onChange.trigger({
-            type: QueueEventType.AddTrack,
-            tracks: newTracks,
+            type: QueueEventType.AddItems,
+            items: trackItems,
+        });
+    }
+
+    remove(items: Array<PlayQueueItem>): void {
+        const removeIds = items.map((item) => item.queueItemId);
+        const removedItems = [];
+        const keptItems = [];
+
+        for (const item of this.queueItems) {
+            if (removeIds.includes(item.queueItemId)) {
+                removedItems.push(item);
+            } else {
+                keptItems.push(item);
+            }
+        }
+        this.queueItems = keptItems;
+        this.onChange.trigger({
+            type: QueueEventType.RemoveItems,
+            items: removedItems,
         });
     }
 

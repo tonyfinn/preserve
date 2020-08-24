@@ -1,4 +1,8 @@
-# 0.1.1
+# 0.1.1 (unreleased)
+
+## New features
+
+- Remove tracks from play queue (select and press delete)
 
 ## Bug fixes
 
