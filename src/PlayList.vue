@@ -10,23 +10,23 @@
             </thead>
             <tbody>
                 <tr
-                    v-for="(track, index) in tracks"
-                    :key="track.id"
+                    v-for="(queueItem, index) in queueItems"
+                    :key="queueItem.id"
                     :class="{
-                        'playlist__track--selected': track.selected,
+                        'playlist__track--selected': queueItem.selected,
                     }"
-                    @click.exact="selectItem(track)"
+                    @click.exact="selectItem(queueItem)"
                     @mousedown.ctrl.prevent
                     @mousedown.shift.prevent
-                    @click.ctrl.exact.prevent.stop="appendSelectItem(track)"
+                    @click.ctrl.exact.prevent.stop="appendSelectItem(queueItem)"
                     @click.shift.exact.prevent.stop="
-                        extendSelectItem(track, index)
+                        extendSelectItem(queueItem, index)
                     "
                     @dblclick.prevent.stop="playTrack(index)"
                 >
-                    <td>{{ track.data.name }}</td>
-                    <td>{{ formatAlbumArtists(track.data) }}</td>
-                    <td>{{ track.data.album.name }}</td>
+                    <td>{{ queueItem.data.track.name }}</td>
+                    <td>{{ formatAlbumArtists(queueItem.data.track) }}</td>
+                    <td>{{ queueItem.data.track.album.name }}</td>
                 </tr>
             </tbody>
         </table>
@@ -37,7 +37,7 @@
 import { defineComponent } from 'vue';
 import { Track } from './library';
 import { AudioPlayer } from './player';
-import PlayQueue from './play-queue';
+import PlayQueue, { PlayQueueItem } from './play-queue';
 
 interface RowItem<T> {
     id: string;
@@ -53,16 +53,24 @@ export default defineComponent({
         },
     },
     data() {
-        const defaultQueue = new PlayQueue('Default');
+        const defaultQueue = this.player.getQueue();
         return {
-            tracks: [] as Array<RowItem<Track>>,
+            queueItems: [] as Array<RowItem<PlayQueueItem>>,
             playQueues: [defaultQueue],
             activeQueue: defaultQueue,
-            selectedItems: [] as Array<RowItem<Track>>,
+            selectedItems: [] as Array<RowItem<PlayQueueItem>>,
         };
     },
     created() {
         this.player.setQueue(this.activeQueue);
+        window.addEventListener('keydown', this.handleKeyDown);
+        this.queueItems = this.rowItemsFromQueue(this.activeQueue);
+        this.activeQueue.onChange.on(() => {
+            this.queueItems = this.rowItemsFromQueue(this.activeQueue);
+        });
+    },
+    destroyed() {
+        window.removeEventListener('keydown', this.handleKeyDown);
     },
     emits: ['play-track'],
     methods: {
@@ -76,20 +84,27 @@ export default defineComponent({
             }
             return albumArtists.join('; ');
         },
-        addTrack(item: Track) {
-            this.activeQueue.extend([item]);
-            this.tracks.push({
-                id: item.id,
-                selected: false,
-                data: item,
-            });
+        addTracks(items: Array<Track>) {
+            this.activeQueue.extend(items);
         },
-        selectItem(item: RowItem<Track>) {
+        rowItemsFromQueue(queue: PlayQueue): Array<RowItem<PlayQueueItem>> {
+            const rowItems = [];
+            for (const track of queue) {
+                const rowItem = {
+                    id: track.queueItemId,
+                    selected: false,
+                    data: track,
+                };
+                rowItems.push(rowItem);
+            }
+            return rowItems;
+        },
+        selectItem(item: RowItem<PlayQueueItem>) {
             this.clearSelection();
             item.selected = true;
             this.selectedItems = [item];
         },
-        appendSelectItem(item: RowItem<Track>) {
+        appendSelectItem(item: RowItem<PlayQueueItem>) {
             item.selected = true;
             this.selectedItems.push(item);
         },
@@ -100,15 +115,15 @@ export default defineComponent({
             this.selectedItems = [];
         },
         extendSelectItem(
-            selectTargetItem: RowItem<Track>,
+            selectTargetItem: RowItem<PlayQueueItem>,
             targetItemIndex: number
         ) {
             if (this.selectedItems.length === 0) {
                 this.selectItem(selectTargetItem);
             } else {
                 let firstSelectedIndex = -1;
-                for (let i = 0; i < this.tracks.length; i++) {
-                    let currentItem = this.tracks[i];
+                for (let i = 0; i < this.queueItems.length; i++) {
+                    let currentItem = this.queueItems[i];
                     if (firstSelectedIndex === -1 && currentItem.selected) {
                         firstSelectedIndex = i;
                     }
@@ -116,7 +131,7 @@ export default defineComponent({
                 this.clearSelection();
                 let startIdx = Math.min(firstSelectedIndex, targetItemIndex);
                 let endIdx = Math.max(firstSelectedIndex, targetItemIndex) + 1;
-                let newSelection = this.tracks.slice(startIdx, endIdx);
+                let newSelection = this.queueItems.slice(startIdx, endIdx);
 
                 for (const item of newSelection) {
                     item.selected = true;
@@ -126,6 +141,11 @@ export default defineComponent({
         },
         playTrack(index: number) {
             this.player.play(index);
+        },
+        handleKeyDown(e: KeyboardEvent) {
+            if (e.key === 'Delete') {
+                console.log('Delete pressed');
+            }
         },
     },
 });

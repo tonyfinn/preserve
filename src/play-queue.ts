@@ -18,29 +18,36 @@ interface RemoveTrackEvent {
 
 export type QueueEvent = AddTrackEvent | RemoveTrackEvent;
 
+export interface PlayQueueItem {
+    track: Track;
+    queueItemId: string;
+}
+
 export default class PlayQueue {
-    tracks: Array<Track>;
+    queueItems: Array<PlayQueueItem>;
     index: number;
     title: string;
+    nextItemId: number;
     onChange: EventEmitter<QueueEvent>;
 
     constructor(title: string) {
-        this.tracks = [];
+        this.queueItems = [];
         this.index = -1;
+        this.nextItemId = 0;
         this.title = title;
         this.onChange = new EventEmitter();
     }
 
     previousTrack(options: { repeat: boolean }): Track | null {
         const prevIndex = Math.max(0, this.index - 1);
-        if (this.tracks.length === 0) {
+        if (this.queueItems.length === 0) {
             return null;
-        } else if (prevIndex < this.tracks.length) {
+        } else if (prevIndex < this.queueItems.length) {
             this.index = prevIndex;
-            return this.tracks[prevIndex];
+            return this.queueItems[prevIndex].track;
         } else if (options.repeat) {
-            this.index = this.tracks.length - 1;
-            return this.tracks[this.index];
+            this.index = this.queueItems.length - 1;
+            return this.queueItems[this.index].track;
         } else {
             this.index = 0;
             return null;
@@ -49,14 +56,14 @@ export default class PlayQueue {
 
     nextTrack(options: { repeat: boolean }): Track | null {
         const nextIndex = this.index + 1;
-        if (this.tracks.length === 0) {
+        if (this.queueItems.length === 0) {
             return null;
-        } else if (nextIndex < this.tracks.length) {
+        } else if (nextIndex < this.queueItems.length) {
             this.index = nextIndex;
-            return this.tracks[nextIndex];
+            return this.queueItems[nextIndex].track;
         } else if (options.repeat) {
             this.index = 0;
-            return this.tracks[0];
+            return this.queueItems[0].track;
         } else {
             this.index = -1;
             return null;
@@ -66,19 +73,31 @@ export default class PlayQueue {
     activeTrack(): Track | null {
         if (this.index === -1) {
             return null;
-        } else if (this.tracks[this.index]) {
-            return this.tracks[this.index];
+        } else if (this.queueItems[this.index]) {
+            return this.queueItems[this.index].track;
         } else {
             return null;
         }
     }
 
-    get(index: number): Track | null {
-        return this.tracks[index] || null;
+    getTrack(index: number): Track | null {
+        return this.queueItems[index].track || null;
+    }
+
+    _makeTrackItems(tracks: Array<Track>): Array<PlayQueueItem> {
+        const trackItems = [];
+        for (const track of tracks) {
+            trackItems.push({
+                queueItemId: '' + this.nextItemId++,
+                track,
+            });
+        }
+        return trackItems;
     }
 
     extend(tracks: Array<Track>): void {
-        this.tracks = this.tracks.concat(tracks);
+        const trackItems = this._makeTrackItems(tracks);
+        this.queueItems = this.queueItems.concat(trackItems);
         this.onChange.trigger({
             type: QueueEventType.AddTrack,
             tracks: tracks,
@@ -86,22 +105,23 @@ export default class PlayQueue {
     }
 
     insert(position: number, newTracks: Array<Track>): void {
-        this.tracks.splice(position, 0, ...newTracks);
+        const trackItems = this._makeTrackItems(newTracks);
+        this.queueItems.splice(position, 0, ...trackItems);
         this.onChange.trigger({
             type: QueueEventType.AddTrack,
             tracks: newTracks,
         });
     }
 
-    [Symbol.iterator](): Iterator<Track> {
-        return this.tracks[Symbol.iterator]();
+    [Symbol.iterator](): Iterator<PlayQueueItem> {
+        return this.queueItems[Symbol.iterator]();
     }
 
-    entries(): Iterator<[number, Track]> {
-        return this.tracks.entries();
+    entries(): Iterator<[number, PlayQueueItem]> {
+        return this.queueItems.entries();
     }
 
     size(): number {
-        return this.tracks.length;
+        return this.queueItems.length;
     }
 }

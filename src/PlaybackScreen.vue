@@ -39,19 +39,22 @@ export default defineComponent({
         activateItem(item: LibraryItem) {
             console.log('Activating', item);
             const playlist = this.$refs.playlist as typeof PlayList;
+            const tracks = [];
             if (item.type === 'track') {
                 playlist.addTrack(item);
+                tracks.push(item);
             } else if (item.type === 'album') {
                 for (const track of sorted(item.tracks, sortTracks)) {
-                    playlist.addTrack(track);
+                    tracks.push(track);
                 }
             } else if (item.type === 'artist') {
                 for (const album of sorted(item.albums, sortAlbums)) {
                     for (const track of sorted(album.tracks, sortTracks)) {
-                        playlist.addTrack(track);
+                        tracks.push(track);
                     }
                 }
             }
+            playlist.addTracks(tracks);
         },
     },
 });

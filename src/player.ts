@@ -64,7 +64,7 @@ export class AudioPlayer {
     hls: Hls | null;
     useHls: boolean;
     library: Library;
-    playQueue: PlayQueue | null;
+    playQueue: PlayQueue;
     playing: boolean;
     repeat: boolean;
     shuffle: boolean;
@@ -75,7 +75,7 @@ export class AudioPlayer {
     constructor(library: Library) {
         this.element = document.createElement('audio');
         this.library = library;
-        this.playQueue = null;
+        this.playQueue = new PlayQueue('Default');
         this.hls = null;
         this.useHls = false;
         this.playing = false;
@@ -148,7 +148,11 @@ export class AudioPlayer {
     }
 
     activeTrack(): Track | null {
-        return this.playQueue?.activeTrack() || null;
+        return this.playQueue.activeTrack();
+    }
+
+    getQueue(): PlayQueue {
+        return this.playQueue;
     }
 
     setQueue(playQueue: PlayQueue): void {
@@ -156,8 +160,8 @@ export class AudioPlayer {
     }
 
     play(index: number): void {
-        const track = this.playQueue?.get(index);
-        if (track && this.playQueue) {
+        const track = this.playQueue.getTrack(index);
+        if (track) {
             this.playQueue.index = index;
             this.playTrack(track);
         }
@@ -218,7 +222,7 @@ export class AudioPlayer {
     }
 
     previousTrack(): void {
-        const prevTrack = this.playQueue?.previousTrack({
+        const prevTrack = this.playQueue.previousTrack({
             repeat: this.repeat,
         });
         if (prevTrack) {
@@ -232,7 +236,7 @@ export class AudioPlayer {
     }
 
     nextTrack(): void {
-        const nextTrack = this.playQueue?.nextTrack({
+        const nextTrack = this.playQueue.nextTrack({
             repeat: this.repeat,
         });
         if (nextTrack) {
@@ -283,7 +287,7 @@ export class AudioPlayer {
     }
 
     _shuffle(): void {
-        const shuffleOrder = Array(this.playQueue?.size() || 0);
+        const shuffleOrder = Array(this.playQueue.size());
         // Fisher-Yates shuffle
         for (let i = shuffleOrder.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
