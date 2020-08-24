@@ -12,6 +12,7 @@
         <login-screen
             v-if="loaded && !loggedIn"
             class="screen-root"
+            @login-complete="setupServer($event.loginResult)"
         ></login-screen>
         <div id="loading-spinner" v-if="!loaded">
             <p>Loading...</p>
@@ -28,7 +29,10 @@ import { Library } from './library';
 import { NotificationType, NotificationService } from './common/notifications';
 import NotificationToast from './common/NotificationToast.vue';
 import { defineComponent } from 'vue';
-import { LoggedInConnectionResult } from 'jellyfin-apiclient';
+import {
+    LoggedInConnectionResult,
+    SuccessfulConnectionResult,
+} from 'jellyfin-apiclient';
 
 export default defineComponent({
     components: {
@@ -56,20 +60,7 @@ export default defineComponent({
                     }
                     return Promise.reject('Not signed in previously');
                 })
-                .then((conResult) => {
-                    const server = conResult.Servers[0];
-                    return server;
-                })
-                .then((server) => {
-                    this.library = Library.createInstance(connectionManager);
-                    this.loggedIn = server.AccessToken !== null;
-                    this.loaded = true;
-                    NotificationService.notify(
-                        `Logged in to ${server.Name}`,
-                        NotificationType.Success,
-                        3
-                    );
-                })
+                .then(this.setupServer.bind(this))
                 .catch((err) => {
                     console.log(err);
                     this.loggedIn = false;
@@ -82,6 +73,17 @@ export default defineComponent({
             connectionManager.logout().then(() => {
                 this.loggedIn = false;
             });
+        },
+        setupServer(conResult: SuccessfulConnectionResult) {
+            const server = conResult.Servers[0];
+            this.library = Library.createInstance(connectionManager);
+            this.loggedIn = server.AccessToken !== null;
+            this.loaded = true;
+            NotificationService.notify(
+                `Logged in to ${server.Name}`,
+                NotificationType.Success,
+                3
+            );
         },
     },
 });

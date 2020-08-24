@@ -27,6 +27,7 @@ import {
     ServerConnectionResult,
     LoggedInConnectionResult,
     LoggedOutConnectionResult,
+    SuccessfulConnectionResult,
 } from 'jellyfin-apiclient';
 
 function isSignedInState(
@@ -35,7 +36,12 @@ function isSignedInState(
     return result.State == 'SignedIn' || result.State === 'ServerSignIn';
 }
 
+interface LoginEvent {
+    loginResult: SuccessfulConnectionResult;
+}
+
 export default defineComponent({
+    emits: ['login-complete'],
     data: function () {
         return {
             username: '',
@@ -71,7 +77,11 @@ export default defineComponent({
                             'Successfully logged in',
                             NotificationType.Success
                         );
+                        this.$emit('login-complete', {
+                            loginResult: result,
+                        });
                     } catch (e) {
+                        console.error(e);
                         NotificationService.notify(
                             'Failed to authenticate. Username or password incorrect',
                             NotificationType.Error

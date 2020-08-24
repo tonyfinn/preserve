@@ -1,3 +1,9 @@
+# 0.1.1
+
+## Bug fixes
+
+- Send to main screen on login
+
 # 0.1.0
 
 ## New features
