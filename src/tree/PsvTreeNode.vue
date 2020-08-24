@@ -40,16 +40,19 @@
                 @toggle-select-item="$emit('toggle-select-item', $event)"
                 @toggle-expand-item="$emit('toggle-expand-item', $event)"
                 @activate-item="$emit('activate-item', $event)"
-                v-if="item.expanded && !item.isLeaf"
+                v-if="item.expanded && childrenLoaded(item)"
                 :items="item.children"
+                :parents="itemParents(item)"
+                :populateChildren="populateChildren"
             ></psv-tree-node>
+            <p v-if="item.expanded && childrenLoading(item)">Loading...</p>
         </li>
     </ul>
 </template>
 
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
-import { TreeItem, SelectionType } from './tree-item';
+import { TreeItem, SelectionType, ChildrenLoadState } from './tree-item';
 
 export default defineComponent({
     name: 'psv-tree-node',
@@ -59,6 +62,18 @@ export default defineComponent({
             type: Array as PropType<Array<TreeItem<unknown>>>,
             required: true,
         },
+        parents: {
+            type: Array as PropType<Array<TreeItem<unknown>>>,
+            required: true,
+        },
+        populateChildren: {
+            type: Function as PropType<
+                (
+                    node: TreeItem<unknown>,
+                    parents: Array<TreeItem<unknown>>
+                ) => Promise<Array<TreeItem<unknown>>>
+            >,
+        },
     },
     computed: {
         filteredItems(): Array<TreeItem<unknown>> {
@@ -66,6 +81,21 @@ export default defineComponent({
         },
     },
     methods: {
+        childrenLoaded(item: TreeItem<unknown>) {
+            return (
+                !item.isLeaf &&
+                item.childrenLoadState === ChildrenLoadState.Loaded
+            );
+        },
+        childrenLoading(item: TreeItem<unknown>) {
+            return (
+                !item.isLeaf &&
+                item.childrenLoadState === ChildrenLoadState.Loading
+            );
+        },
+        itemParents(item: TreeItem<unknown>): Array<TreeItem<unknown>> {
+            return [...this.parents, item];
+        },
         selectItemInternal(item: TreeItem<unknown>, selectType: SelectionType) {
             if (item.selected) {
                 this.$emit('toggle-select-item', {
@@ -80,7 +110,7 @@ export default defineComponent({
                     selected: true,
                 });
                 if (!item.expanded) {
-                    this.$emit('toggle-expand-item', { item, expanded: true });
+                    this.toggleExpand(item);
                 }
             }
         },
@@ -98,6 +128,20 @@ export default defineComponent({
                 item,
                 expanded: !item.expanded,
             });
+            if (
+                !item.isLeaf &&
+                item.childrenLoadState === ChildrenLoadState.Unloaded &&
+                this.populateChildren
+            ) {
+                item.childrenLoadState = ChildrenLoadState.Loading;
+                this.populateChildren(item, this.itemParents(item)).then(
+                    (children) => {
+                        item.childrenLoadState = ChildrenLoadState.Loaded;
+                        item.children = children;
+                        this.$forceUpdate();
+                    }
+                );
+            }
         },
     },
 });

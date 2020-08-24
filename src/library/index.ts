@@ -12,8 +12,8 @@ interface Item {
 }
 
 interface ItemStub {
-    id?: string;
-    name?: string;
+    id: string;
+    name: string;
     type: ItemType;
 }
 
@@ -101,9 +101,12 @@ export class Library {
     albums: Array<Album>;
     tracks: Array<Track>;
     artists: Array<Artist>;
-    artistLookup: ItemLookup<Artist>;
-    albumLookup: ItemLookup<Album>;
-    trackLookup: ItemLookup<Track>;
+    artistByIdLookup: ItemLookup<Artist>;
+    albumByIdLookup: ItemLookup<Album>;
+    trackByIdLookup: ItemLookup<Track>;
+    albumByFeaturedArtistLookup: Map<string, Array<Album>>;
+    albumByAlbumArtistLookup: Map<string, Array<Album>>;
+    trackByAlbumLookup: Map<string, Array<Track>>;
     static instance: Library;
 
     constructor(connectionManager: Jellyfin.ConnectionManager) {
@@ -117,41 +120,40 @@ export class Library {
         this.artists = [];
         this.albums = [];
         this.tracks = [];
-        this.artistLookup = new Map();
-        this.albumLookup = new Map();
-        this.trackLookup = new Map();
+        this.artistByIdLookup = new Map();
+        this.albumByIdLookup = new Map();
+        this.trackByIdLookup = new Map();
+        this.albumByFeaturedArtistLookup = new Map();
+        this.albumByAlbumArtistLookup = new Map();
+        this.trackByAlbumLookup = new Map();
         const artistLoading = this.apiClient
             .getArtists(userId)
-            .then((artistsResult) => artistsResult.Items.map(this.mapArtist));
+            .then((artistsResult) =>
+                artistsResult.Items.map(this.loadArtist.bind(this))
+            );
         const albumLoading = this.apiClient
             .getItems<Jellyfin.Album>(userId, {
                 recursive: true,
                 IncludeItemTypes: 'MusicAlbum',
             })
-            .then((albumResult) => albumResult.Items.map(this.mapAlbum));
+            .then((albumResult) =>
+                albumResult.Items.map(this.loadAlbum.bind(this))
+            );
         const trackLoading = this.apiClient
             .getItems<Jellyfin.Track>(userId, {
                 recursive: true,
                 IncludeItemTypes: 'Audio',
             })
-            .then((trackResult) => trackResult.Items.map(this.mapTrack));
+            .then((trackResult) =>
+                trackResult.Items.map(this.loadTrack.bind(this))
+            );
 
         this.loadingPromise = Promise.all([
             artistLoading,
             albumLoading,
             trackLoading,
-        ]).then(([artists, albums, tracks]) => {
-            this.artists = artists;
-            this.albums = albums;
-            this.tracks = tracks;
-
-            this.buildSyntheticAlbums(tracks).forEach((album) =>
-                this.albums.push(album)
-            );
-            this.artistLookup = this.buildLookup(this.artists);
-            this.albumLookup = this.buildLookup(this.albums);
-            this.trackLookup = this.buildLookup(this.tracks);
-
+        ]).then(([_artists, _albums, tracks]) => {
+            this.buildSyntheticAlbums(tracks);
             this.loaded = true;
         });
 
@@ -159,26 +161,68 @@ export class Library {
         Library.instance = this;
     }
 
-    buildLookup<T extends Item>(items: Array<T>): ItemLookup<T> {
-        const lookup = new Map<string, T>();
-        for (const item of items) {
-            lookup.set(item.id, item);
+    getArtistAlbums(artistId: string, includeFeatured: boolean): Array<Album> {
+        const ownAlbums = this.albumByAlbumArtistLookup.get(artistId) || [];
+
+        ownAlbums.sort(sortAlbums);
+
+        if (!includeFeatured) {
+            return [...ownAlbums];
+        } else {
+            const featuredAlbums =
+                this.albumByFeaturedArtistLookup.get(artistId) || [];
+            featuredAlbums.sort(sortAlbums);
+            return [...ownAlbums, ...featuredAlbums];
         }
-        return lookup;
+    }
+
+    getAlbumTracks(albumId: string): Array<Track> {
+        const tracks = this.trackByAlbumLookup.get(albumId) || [];
+        tracks.sort(sortTracks);
+        return tracks;
     }
 
     buildSyntheticAlbums(tracks: Array<Track>): Array<Album> {
         const syntheticAlbums = new Map<string, Album>();
         for (const track of tracks) {
-            if (!track.album.id) {
-                const albumId = this.albumIdFromTrack(track);
+            if (track.album.id.startsWith('synth')) {
+                const albumId = track.album.id;
                 if (!syntheticAlbums.get(albumId)) {
                     const album = this.albumFromTrack(albumId, track);
+                    this.albumByIdLookup.set(albumId, album);
                     syntheticAlbums.set(album.id, album);
                 }
             }
         }
+        for (const album of syntheticAlbums.values()) {
+            this.albums.push(album);
+            this.createAlbumLookups(album);
+        }
         return Object.values(syntheticAlbums);
+    }
+
+    createAlbumLookups(album: Album): void {
+        for (const artist of album.artists) {
+            const lookup =
+                this.albumByFeaturedArtistLookup.get(
+                    artist.id || UNKNOWN_ARTIST_NAME
+                ) || null;
+            lookup?.push(album);
+        }
+        for (const artist of album.albumArtists) {
+            const lookup =
+                this.albumByAlbumArtistLookup.get(
+                    artist.id || UNKNOWN_ARTIST_NAME
+                ) || null;
+            lookup?.push(album);
+        }
+    }
+
+    loadArtist(jfArtist: Jellyfin.Artist): Artist {
+        const artist = this.mapArtist(jfArtist);
+        this.artistByIdLookup.set(artist.id, artist);
+        this.artists.push(artist);
+        return artist;
     }
 
     mapArtist(artist: Jellyfin.Artist): Artist {
@@ -189,6 +233,32 @@ export class Library {
             albums: [],
             type: 'artist',
         };
+    }
+
+    loadAlbum(jfAlbum: Jellyfin.Album): Album {
+        const albumArtistIds = [];
+        const album = this.mapAlbum(jfAlbum);
+        for (const albumArtist of album.albumArtists) {
+            albumArtistIds.push(albumArtist.id);
+            const lookup = this.albumByAlbumArtistLookup.get(albumArtist.id);
+            if (lookup) {
+                lookup.push(album);
+            } else {
+                this.albumByAlbumArtistLookup.set(albumArtist.id, [album]);
+            }
+        }
+        for (const artist of album.artists) {
+            if (!albumArtistIds.includes(artist.id)) {
+                const lookup = this.albumByFeaturedArtistLookup.get(artist.id);
+                if (lookup) {
+                    lookup.push(album);
+                } else {
+                    this.albumByAlbumArtistLookup.set(artist.id, [album]);
+                }
+            }
+        }
+        this.albums.push(album);
+        return album;
     }
 
     mapAlbum(album: Jellyfin.Album): Album {
@@ -218,10 +288,13 @@ export class Library {
         };
     }
 
-    albumIdFromTrack(track: Track): string {
+    albumIdFromTrack(track: Jellyfin.Track): string {
+        if (track.AlbumId) {
+            return track.AlbumId;
+        }
         const primaryArtistId =
-            track.albumArtists.entries().next().value || UNKNOWN_ARTIST_NAME;
-        const albumName = track.album.name || UNKNOWN_ALBUM_NAME;
+            track.AlbumArtists[0]?.Id || UNKNOWN_ARTIST_NAME;
+        const albumName = track.Album || UNKNOWN_ALBUM_NAME;
         return `synth-${primaryArtistId}-${albumName}`;
     }
 
@@ -257,6 +330,29 @@ export class Library {
         });
     }
 
+    loadTrack(jfTrack: Jellyfin.Track): Track {
+        const track = this.mapTrack(jfTrack);
+        this.tracks.push(track);
+        this.trackByIdLookup.set(track.id, track);
+        const trackLookup = this.trackByAlbumLookup.get(track.album.id);
+        if (trackLookup) {
+            trackLookup.push(track);
+        } else {
+            this.trackByAlbumLookup.set(track.album.id, [track]);
+        }
+        return track;
+    }
+
+    generateArtistId(artistStub: Jellyfin.ArtistStub): string {
+        if (artistStub.Id) {
+            return artistStub.Id;
+        } else if (artistStub.Name) {
+            return `synth-${artistStub.Name}`;
+        } else {
+            return `synth-${UNKNOWN_ARTIST_NAME}`;
+        }
+    }
+
     mapTrack(track: Jellyfin.Track): Track {
         return {
             id: track.Id,
@@ -264,7 +360,7 @@ export class Library {
             serverId: track.ServerId,
             artists: new Set(
                 track.ArtistItems.map((artist) => ({
-                    id: artist.Id,
+                    id: this.generateArtistId(artist),
                     name: artist.Name || UNKNOWN_ARTIST_NAME,
                     type: 'artist',
                 }))
@@ -274,7 +370,7 @@ export class Library {
             duration: Math.floor(track.RunTimeTicks / 10_000_000),
             albumArtists: new Set(
                 track.AlbumArtists.map((aa) => ({
-                    id: aa.Id,
+                    id: this.generateArtistId(aa),
                     name: aa.Name || UNKNOWN_ARTIST_NAME,
                     type: 'artist',
                 }))
@@ -282,7 +378,7 @@ export class Library {
             albumArtId: track.AlbumPrimaryImageTag,
             year: track.ProductionYear,
             album: {
-                id: track.AlbumId,
+                id: this.albumIdFromTrack(track),
                 name: track.Album || UNKNOWN_ALBUM_NAME,
                 type: 'album',
             },

@@ -13,8 +13,15 @@ export interface TreeItemLeaf<T> extends TreeItemCommon<T> {
     isLeaf: true;
 }
 
+export enum ChildrenLoadState {
+    Unloaded,
+    Loading,
+    Loaded,
+}
+
 export interface TreeItemNode<T> extends TreeItemCommon<T> {
     isLeaf: false;
+    childrenLoadState: ChildrenLoadState;
     children: Array<TreeItem<T>>;
 }
 

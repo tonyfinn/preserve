@@ -11,6 +11,7 @@
             v-if="loaded"
             class="library-tree"
             :items="treeItems"
+            :populateChildren="populateChildren"
             @activate-item="$emit('activate-item', $event)"
         ></psv-tree>
         <p v-if="!loaded">Loading...</p>
@@ -18,28 +19,73 @@
 </template>
 
 <script lang="ts">
-import { Album, Artist, Library, LibraryItem } from '.';
-import { debounced } from '../common/utils';
+import { Album, Artist, Library, LibraryItem, Track } from '.';
 import { PsvTree, TreeItem } from '../tree';
 import { defineComponent } from 'vue';
 
-import LibraryTreeBuilder from 'worker-loader!./tree-builder.worker';
+import { ChildrenLoadState } from '../tree/tree-item';
 
 type LibraryTree = Array<Artist>;
 
-function treeViewFromLibrary(
-    artists: Array<Artist>,
+function artistTreeNode(
+    artist: Artist,
     searchRegex: RegExp | null
-): Promise<Array<TreeItem<LibraryItem>>> {
-    return new Promise((resolve) => {
-        const libraryTreeWorker = new LibraryTreeBuilder();
-        console.log(artists);
-        libraryTreeWorker.postMessage({ artists, searchRegex });
-        libraryTreeWorker.addEventListener('message', (evt: MessageEvent) => {
-            resolve(evt.data);
-            libraryTreeWorker.terminate();
-        });
-    });
+): TreeItem<LibraryItem> {
+    const ownMatch = !searchRegex || searchRegex.test(artist.name);
+
+    return {
+        id: artist.id,
+        name: artist.name,
+        isLeaf: false,
+        expanded: false,
+        selected: false,
+        childrenSelected: false,
+        data: artist,
+        visible: ownMatch,
+        childrenLoadState: ChildrenLoadState.Unloaded,
+        children: [],
+    };
+}
+
+function albumTreeNode(
+    artist: Artist,
+    album: Album,
+    parentMatch: boolean,
+    searchRegex: RegExp | null
+): TreeItem<LibraryItem> {
+    const ownMatch = !searchRegex || searchRegex.test(album.name);
+
+    return {
+        id: album.id,
+        name: album.name,
+        isLeaf: false,
+        expanded: false,
+        selected: false,
+        childrenSelected: false,
+        childrenLoadState: ChildrenLoadState.Unloaded,
+        data: album,
+        visible: parentMatch || ownMatch,
+        children: [],
+    };
+}
+
+function trackTreeNode(
+    artist: Artist,
+    album: Album,
+    track: Track,
+    parentMatch: boolean,
+    searchRegex: RegExp | null
+): TreeItem<Track> {
+    return {
+        id: track.id,
+        name: track.name,
+        isLeaf: true,
+        expanded: false,
+        selected: false,
+        childrenSelected: false,
+        data: track,
+        visible: parentMatch || !searchRegex || searchRegex.test(track.name),
+    };
 }
 
 export default defineComponent({
@@ -53,11 +99,6 @@ export default defineComponent({
             libraryTree: [] as LibraryTree,
         };
     },
-    watch: {
-        searchText(newText: string): void {
-            this.updateTreeView(this.libraryTree, newText.trim());
-        },
-    },
     props: {
         library: {
             type: Library,
@@ -65,122 +106,58 @@ export default defineComponent({
         },
     },
     methods: {
-        updateTreeView: debounced(function (
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            this: any,
-            libraryTree: LibraryTree,
-            searchText: string
-        ) {
-            const trimmedText = searchText.trim();
-            const emptySearch = trimmedText === '';
-            treeViewFromLibrary(
-                libraryTree,
-                emptySearch ? null : new RegExp(trimmedText, 'i')
-            ).then((items) => {
-                this.treeItems = items;
-            });
-        }),
+        async populateChildren(
+            treeItem: TreeItem<LibraryItem>,
+            parents: Array<TreeItem<LibraryItem>>
+        ): Promise<Array<TreeItem<LibraryItem>>> {
+            console.log('Populating children', treeItem, parents);
+            const item = treeItem.data;
+            if (item.type === 'artist') {
+                return this.library
+                    .getArtistAlbums(item.id, true)
+                    .map((album) => albumTreeNode(item, album, true, null));
+            } else if (item.type === 'album') {
+                const parent = parents[0]?.data;
+                if (parent && parent.type === 'artist') {
+                    const artist = parent;
+                    let isOwnAlbum = false;
+                    let tracks = this.library.getAlbumTracks(item.id);
+
+                    for (const albumArtist of item.albumArtists) {
+                        if (albumArtist.id === artist.id) {
+                            isOwnAlbum = true;
+                            break;
+                        }
+                    }
+
+                    if (!isOwnAlbum) {
+                        tracks = tracks.filter((t) => {
+                            return [...t.artists]
+                                .map((aa) => aa.id)
+                                .includes(artist.id);
+                        });
+                    }
+
+                    return tracks.map((t) =>
+                        trackTreeNode(artist, item, t, false, null)
+                    );
+                } else {
+                    return [];
+                }
+            }
+            return [];
+        },
     },
     async created() {
         const library = Library.getInstance();
         if (!library) {
             return;
         }
-        const [artists, albums, tracks] = await Promise.all([
-            library.getArtists(),
-            library.getAlbums(),
-            library.getTracks(),
-        ]);
 
-        const artistLookup = new Map<string, Artist>();
-        const looseArtistLookup = new Map<string, Artist>();
-
-        const albumLookup = new Map<string, Album>();
-        const looseAlbumLookup = new Map<string, Album>();
-
-        const libraryTree = [];
-
-        for (const artist of artists) {
-            const artistNode = Object.assign({}, artist, {
-                albums: [],
-                filteredAlbums: [],
-                expanded: false,
-                selected: false,
-                visible: true,
-            });
-            if (artist.id) {
-                artistLookup.set(artist.id, artistNode);
-            } else {
-                looseArtistLookup.set(artist.name, artistNode);
-            }
-            libraryTree.push(artistNode);
-        }
-
-        for (const album of albums) {
-            const albumNode = Object.assign({}, album, {
-                tracks: [],
-                expanded: false,
-                selected: false,
-                visible: true,
-            });
-
-            if (album.id) {
-                albumLookup.set(album.id, albumNode);
-            } else {
-                looseAlbumLookup.set(album.name, albumNode);
-            }
-
-            for (const albumArtist of album.albumArtists) {
-                const aa =
-                    (albumArtist.id && artistLookup.get(albumArtist.id)) ||
-                    (albumArtist.name &&
-                        looseArtistLookup.get(albumArtist.name));
-                if (!aa) {
-                    console.warn(
-                        'Could not find album artist %s (%s)',
-                        albumArtist.id,
-                        albumArtist.name
-                    );
-                } else {
-                    aa.albums.push(albumNode);
-                }
-            }
-        }
-
-        for (const track of tracks) {
-            const t = Object.assign(
-                {},
-                {
-                    visible: true,
-                    selected: false,
-                },
-                track
-            );
-            const album =
-                (t.album.id && albumLookup.get(t.album.id)) ||
-                (t.album.name && looseAlbumLookup.get(t.album.name));
-            if (!album) {
-                console.warn(
-                    'Could not find album %s (%s)',
-                    t.album.id,
-                    t.album.name,
-                    t
-                );
-            } else {
-                album.tracks.push(t);
-            }
-        }
-
-        console.time('renderLibraryTree');
-
-        treeViewFromLibrary(libraryTree, null).then((items) => {
-            console.timeLog('renderLibraryTree');
-            this.treeItems = items;
-            this.loaded = true;
-            console.timeEnd('renderLibraryTree');
-        });
-
-        this.libraryTree = libraryTree;
+        const artists = await library.getArtists();
+        this.libraryTree = artists;
+        this.loaded = true;
+        this.treeItems = artists.map((a) => artistTreeNode(a, null));
     },
 });
 </script>

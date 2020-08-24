@@ -3,6 +3,7 @@
 ## New features
 
 - Remove tracks from play queue (select and press delete)
+- View albums under an artist where they have songs but are not an album artist.
 
 ## Bug fixes
 

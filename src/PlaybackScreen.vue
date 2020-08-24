@@ -36,25 +36,35 @@ export default defineComponent({
         };
     },
     methods: {
-        activateItem(item: LibraryItem) {
+        async activateItem(item: LibraryItem) {
             console.log('Activating', item);
             const playlist = this.$refs.playlist as typeof PlayList;
-            const tracks = [];
+            const tracksToAdd = [];
             if (item.type === 'track') {
-                playlist.addTrack(item);
-                tracks.push(item);
+                tracksToAdd.push(item);
             } else if (item.type === 'album') {
-                for (const track of sorted(item.tracks, sortTracks)) {
-                    tracks.push(track);
+                const albumTracks = await this.library.getAlbumTracks(item.id);
+                for (const track of sorted(albumTracks, sortTracks)) {
+                    tracksToAdd.push(track);
                 }
             } else if (item.type === 'artist') {
-                for (const album of sorted(item.albums, sortAlbums)) {
-                    for (const track of sorted(album.tracks, sortTracks)) {
-                        tracks.push(track);
+                const albums = await this.library.getArtistAlbums(
+                    item.id,
+                    false
+                );
+
+                const tracksByAlbum = await Promise.all(
+                    sorted(albums, sortAlbums).map((album) =>
+                        this.library.getAlbumTracks(album.id)
+                    )
+                );
+                for (const albumTracks of tracksByAlbum) {
+                    for (const track of albumTracks) {
+                        tracksToAdd.push(track);
                     }
                 }
             }
-            playlist.addTracks(tracks);
+            playlist.addTracks(tracksToAdd);
         },
     },
 });

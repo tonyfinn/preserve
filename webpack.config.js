@@ -13,7 +13,6 @@ module.exports = {
     },
     entry: {
         main: './src/index.ts',
-        'tree-builder': './src/library/tree-builder.worker.ts',
     },
     output: {
         filename: devMode ? '[name].js' : '[name].[hash].js',
@@ -81,7 +80,6 @@ module.exports = {
         new HtmlWebpackPlugin({
             title: 'Preserve',
             hash: !devMode,
-            excludeChunks: ['tree-builder.worker'],
         }),
         new VueLoaderPlugin(),
     ],

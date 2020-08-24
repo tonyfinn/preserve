@@ -1,6 +1,8 @@
 <template>
     <psv-tree-node
         :items="items"
+        :parents="[]"
+        :populateChildren="populateChildren"
         @toggle-select-item="toggleSelect($event)"
         @toggle-expand-item="toggleExpand($event)"
         @activate-item="activateItem($event)"
@@ -25,6 +27,14 @@ export default defineComponent({
         items: {
             type: Array as PropType<Array<TreeItem<unknown>>>,
             required: true,
+        },
+        populateChildren: {
+            type: Function as PropType<
+                (
+                    node: TreeItem<unknown>,
+                    parents: Array<TreeItem<unknown>>
+                ) => Promise<Array<TreeItem<unknown>>>
+            >,
         },
     },
     methods: {
