@@ -20,8 +20,14 @@ export interface ItemStub {
 
 export interface Artist extends Item {
     name: string;
+    synthetic: boolean;
     albums: Array<Album>;
     type: 'artist';
+}
+
+interface HasArtists {
+    artists: Set<ItemStub>;
+    albumArtists: Set<ItemStub>;
 }
 
 export interface Album extends Item {
@@ -83,6 +89,16 @@ export function sortAlbums(a: Album, b: Album): number {
         return aYear - bYear;
     } else {
         return a.name === b.name ? 0 : a.name > b.name ? 1 : -1;
+    }
+}
+
+export function sortArtists(a: Artist, b: Artist): number {
+    if (a.name === b.name) {
+        return 0;
+    } else if (a.name > b.name) {
+        return 1;
+    } else {
+        return -1;
     }
 }
 
@@ -154,7 +170,10 @@ export class Library {
             albumLoading,
             trackLoading,
         ]).then(([_artists, _albums, tracks]) => {
+            this.buildSyntheticArtists(tracks);
+            this.buildSyntheticArtists(this.albums);
             this.buildSyntheticAlbums(tracks);
+            this.artists.sort(sortArtists);
             this.loaded = true;
         });
 
@@ -219,10 +238,41 @@ export class Library {
         return childTracks;
     }
 
+    artistFromTrack(stub: ItemStub, serverId: string): Artist {
+        return {
+            id: stub.id,
+            name: stub.name,
+            albums: [],
+            type: 'artist',
+            synthetic: true,
+            serverId: serverId,
+        };
+    }
+
+    buildSyntheticArtists(items: Array<Item & HasArtists>): Array<Artist> {
+        const newSyntheticArtists = new Map<string, Artist>();
+        for (const item of items) {
+            for (const artistStub of [...item.artists, ...item.albumArtists]) {
+                const artistId = artistStub.id;
+                if (!this.artistByIdLookup.get(artistId)) {
+                    const artist = this.artistFromTrack(
+                        artistStub,
+                        item.serverId
+                    );
+                    this.artistByIdLookup.set(artistId, artist);
+                    this.artists.push(artist);
+                    newSyntheticArtists.set(artist.id, artist);
+                }
+            }
+        }
+        return Object.values(newSyntheticArtists);
+    }
+
     buildSyntheticAlbums(tracks: Array<Track>): Array<Album> {
         const syntheticAlbums = new Map<string, Album>();
         for (const track of tracks) {
-            if (track.album.id.startsWith('synth')) {
+            const albumId = track.album.id;
+            if (!this.albumByIdLookup.get(albumId)) {
                 const albumId = track.album.id;
                 if (!syntheticAlbums.get(albumId)) {
                     const album = this.albumFromTrack(albumId, track);
@@ -239,19 +289,25 @@ export class Library {
     }
 
     createAlbumLookups(album: Album): void {
-        for (const artist of album.artists) {
-            const lookup =
-                this.albumByFeaturedArtistLookup.get(
-                    artist.id || UNKNOWN_ARTIST_NAME
-                ) || null;
-            lookup?.push(album);
+        const albumArtistIds = [];
+        for (const albumArtist of album.albumArtists) {
+            albumArtistIds.push(albumArtist.id);
+            const lookup = this.albumByAlbumArtistLookup.get(albumArtist.id);
+            if (lookup) {
+                lookup.push(album);
+            } else {
+                this.albumByAlbumArtistLookup.set(albumArtist.id, [album]);
+            }
         }
-        for (const artist of album.albumArtists) {
-            const lookup =
-                this.albumByAlbumArtistLookup.get(
-                    artist.id || UNKNOWN_ARTIST_NAME
-                ) || null;
-            lookup?.push(album);
+        for (const artist of album.artists) {
+            if (!albumArtistIds.includes(artist.id)) {
+                const lookup = this.albumByFeaturedArtistLookup.get(artist.id);
+                if (lookup) {
+                    lookup.push(album);
+                } else {
+                    this.albumByFeaturedArtistLookup.set(artist.id, [album]);
+                }
+            }
         }
     }
 
@@ -268,34 +324,38 @@ export class Library {
             name: artist.Name,
             serverId: artist.ServerId,
             albums: [],
+            synthetic: false,
             type: 'artist',
         };
     }
 
     loadAlbum(jfAlbum: Jellyfin.Album): Album {
-        const albumArtistIds = [];
         const album = this.mapAlbum(jfAlbum);
-        for (const albumArtist of album.albumArtists) {
-            albumArtistIds.push(albumArtist.id);
-            const lookup = this.albumByAlbumArtistLookup.get(albumArtist.id);
-            if (lookup) {
-                lookup.push(album);
-            } else {
-                this.albumByAlbumArtistLookup.set(albumArtist.id, [album]);
-            }
-        }
-        for (const artist of album.artists) {
-            if (!albumArtistIds.includes(artist.id)) {
-                const lookup = this.albumByFeaturedArtistLookup.get(artist.id);
-                if (lookup) {
-                    lookup.push(album);
-                } else {
-                    this.albumByAlbumArtistLookup.set(artist.id, [album]);
-                }
-            }
-        }
+        this.createAlbumLookups(album);
+        this.albumByIdLookup.set(album.id, album);
         this.albums.push(album);
         return album;
+    }
+
+    artistsFromArtistStubs(stubs: Array<Jellyfin.ArtistStub>): Set<ItemStub> {
+        const artists = new Set<ItemStub>(
+            stubs.map((aa) => ({
+                id: this.artistIdFromStub(aa),
+                name: aa.Name || UNKNOWN_ARTIST_NAME,
+                type: 'artist',
+            }))
+        );
+
+        if (artists.size === 0) {
+            console.log('No artist, adding unknown');
+            artists.add({
+                id: `synth-${UNKNOWN_ARTIST_NAME}`,
+                name: UNKNOWN_ARTIST_NAME,
+                type: 'artist',
+            });
+        }
+
+        return artists;
     }
 
     mapAlbum(album: Jellyfin.Album): Album {
@@ -303,26 +363,24 @@ export class Library {
             id: album.Id,
             name: album.Name,
             serverId: album.ServerId,
-            albumArtists: new Set(
-                album.AlbumArtists.map((aa) => ({
-                    id: aa.Id,
-                    name: aa.Name || UNKNOWN_ARTIST_NAME,
-                    type: 'artist',
-                }))
-            ),
-            artists: new Set(
-                album.ArtistItems.map((aa) => ({
-                    id: aa.Id,
-                    name: aa.Name || UNKNOWN_ARTIST_NAME,
-                    type: 'artist',
-                }))
-            ),
+            albumArtists: this.artistsFromArtistStubs(album.AlbumArtists),
+            artists: this.artistsFromArtistStubs(album.ArtistItems),
             tracks: [],
             albumArtId: album.ImageTags.Primary,
             year: album.ProductionYear,
             type: 'album',
             synthetic: false,
         };
+    }
+
+    artistIdFromStub(stub: Jellyfin.ArtistStub): string {
+        if (stub.Id) {
+            return stub.Id;
+        } else if (stub.Name) {
+            return `synth-${stub.Name}`;
+        } else {
+            return `synth-${UNKNOWN_ARTIST_NAME}`;
+        }
     }
 
     albumIdFromTrack(track: Jellyfin.Track): string {
@@ -380,38 +438,16 @@ export class Library {
         return track;
     }
 
-    generateArtistId(artistStub: Jellyfin.ArtistStub): string {
-        if (artistStub.Id) {
-            return artistStub.Id;
-        } else if (artistStub.Name) {
-            return `synth-${artistStub.Name}`;
-        } else {
-            return `synth-${UNKNOWN_ARTIST_NAME}`;
-        }
-    }
-
     mapTrack(track: Jellyfin.Track): Track {
         return {
             id: track.Id,
             name: track.Name,
             serverId: track.ServerId,
-            artists: new Set(
-                track.ArtistItems.map((artist) => ({
-                    id: this.generateArtistId(artist),
-                    name: artist.Name || UNKNOWN_ARTIST_NAME,
-                    type: 'artist',
-                }))
-            ),
+            artists: this.artistsFromArtistStubs(track.ArtistItems),
+            albumArtists: this.artistsFromArtistStubs(track.AlbumArtists),
             trackNumber: track.IndexNumber,
             discNumber: track.ParentIndexNumber,
             duration: Math.floor(track.RunTimeTicks / 10_000_000),
-            albumArtists: new Set(
-                track.AlbumArtists.map((aa) => ({
-                    id: this.generateArtistId(aa),
-                    name: aa.Name || UNKNOWN_ARTIST_NAME,
-                    type: 'artist',
-                }))
-            ),
             albumArtId: track.AlbumPrimaryImageTag,
             year: track.ProductionYear,
             album: {
