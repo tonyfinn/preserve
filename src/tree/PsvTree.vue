@@ -1,6 +1,6 @@
 <template>
     <psv-tree-node
-        :items="items"
+        :items="treeItems"
         :parents="[]"
         :populateChildren="populateChildren"
         @toggle-select-item="toggleSelect($event)"
@@ -17,6 +17,7 @@ import {
     SelectionEvent,
     ExpandEvent,
     TreeItemEvent,
+    TreeItemNode,
 } from './tree-item';
 import { PsvTreeNode } from '.';
 
@@ -54,14 +55,29 @@ export default defineComponent({
                     }
                 }
                 this.selection.add(evt.item);
+                if (!evt.item.isLeaf) {
+                    this.removeChildrenFromSelection(evt.item);
+                }
             } else {
                 this.selection.delete(evt.item);
             }
             this.$emit('update-selection', this.selection);
         },
+        removeChildrenFromSelection(node: TreeItemNode<unknown>) {
+            for (const child of node.children) {
+                if (child.selected) {
+                    child.selected = false;
+                    this.selection.delete(child);
+                }
+                if (!child.isLeaf) {
+                    this.removeChildrenFromSelection(child);
+                }
+            }
+        },
     },
     data() {
         return {
+            treeItems: [...this.items] as Array<TreeItem<unknown>>,
             selection: new Set<TreeItem<unknown>>(),
         };
     },

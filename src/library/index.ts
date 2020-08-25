@@ -2,6 +2,7 @@ const UNKNOWN_ARTIST_NAME = 'Unknown Artist';
 const UNKNOWN_ALBUM_NAME = 'Unknown Album';
 
 import * as Jellyfin from 'jellyfin-apiclient';
+import { sorted } from '../common/utils';
 
 type ItemType = 'artist' | 'album' | 'track';
 
@@ -11,7 +12,7 @@ interface Item {
     type: ItemType;
 }
 
-interface ItemStub {
+export interface ItemStub {
     id: string;
     name: string;
     type: ItemType;
@@ -161,7 +162,12 @@ export class Library {
         Library.instance = this;
     }
 
-    getArtistAlbums(artistId: string, includeFeatured: boolean): Array<Album> {
+    // actually totally synchronous but marked as async to allow for future
+    // dynamic library loading
+    async getArtistAlbums(
+        artistId: string,
+        includeFeatured: boolean
+    ): Promise<Array<Album>> {
         const ownAlbums = this.albumByAlbumArtistLookup.get(artistId) || [];
 
         ownAlbums.sort(sortAlbums);
@@ -176,10 +182,41 @@ export class Library {
         }
     }
 
-    getAlbumTracks(albumId: string): Array<Track> {
+    // actually totally synchronous but marked as async to allow for future
+    // dynamic library loading
+    async getAlbumTracks(albumId: string): Promise<Array<Track>> {
         const tracks = this.trackByAlbumLookup.get(albumId) || [];
         tracks.sort(sortTracks);
         return tracks;
+    }
+
+    async getChildTracks(item: ItemStub): Promise<Array<Track>> {
+        const childTracks = [];
+        if (item.type === 'track') {
+            const track = this.trackByIdLookup.get(item.id);
+            if (track) {
+                childTracks.push(track);
+            }
+        } else if (item.type === 'album') {
+            const albumTracks = await this.getAlbumTracks(item.id);
+            for (const track of sorted(albumTracks, sortTracks)) {
+                childTracks.push(track);
+            }
+        } else if (item.type === 'artist') {
+            const albums = await this.getArtistAlbums(item.id, false);
+
+            const tracksByAlbum = await Promise.all(
+                sorted(albums, sortAlbums).map((album) =>
+                    this.getAlbumTracks(album.id)
+                )
+            );
+            for (const albumTracks of tracksByAlbum) {
+                for (const track of albumTracks) {
+                    childTracks.push(track);
+                }
+            }
+        }
+        return childTracks;
     }
 
     buildSyntheticAlbums(tracks: Array<Track>): Array<Album> {

@@ -1,5 +1,15 @@
 <template>
-    <section id="playlist">
+    <section
+        id="playlist"
+        :class="{
+            'playlist--dragover': dragOver !== 0,
+            'playlist--dragover-self': dragOver !== 0 && childDragOver === 0,
+        }"
+        @dragenter="listDragEnter"
+        @dragleave="listDragLeave"
+        @drop.stop.prevent="listDrop"
+        @dragover.prevent
+    >
         <table>
             <thead>
                 <tr>
@@ -14,6 +24,7 @@
                     :key="queueItem.id"
                     :class="{
                         'playlist__track--selected': queueItem.selected,
+                        'playlist__track--dragover': queueItem.dragCount !== 0,
                     }"
                     @click.exact="selectItem(queueItem)"
                     @mousedown.ctrl.prevent
@@ -23,6 +34,10 @@
                         extendSelectItem(queueItem, index)
                     "
                     @dblclick.prevent.stop="playTrack(index)"
+                    @dragenter="itemDragEnter(queueItem, $event)"
+                    @dragleave="itemDragLeave(queueItem, $event)"
+                    @drop.stop.prevent="itemDrop(queueItem, index, $event)"
+                    @dragover.prevent
                 >
                     <td>{{ queueItem.data.track.name }}</td>
                     <td>{{ formatAlbumArtists(queueItem.data.track) }}</td>
@@ -35,7 +50,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import { Track } from './library';
+import { Track, Library, ItemStub } from './library';
 import { AudioPlayer } from './player';
 import PlayQueue, { PlayQueueItem } from './play-queue';
 
@@ -43,12 +58,17 @@ interface RowItem<T> {
     id: string;
     selected: boolean;
     data: T;
+    dragCount: number;
 }
 
 export default defineComponent({
     props: {
         player: {
             type: AudioPlayer,
+            required: true,
+        },
+        library: {
+            type: Library,
             required: true,
         },
     },
@@ -59,6 +79,8 @@ export default defineComponent({
             playQueues: [defaultQueue],
             activeQueue: defaultQueue,
             selectedItems: [] as Array<RowItem<PlayQueueItem>>,
+            dragOver: 0,
+            childDragOver: 0,
         };
     },
     created() {
@@ -94,6 +116,7 @@ export default defineComponent({
                     id: track.queueItemId,
                     selected: false,
                     data: track,
+                    dragCount: 0,
                 };
                 rowItems.push(rowItem);
             }
@@ -142,11 +165,83 @@ export default defineComponent({
         playTrack(index: number) {
             this.player.play(index);
         },
-        handleKeyDown(e: KeyboardEvent) {
-            if (e.key === 'Delete') {
+        handleKeyDown(evt: KeyboardEvent) {
+            if (evt.key === 'Delete') {
                 const itemsToRemove = this.selectedItems.map((x) => x.data);
                 this.activeQueue.remove(itemsToRemove);
                 this.selectedItems = [];
+            }
+        },
+        itemDragEnter(item: RowItem<PlayQueueItem>, evt: DragEvent) {
+            console.log(evt);
+            this.childDragOver += 1;
+            if (
+                evt.dataTransfer?.getData(
+                    'application/x-preserve-library-item-stub'
+                )
+            ) {
+                item.dragCount += 1;
+                evt.preventDefault();
+            }
+        },
+        itemDragLeave(item: RowItem<PlayQueueItem>, _evt: DragEvent) {
+            this.childDragOver -= 1;
+            item.dragCount -= 1;
+        },
+        listDragEnter(evt: DragEvent) {
+            if (
+                evt.dataTransfer?.getData(
+                    'application/x-preserve-library-item-stub'
+                )
+            ) {
+                this.dragOver += 1;
+                evt.preventDefault();
+            }
+        },
+        listDragLeave(_evt: DragEvent) {
+            this.dragOver -= 1;
+        },
+        async listDrop(evt: DragEvent) {
+            const transferData = evt.dataTransfer?.getData(
+                'application/x-preserve-library-item-stub'
+            );
+            this.dragOver = 0;
+            this.childDragOver = 0;
+            if (transferData) {
+                evt.preventDefault();
+                const itemStubs = JSON.parse(transferData) as Array<ItemStub>;
+                const tracksByItem = await Promise.all(
+                    itemStubs.map((item) => this.library.getChildTracks(item))
+                );
+                let tracks: Array<Track> = [];
+                for (const itemTrackList of tracksByItem) {
+                    tracks = tracks.concat(itemTrackList);
+                }
+                this.activeQueue.extend(tracks);
+            }
+        },
+        async itemDrop(
+            item: RowItem<PlayQueueItem>,
+            index: number,
+            evt: DragEvent
+        ) {
+            const transferData = evt.dataTransfer?.getData(
+                'application/x-preserve-library-item-stub'
+            );
+            item.dragCount = 0;
+            this.dragOver = 0;
+            this.childDragOver = 0;
+            if (transferData) {
+                evt.preventDefault();
+                const itemStubs = JSON.parse(transferData) as Array<ItemStub>;
+                const tracksByItem = await Promise.all(
+                    itemStubs.map((item) => this.library.getChildTracks(item))
+                );
+                let tracks: Array<Track> = [];
+                for (const itemTrackList of tracksByItem) {
+                    tracks = tracks.concat(itemTrackList);
+                }
+                this.activeQueue.insert(index, tracks);
             }
         },
     },
@@ -162,10 +257,19 @@ export default defineComponent({
     overflow-y: scroll;
 }
 
+#playlist.playlist--dragover {
+    border: 3px dashed $colors-text;
+}
+
+#playlist.playlist--dragover-self table {
+    border-bottom: 3px dashed $colors-text;
+}
+
 #playlist table {
     width: 100%;
     padding: 1em;
     border-collapse: collapse;
+    margin-bottom: 5em;
 }
 
 #playlist table th {
@@ -188,6 +292,10 @@ export default defineComponent({
 
     &.playlist__track--selected {
         background: $colors-selected;
+    }
+
+    &.playlist__track--dragover {
+        border-top: 3px dashed $colors-text;
     }
 
     &:hover {

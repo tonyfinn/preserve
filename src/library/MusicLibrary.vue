@@ -13,6 +13,7 @@
             :items="treeItems"
             :populateChildren="populateChildren"
             @activate-item="$emit('activate-item', $event)"
+            @update-selection="updateSelection"
         ></psv-tree>
         <p v-if="!loaded">Loading...</p>
     </section>
@@ -90,7 +91,7 @@ function trackTreeNode(
 
 export default defineComponent({
     components: { PsvTree },
-    events: ['activate-item'],
+    events: ['activate-item', 'update-selection'],
     data() {
         return {
             searchText: '',
@@ -113,15 +114,19 @@ export default defineComponent({
             console.log('Populating children', treeItem, parents);
             const item = treeItem.data;
             if (item.type === 'artist') {
-                return this.library
-                    .getArtistAlbums(item.id, true)
-                    .map((album) => albumTreeNode(item, album, true, null));
+                const albums = await this.library.getArtistAlbums(
+                    item.id,
+                    true
+                );
+                return albums.map((album) =>
+                    albumTreeNode(item, album, true, null)
+                );
             } else if (item.type === 'album') {
                 const parent = parents[0]?.data;
                 if (parent && parent.type === 'artist') {
                     const artist = parent;
                     let isOwnAlbum = false;
-                    let tracks = this.library.getAlbumTracks(item.id);
+                    let tracks = await this.library.getAlbumTracks(item.id);
 
                     for (const albumArtist of item.albumArtists) {
                         if (albumArtist.id === artist.id) {
@@ -146,6 +151,12 @@ export default defineComponent({
                 }
             }
             return [];
+        },
+        updateSelection(selection: Array<TreeItem<LibraryItem>>) {
+            this.$emit(
+                'update-selection',
+                [...selection].map((x) => x.data)
+            );
         },
     },
     async created() {

@@ -116,7 +116,7 @@ export class AudioPlayer {
             navigator.mediaSession.setActionHandler('previoustrack', () => {
                 this.previousTrack();
             });
-            navigator.mediaSession.setActionHandler('nextTrack', () => {
+            navigator.mediaSession.setActionHandler('nexttrack', () => {
                 this.nextTrack();
             });
         }

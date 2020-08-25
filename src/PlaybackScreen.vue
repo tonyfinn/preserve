@@ -1,22 +1,31 @@
 <template>
     <div id="playback-screen">
         <music-library
+            draggable="true"
             :library="library"
             @activate-item="activateItem"
+            @update-selection="updateSelection"
+            @dragstart="libraryDragStart"
         ></music-library>
-        <play-list ref="playlist" :player="player"></play-list>
+        <play-list
+            ref="playlist"
+            :library="library"
+            :player="player"
+        ></play-list>
         <playback-footer :player="player"></playback-footer>
+        <div class="drag-counter">
+            {{ selectedItems.length }} items selected
+        </div>
     </div>
 </template>
 
 <script lang="ts">
 import MusicLibrary from './library/MusicLibrary.vue';
 import { AudioPlayer } from './player';
-import { Library, LibraryItem, sortAlbums, sortTracks } from './library';
+import { Library, LibraryItem } from './library';
 import PlaybackFooter from './PlaybackFooter.vue';
 import PlayList from './PlayList.vue';
 import { defineComponent } from 'vue';
-import { sorted } from './common/utils';
 
 export default defineComponent({
     components: {
@@ -33,38 +42,41 @@ export default defineComponent({
     data() {
         return {
             player: AudioPlayer.getOrCreateInstance(this.library),
+            selectedItems: [] as Array<LibraryItem>,
         };
     },
     methods: {
         async activateItem(item: LibraryItem) {
-            console.log('Activating', item);
             const playlist = this.$refs.playlist as typeof PlayList;
-            const tracksToAdd = [];
-            if (item.type === 'track') {
-                tracksToAdd.push(item);
-            } else if (item.type === 'album') {
-                const albumTracks = await this.library.getAlbumTracks(item.id);
-                for (const track of sorted(albumTracks, sortTracks)) {
-                    tracksToAdd.push(track);
-                }
-            } else if (item.type === 'artist') {
-                const albums = await this.library.getArtistAlbums(
-                    item.id,
-                    false
-                );
-
-                const tracksByAlbum = await Promise.all(
-                    sorted(albums, sortAlbums).map((album) =>
-                        this.library.getAlbumTracks(album.id)
-                    )
-                );
-                for (const albumTracks of tracksByAlbum) {
-                    for (const track of albumTracks) {
-                        tracksToAdd.push(track);
-                    }
-                }
-            }
+            const tracksToAdd = await this.library.getChildTracks(item);
             playlist.addTracks(tracksToAdd);
+        },
+        libraryDragStart(evt: DragEvent) {
+            console.log('Library drag start', evt, this.selectedItems);
+            if (this.selectedItems.length > 0) {
+                const textValues = this.selectedItems
+                    .map((item) => `${item.type}: ${item.name}`)
+                    .join('\n');
+                evt.dataTransfer?.setData('text/plain', textValues);
+                const jsonValues = this.selectedItems.map((item) => {
+                    return {
+                        type: item.type,
+                        name: item.name,
+                        id: item.id,
+                    };
+                });
+                evt.dataTransfer?.setData(
+                    'application/x-preserve-library-item-stub',
+                    JSON.stringify(jsonValues)
+                );
+                const dragEl = this.$el.querySelector('.drag-counter');
+                evt.dataTransfer?.setDragImage(dragEl, 10, dragEl.width / 2);
+            } else {
+                evt.preventDefault();
+            }
+        },
+        updateSelection(selection: Array<LibraryItem>) {
+            this.selectedItems = selection;
         },
     },
 });
@@ -75,6 +87,15 @@ export default defineComponent({
     display: grid;
     grid-template-rows: minmax(0, 1fr) auto;
     grid-template-columns: minmax(25%, 30em) minmax(75%, 1fr);
+
+    .drag-counter {
+        position: absolute;
+        top: -1000px;
+        left: -1000px;
+        background-color: white;
+        color: black;
+        border-radius: 25%;
+    }
 }
 
 #music-library {
@@ -84,7 +105,7 @@ export default defineComponent({
 
 #playlist {
     grid-row: 1;
-    grid-column: 2;
+    grid-column: 2 / 3;
 }
 
 #playback-footer {
