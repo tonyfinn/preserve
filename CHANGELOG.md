@@ -10,6 +10,11 @@
 
 - Send to main screen on login
 
+## Tech changes
+
+- Add CI config
+- Add makefiles
+
 # 0.1.0
 
 ## New features

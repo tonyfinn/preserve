@@ -39,11 +39,11 @@
         "webpack-dev-server": "^3.11.0"
     },
     "scripts": {
-        "clean": "rm -rf dist/",
+        "clean": "rm -rf dist/ target/",
         "test": "echo \"Error: no test specified\" && exit 1",
         "build": "webpack",
-        "build:prod": "npm run clean && NODE_ENV=production npm run build",
-        "package:prod": "npm run build:prod && tar -czvf dist/preverse-$npm_package_version.tar.gz --transform=s/dist/preserve-$npm_package_version/g dist/*",
+        "build:prod": "NODE_ENV=production npm run build",
+        "package": "mkdir -p target/ && tar -czf target/preserve-$npm_package_version.tar.gz --transform=s/dist/preserve-$npm_package_version/g dist/*",
         "lint:eslint": "eslint . --ext .js,.ts,.vue",
         "lint:prettier": "prettier --check .",
         "lint": "npm run lint:eslint && npm run lint:prettier",
