@@ -52,7 +52,7 @@
 import { defineComponent } from 'vue';
 import { Track, Library, ItemStub } from './library';
 import { AudioPlayer } from './player';
-import PlayQueue, { PlayQueueItem } from './play-queue';
+import PlayQueue, { PlayQueueItem, QueueManager } from './play-queue';
 
 interface RowItem<T> {
     id: string;
@@ -71,13 +71,16 @@ export default defineComponent({
             type: Library,
             required: true,
         },
+        queueManager: {
+            type: QueueManager,
+            required: true,
+        },
     },
     data() {
-        const defaultQueue = this.player.getQueue();
         return {
             queueItems: [] as Array<RowItem<PlayQueueItem>>,
-            playQueues: [defaultQueue],
-            activeQueue: defaultQueue,
+            playQueues: this.queueManager.getQueues(),
+            activeQueue: this.queueManager.getActiveQueue(),
             selectedItems: [] as Array<RowItem<PlayQueueItem>>,
             dragOver: 0,
             childDragOver: 0,

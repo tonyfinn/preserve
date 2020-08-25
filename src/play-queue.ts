@@ -1,4 +1,4 @@
-import { Track } from './library';
+import { Track, Library } from './library';
 import EventEmitter from './common/events';
 
 export enum QueueEventType {
@@ -26,15 +26,17 @@ export interface PlayQueueItem {
 export default class PlayQueue {
     queueItems: Array<PlayQueueItem>;
     index: number;
-    title: string;
+    name: string;
+    loaded: boolean;
     nextItemId: number;
     onChange: EventEmitter<QueueEvent>;
 
-    constructor(title: string) {
+    constructor(name: string) {
         this.queueItems = [];
         this.index = -1;
         this.nextItemId = 0;
-        this.title = title;
+        this.name = name;
+        this.loaded = false;
         this.onChange = new EventEmitter();
     }
 
@@ -142,5 +144,90 @@ export default class PlayQueue {
 
     size(): number {
         return this.queueItems.length;
+    }
+}
+
+interface StoredQueue {
+    name: string;
+    trackIds: Array<string>;
+}
+
+interface StoredQueueStorage {
+    lastActive: string;
+    queues: Array<StoredQueue>;
+}
+
+export class QueueManager {
+    queues: Map<string, PlayQueue>;
+    activeQueue: string;
+
+    constructor(queues: Map<string, PlayQueue>, lastActive: string) {
+        this.queues = queues;
+        for (const queue of this.queues.values()) {
+            this.saveOnQueueUpdate(queue);
+        }
+        this.activeQueue = lastActive;
+    }
+
+    static async create(library: Library): Promise<QueueManager> {
+        const queues = new Map();
+        let lastActive = '';
+        const storedString = window.localStorage.getItem('playQueues');
+        if (storedString) {
+            const queueStorage = JSON.parse(storedString) as StoredQueueStorage;
+            lastActive = queueStorage.lastActive;
+            for (const storedQueue of queueStorage.queues) {
+                const queue = await this.queueFromLibrary(
+                    storedQueue.name,
+                    storedQueue.trackIds,
+                    library
+                );
+                queues.set(queue.name, queue);
+            }
+        } else {
+            const defaultQueue = new PlayQueue('Default');
+            queues.set(defaultQueue.name, defaultQueue);
+            lastActive = defaultQueue.name;
+        }
+
+        return new QueueManager(queues, lastActive);
+    }
+
+    saveOnQueueUpdate(queue: PlayQueue): void {
+        queue.onChange.on(() => {
+            const storeQueues = [];
+            for (const queue of this.queues.values()) {
+                storeQueues.push({
+                    name: queue.name,
+                    trackIds: queue.queueItems.map((item) => {
+                        return item.track.id;
+                    }),
+                });
+            }
+            const queues: StoredQueueStorage = {
+                queues: storeQueues,
+                lastActive: this.activeQueue,
+            };
+            window.localStorage.setItem('playQueues', JSON.stringify(queues));
+        });
+    }
+
+    getActiveQueue(): PlayQueue {
+        return this.queues.get(this.activeQueue) as PlayQueue;
+    }
+
+    getQueues(): Array<PlayQueue> {
+        return [...this.queues.values()];
+    }
+
+    static async queueFromLibrary(
+        name: string,
+        trackIds: Array<string>,
+        library: Library
+    ): Promise<PlayQueue> {
+        const queue = new PlayQueue(name);
+        const tracks = await library.getTracksByIds(trackIds);
+        queue.extend(tracks);
+        return queue;
     }
 }

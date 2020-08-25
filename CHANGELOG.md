@@ -5,6 +5,7 @@
 - Remove tracks from play queue (select and press delete)
 - View albums under an artist where they have songs but are not an album artist.
 - Drag and drop tracks from library to play queue.
+- Remember play queue across page visits.
 
 ## Bug fixes
 

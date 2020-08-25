@@ -7,6 +7,7 @@
         <playback-screen
             v-if="loaded && loggedIn"
             :library="library"
+            :queueManager="queueManager"
             class="screen-root"
         ></playback-screen>
         <login-screen
@@ -33,6 +34,7 @@ import {
     LoggedInConnectionResult,
     SuccessfulConnectionResult,
 } from 'jellyfin-apiclient';
+import { QueueManager } from './play-queue';
 
 export default defineComponent({
     components: {
@@ -45,6 +47,7 @@ export default defineComponent({
             loggedIn: false,
             loaded: false,
             library: null as Library | null,
+            queueManager: null as QueueManager | null,
         };
     },
     created() {
@@ -74,9 +77,10 @@ export default defineComponent({
                 this.loggedIn = false;
             });
         },
-        setupServer(conResult: SuccessfulConnectionResult) {
+        async setupServer(conResult: SuccessfulConnectionResult) {
             const server = conResult.Servers[0];
             this.library = Library.createInstance(connectionManager);
+            this.queueManager = await QueueManager.create(this.library);
             this.loggedIn = server.AccessToken !== null;
             this.loaded = true;
             NotificationService.notify(

@@ -209,6 +209,19 @@ export class Library {
         return tracks;
     }
 
+    async getTracksByIds(trackIds: Array<string>): Promise<Array<Track>> {
+        await this.loadingPromise;
+        const result = [];
+
+        for (const trackId of trackIds) {
+            const track = this.trackByIdLookup.get(trackId);
+            if (track) {
+                result.push(track);
+            }
+        }
+        return result;
+    }
+
     async getChildTracks(item: ItemStub): Promise<Array<Track>> {
         const childTracks = [];
         if (item.type === 'track') {

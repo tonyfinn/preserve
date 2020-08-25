@@ -10,6 +10,7 @@
         <play-list
             ref="playlist"
             :library="library"
+            :queueManager="queueManager"
             :player="player"
         ></play-list>
         <playback-footer :player="player"></playback-footer>
@@ -26,6 +27,7 @@ import { Library, LibraryItem } from './library';
 import PlaybackFooter from './PlaybackFooter.vue';
 import PlayList from './PlayList.vue';
 import { defineComponent } from 'vue';
+import { QueueManager } from './play-queue';
 
 export default defineComponent({
     components: {
@@ -38,10 +40,16 @@ export default defineComponent({
             type: Library,
             required: true,
         },
+        queueManager: {
+            type: QueueManager,
+            required: true,
+        },
     },
     data() {
+        const player = AudioPlayer.getOrCreateInstance(this.library);
+        player.setQueue(this.queueManager.getActiveQueue());
         return {
-            player: AudioPlayer.getOrCreateInstance(this.library),
+            player,
             selectedItems: [] as Array<LibraryItem>,
         };
     },
