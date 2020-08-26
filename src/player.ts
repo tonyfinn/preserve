@@ -52,6 +52,12 @@ declare global {
     }
 }
 
+export enum RepeatMode {
+    Off,
+    Repeat,
+    RepeatOne,
+}
+
 export type PlaybackEvent =
     | PlayEvent
     | PauseEvent
@@ -66,20 +72,22 @@ export class AudioPlayer {
     library: Library;
     playQueue: PlayQueue;
     playing: boolean;
-    repeat: boolean;
+    repeatMode: RepeatMode;
     shuffle: boolean;
     shuffleOrder: Array<number>;
     playbackEvent: EventEmitter<PlaybackEvent>;
+    playQueueUpdateHandler: number;
     static instance: AudioPlayer;
 
     constructor(library: Library) {
         this.element = document.createElement('audio');
         this.library = library;
         this.playQueue = new PlayQueue('Default');
+        this.playQueueUpdateHandler = this.listenToQueueUpdates(this.playQueue);
         this.hls = null;
         this.useHls = false;
         this.playing = false;
-        this.repeat = false;
+        this.repeatMode = RepeatMode.Off;
         this.shuffle = false;
         this.shuffleOrder = [];
         this.playbackEvent = new EventEmitter();
@@ -147,6 +155,10 @@ export class AudioPlayer {
         }
     }
 
+    listenToQueueUpdates(playQueue: PlayQueue): number {
+        return playQueue.onChange.on(() => this._shuffle());
+    }
+
     activeTrack(): Track | null {
         return this.playQueue.activeTrack();
     }
@@ -156,7 +168,9 @@ export class AudioPlayer {
     }
 
     setQueue(playQueue: PlayQueue): void {
+        this.playQueue.onChange.off(this.playQueueUpdateHandler);
         this.playQueue = playQueue;
+        this.playQueueUpdateHandler = this.listenToQueueUpdates(playQueue);
     }
 
     play(index: number): void {
@@ -223,7 +237,7 @@ export class AudioPlayer {
 
     previousTrack(): void {
         const prevTrack = this.playQueue.previousTrack({
-            repeat: this.repeat,
+            repeatMode: this.repeatMode,
         });
         if (prevTrack) {
             this.playTrack(prevTrack);
@@ -235,9 +249,10 @@ export class AudioPlayer {
         }
     }
 
-    nextTrack(): void {
+    nextTrack(songEnded = false): void {
         const nextTrack = this.playQueue.nextTrack({
-            repeat: this.repeat,
+            repeatMode: this.repeatMode,
+            songEnded: songEnded,
         });
         if (nextTrack) {
             this.playTrack(nextTrack);
@@ -251,7 +266,7 @@ export class AudioPlayer {
     }
 
     _handleTrackEnd(): void {
-        this.nextTrack();
+        this.nextTrack(true);
     }
 
     _play(): void {
@@ -303,5 +318,16 @@ export class AudioPlayer {
         this.shuffle = !this.shuffle;
         this._shuffle();
         return this.shuffle;
+    }
+
+    nextRepeatMode(): RepeatMode {
+        if (this.repeatMode === RepeatMode.Off) {
+            this.repeatMode = RepeatMode.Repeat;
+        } else if (this.repeatMode === RepeatMode.Repeat) {
+            this.repeatMode = RepeatMode.RepeatOne;
+        } else {
+            this.repeatMode = RepeatMode.Off;
+        }
+        return this.repeatMode;
     }
 }

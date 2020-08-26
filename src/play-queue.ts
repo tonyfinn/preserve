@@ -1,5 +1,6 @@
 import { Track, Library } from './library';
 import EventEmitter from './common/events';
+import { RepeatMode } from './player';
 
 export enum QueueEventType {
     AddItems,
@@ -40,14 +41,14 @@ export default class PlayQueue {
         this.onChange = new EventEmitter();
     }
 
-    previousTrack(options: { repeat: boolean }): Track | null {
+    previousTrack(options: { repeatMode: RepeatMode }): Track | null {
         const prevIndex = Math.max(0, this.index - 1);
         if (this.queueItems.length === 0) {
             return null;
         } else if (prevIndex < this.queueItems.length) {
             this.index = prevIndex;
             return this.queueItems[prevIndex].track;
-        } else if (options.repeat) {
+        } else if (options.repeatMode === RepeatMode.Repeat) {
             this.index = this.queueItems.length - 1;
             return this.queueItems[this.index].track;
         } else {
@@ -56,14 +57,22 @@ export default class PlayQueue {
         }
     }
 
-    nextTrack(options: { repeat: boolean }): Track | null {
+    nextTrack(options: {
+        repeatMode: RepeatMode;
+        songEnded: boolean;
+    }): Track | null {
         const nextIndex = this.index + 1;
         if (this.queueItems.length === 0) {
             return null;
+        } else if (
+            options.repeatMode === RepeatMode.RepeatOne &&
+            options.songEnded
+        ) {
+            return this.queueItems[this.index].track;
         } else if (nextIndex < this.queueItems.length) {
             this.index = nextIndex;
             return this.queueItems[nextIndex].track;
-        } else if (options.repeat) {
+        } else if (options.repeatMode === RepeatMode.Repeat) {
             this.index = 0;
             return this.queueItems[0].track;
         } else {

@@ -35,10 +35,11 @@
             </button>
             <button
                 title="Repeat"
-                :class="{ active: repeat }"
+                :class="{ active: isRepeat() }"
                 @click="toggleRepeat"
             >
-                <i class="fi-loop" title="Repeat"></i>
+                <i class="fi-loop" title="Repeat" v-if="!isRepeatOne()"></i>
+                <span v-if="isRepeatOne()">1</span>
             </button>
         </section>
     </footer>
@@ -46,7 +47,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import { AudioPlayer, PlaybackEventType } from './player';
+import { AudioPlayer, PlaybackEventType, RepeatMode } from './player';
 import { artistNames } from './library';
 
 export default defineComponent({
@@ -60,7 +61,7 @@ export default defineComponent({
         return {
             activeTrack: this.player.activeTrack(),
             playing: this.player.playing,
-            repeat: this.player.repeat,
+            repeatMode: this.player.repeatMode,
             shuffle: false,
             duration: this.player.activeTrack()?.duration || 0,
             currentTime: 0,
@@ -124,7 +125,13 @@ export default defineComponent({
             this.shuffle = this.player.shuffle = !this.player.shuffle;
         },
         toggleRepeat() {
-            this.repeat = this.player.repeat = !this.player.repeat;
+            this.repeatMode = this.player.nextRepeatMode();
+        },
+        isRepeat() {
+            return this.repeatMode !== RepeatMode.Off;
+        },
+        isRepeatOne() {
+            return this.repeatMode === RepeatMode.RepeatOne;
         },
         formatTime(timeValue: number): string {
             const seconds = Math.floor(timeValue % 60);
