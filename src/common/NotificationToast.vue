@@ -1,5 +1,5 @@
 <template>
-    <div class="notification-wrapper">
+    <section class="notification-wrapper" aria-label="Notifications">
         <div class="notification-grid">
             <div
                 v-for="notification in notifications"
@@ -10,7 +10,7 @@
                 <a href="#" @click="removeNotification(notification.id)">X</a>
             </div>
         </div>
-    </div>
+    </section>
 </template>
 
 <script lang="ts">

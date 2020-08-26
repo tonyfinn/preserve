@@ -1,6 +1,7 @@
 <template>
     <section
         id="music-library"
+        aria-label="Music Library"
         :class="{
             searching: this.isSearching,
         }"
@@ -248,5 +249,9 @@ export default defineComponent({
     overflow-wrap: anywhere;
     overflow-x: hidden;
     overflow-y: auto;
+}
+
+#music-library > .psv-tree > :last-child {
+    padding-bottom: $dims-bottom-spacing;
 }
 </style>

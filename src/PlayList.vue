@@ -1,6 +1,7 @@
 <template>
     <section
         id="playlist"
+        aria-label="Play Queue"
         :class="{
             'playlist--dragover': dragOver !== 0,
             'playlist--dragover-self': dragOver !== 0 && childDragOver === 0,
@@ -280,7 +281,7 @@ export default defineComponent({
     width: 100%;
     padding: 1em;
     border-collapse: collapse;
-    margin-bottom: 5em;
+    margin-bottom: $dims-bottom-spacing;
 }
 
 #playlist table th {
