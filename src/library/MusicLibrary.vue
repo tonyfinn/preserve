@@ -111,7 +111,6 @@ export default defineComponent({
             treeItem: TreeItem<LibraryItem>,
             parents: Array<TreeItem<LibraryItem>>
         ): Promise<Array<TreeItem<LibraryItem>>> {
-            console.log('Populating children', treeItem, parents);
             const item = treeItem.data;
             if (item.type === 'artist') {
                 const albums = await this.library.getArtistAlbums(

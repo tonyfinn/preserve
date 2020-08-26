@@ -360,7 +360,6 @@ export class Library {
         );
 
         if (artists.size === 0) {
-            console.log('No artist, adding unknown');
             artists.add({
                 id: `synth-${UNKNOWN_ARTIST_NAME}`,
                 name: UNKNOWN_ARTIST_NAME,

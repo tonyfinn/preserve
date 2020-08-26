@@ -242,7 +242,17 @@ export class AudioPlayer {
             repeatMode: this.repeatMode,
         });
         if (prevTrack) {
-            this.playTrack(prevTrack, this.playQueue.index);
+            if (this.shuffle) {
+                const shuffledTrackIndex = this.shuffleOrder[
+                    this.playQueue.index
+                ];
+                const shuffledTrack = this.playQueue.getTrack(
+                    shuffledTrackIndex
+                ) as Track;
+                this.playTrack(shuffledTrack, shuffledTrackIndex);
+            } else {
+                this.playTrack(prevTrack, this.playQueue.index);
+            }
         } else {
             this.playing = false;
             this.playbackEvent.trigger({
@@ -257,7 +267,17 @@ export class AudioPlayer {
             songEnded: songEnded,
         });
         if (nextTrack) {
-            this.playTrack(nextTrack, this.playQueue.index);
+            if (this.shuffle) {
+                const shuffledTrackIndex = this.shuffleOrder[
+                    this.playQueue.index
+                ];
+                const shuffledTrack = this.playQueue.getTrack(
+                    shuffledTrackIndex
+                ) as Track;
+                this.playTrack(shuffledTrack, shuffledTrackIndex);
+            } else {
+                this.playTrack(nextTrack, this.playQueue.index);
+            }
         } else {
             this.element.pause();
             this.playing = false;
@@ -304,7 +324,10 @@ export class AudioPlayer {
     }
 
     _shuffle(): void {
-        const shuffleOrder = Array(this.playQueue.size());
+        const shuffleOrder = [];
+        for (let i = 0; i < this.playQueue.size(); i++) {
+            shuffleOrder.push(i);
+        }
         // Fisher-Yates shuffle
         for (let i = shuffleOrder.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -319,6 +342,14 @@ export class AudioPlayer {
     toggleShuffle(): boolean {
         this.shuffle = !this.shuffle;
         this._shuffle();
+        if (this.shuffle) {
+            this.playQueue.index = 0;
+            const firstShuffledIndex = this.shuffleOrder[0];
+            const shuffledTrack = this.playQueue.getTrack(
+                firstShuffledIndex
+            ) as Track;
+            this.playTrack(shuffledTrack, firstShuffledIndex);
+        }
         return this.shuffle;
     }
 

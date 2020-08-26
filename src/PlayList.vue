@@ -185,7 +185,6 @@ export default defineComponent({
             }
         },
         itemDragEnter(item: RowItem<PlayQueueItem>, evt: DragEvent) {
-            console.log(evt);
             this.childDragOver += 1;
             if (
                 evt.dataTransfer?.getData(

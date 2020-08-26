@@ -21,8 +21,8 @@
             >
                 <h2>
                     <span class="expander" @click.stop="toggleExpand(item)">
-                        <template v-if="item.expanded">V</template>
-                        <template v-if="!item.expanded">&gt;</template>
+                        <template v-if="item.expanded">&ndash;</template>
+                        <template v-if="!item.expanded">+</template>
                     </span>
                     {{ item.name }}
                 </h2>
@@ -176,7 +176,7 @@ export default defineComponent({
 .psv-tree-node > header .expander {
     display: inline-block;
     padding-right: 0.2em;
-    font-size: 0.8em;
+    font-weight: 900;
 }
 
 .psv-tree-node header h2,

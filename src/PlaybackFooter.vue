@@ -70,7 +70,6 @@ export default defineComponent({
     emits: ['toggle-play'],
     created() {
         this.player.playbackEvent.on((evt) => {
-            console.log('Playbck event', evt);
             switch (evt.type) {
                 case PlaybackEventType.Play:
                     this.playing = true;
@@ -122,7 +121,7 @@ export default defineComponent({
             this.player.togglePlay();
         },
         toggleShuffle() {
-            this.shuffle = this.player.shuffle = !this.player.shuffle;
+            this.shuffle = this.player.toggleShuffle();
         },
         toggleRepeat() {
             this.repeatMode = this.player.nextRepeatMode();
