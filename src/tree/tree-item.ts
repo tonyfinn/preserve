@@ -1,6 +1,7 @@
 export interface TreeItemCommon<T> {
     id: string;
     name: string;
+    type: string;
     expanded: boolean;
     isLeaf: boolean;
     selected: boolean;

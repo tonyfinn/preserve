@@ -1,5 +1,10 @@
 <template>
-    <section id="music-library">
+    <section
+        id="music-library"
+        :class="{
+            searching: this.isSearching,
+        }"
+    >
         <div class="search-controls">
             <input
                 type="text"
@@ -38,6 +43,7 @@ function artistTreeNode(
     return {
         id: artist.id,
         name: artist.name,
+        type: artist.type,
         isLeaf: false,
         expanded: false,
         selected: false,
@@ -59,6 +65,7 @@ function albumTreeNode(
     return {
         id: album.id,
         name: album.name,
+        type: album.type,
         isLeaf: false,
         expanded: false,
         selected: false,
@@ -78,6 +85,7 @@ function trackTreeNode(
     return {
         id: track.id,
         name: track.name,
+        type: track.type,
         isLeaf: true,
         expanded: false,
         selected: false,
@@ -108,6 +116,7 @@ export default defineComponent({
             treeItems: [] as Array<TreeItem<LibraryItem>>,
             loaded: false,
             libraryTree: [] as LibraryTree,
+            isSearching: false,
         };
     },
     props: {
@@ -169,8 +178,10 @@ export default defineComponent({
             let libraryItems = [];
             if (searchText === '') {
                 libraryItems = await this.library.getArtists();
+                this.isSearching = false;
             } else {
                 libraryItems = await this.library.search(searchText);
+                this.isSearching = true;
             }
             this.treeItems = libraryItems.map(libraryTreeNode);
             this.$forceUpdate();
@@ -205,6 +216,22 @@ export default defineComponent({
     padding: $dims-padding;
     display: grid;
     grid-template-rows: auto 1fr;
+}
+
+#music-library.searching .psv-tree > .psv-tree-node {
+    > header .expander::after {
+        font-family: 'foundation-icons';
+        padding-left: $dims-padding;
+        display: inline-block;
+    }
+
+    &.artist > header .expander::after {
+        content: '\f1a4'; // fi-record
+    }
+
+    &.album > header .expander::after {
+        content: '\f1fe'; // fi-torso
+    }
 }
 
 .search-controls {

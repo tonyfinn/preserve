@@ -10,6 +10,7 @@
                 'psv-tree-node--leaf': item.isLeaf,
                 'psv-tree-node--selected': item.selected,
                 'psv-tree-node--children-selected': item.childrenSelected,
+                [item.type]: true,
             }"
         >
             <header
@@ -20,7 +21,11 @@
                 @dblclick="$emit('activate-item', { item })"
             >
                 <h2>
-                    <span class="expander" @click.stop="toggleExpand(item)">
+                    <span
+                        class="expander"
+                        @click.stop="toggleExpand(item)"
+                        :title="item.expanded ? 'Collapse' : 'Expand'"
+                    >
                         <template v-if="item.expanded">&ndash;</template>
                         <template v-if="!item.expanded">+</template>
                     </span>
