@@ -25,6 +25,7 @@ import { PsvTree, TreeItem } from '../tree';
 import { defineComponent } from 'vue';
 
 import { ChildrenLoadState } from '../tree/tree-item';
+import { debounced } from '../common/utils';
 
 type LibraryTree = Array<Artist>;
 
@@ -49,7 +50,6 @@ function artistTreeNode(
 }
 
 function albumTreeNode(
-    artist: Artist,
     album: Album,
     parentMatch: boolean,
     searchRegex: RegExp | null
@@ -71,8 +71,6 @@ function albumTreeNode(
 }
 
 function trackTreeNode(
-    artist: Artist,
-    album: Album,
     track: Track,
     parentMatch: boolean,
     searchRegex: RegExp | null
@@ -89,12 +87,24 @@ function trackTreeNode(
     };
 }
 
+function libraryTreeNode(item: LibraryItem): TreeItem<LibraryItem> {
+    switch (item.type) {
+        case 'artist':
+            return artistTreeNode(item, null);
+        case 'album':
+            return albumTreeNode(item, false, null);
+        case 'track':
+            return trackTreeNode(item, false, null);
+    }
+}
+
 export default defineComponent({
     components: { PsvTree },
     events: ['activate-item', 'update-selection'],
     data() {
         return {
             searchText: '',
+            debouncedSearch: null as (() => void) | null,
             treeItems: [] as Array<TreeItem<LibraryItem>>,
             loaded: false,
             libraryTree: [] as LibraryTree,
@@ -104,6 +114,13 @@ export default defineComponent({
         library: {
             type: Library,
             required: true,
+        },
+    },
+    watch: {
+        searchText() {
+            if (this.debouncedSearch) {
+                this.debouncedSearch();
+            }
         },
     },
     methods: {
@@ -117,15 +134,14 @@ export default defineComponent({
                     item.id,
                     true
                 );
-                return albums.map((album) =>
-                    albumTreeNode(item, album, true, null)
-                );
+                return albums.map((album) => albumTreeNode(album, true, null));
             } else if (item.type === 'album') {
                 const parent = parents[0]?.data;
+
+                let tracks = await this.library.getAlbumTracks(item.id);
                 if (parent && parent.type === 'artist') {
                     const artist = parent;
                     let isOwnAlbum = false;
-                    let tracks = await this.library.getAlbumTracks(item.id);
 
                     for (const albumArtist of item.albumArtists) {
                         if (albumArtist.id === artist.id) {
@@ -141,15 +157,23 @@ export default defineComponent({
                                 .includes(artist.id);
                         });
                     }
-
-                    return tracks.map((t) =>
-                        trackTreeNode(artist, item, t, false, null)
-                    );
-                } else {
-                    return [];
                 }
+
+                return tracks.map((t) => trackTreeNode(t, false, null));
             }
             return [];
+        },
+        async doSearch() {
+            const searchText = this.searchText.trim();
+            console.log('Searching ', searchText);
+            let libraryItems = [];
+            if (searchText === '') {
+                libraryItems = await this.library.getArtists();
+            } else {
+                libraryItems = await this.library.search(searchText);
+            }
+            this.treeItems = libraryItems.map(libraryTreeNode);
+            this.$forceUpdate();
         },
         updateSelection(selection: Array<TreeItem<LibraryItem>>) {
             this.$emit(
@@ -165,6 +189,7 @@ export default defineComponent({
         }
 
         const artists = await library.getArtists();
+        this.debouncedSearch = debounced(this.doSearch.bind(this));
         this.libraryTree = artists;
         this.loaded = true;
         this.treeItems = artists.map((a) => artistTreeNode(a, null));

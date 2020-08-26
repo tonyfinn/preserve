@@ -471,6 +471,39 @@ export class Library {
         };
     }
 
+    async search(searchText: string): Promise<Array<LibraryItem>> {
+        await this.loadingPromise;
+        const searchRegex = new RegExp(searchText, 'i');
+        const artistResults = [];
+        const albumResults = [];
+        const trackResults = [];
+        for (const artist of this.artists) {
+            if (searchRegex.test(artist.name)) {
+                artistResults.push(artist);
+                if (artistResults.length > 10) {
+                    break;
+                }
+            }
+        }
+        for (const album of this.albums) {
+            if (searchRegex.test(album.name)) {
+                albumResults.push(album);
+                if (albumResults.length > 10) {
+                    break;
+                }
+            }
+        }
+        for (const track of this.tracks) {
+            if (searchRegex.test(track.name)) {
+                trackResults.push(track);
+                if (trackResults.length > 10) {
+                    break;
+                }
+            }
+        }
+        return [...trackResults, ...albumResults, ...artistResults];
+    }
+
     async getArtists(): Promise<Array<Artist>> {
         await this.loadingPromise;
         return this.artists;

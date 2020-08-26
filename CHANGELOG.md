@@ -8,6 +8,7 @@
 - Remember play queue across page visits.
 - Add repeat, repeat and shuffle song modes.
 - Highlight currently playing track in play queue.
+- Search library tree.
 
 ## Bug fixes
 

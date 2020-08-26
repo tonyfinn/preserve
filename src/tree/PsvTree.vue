@@ -38,6 +38,17 @@ export default defineComponent({
             >,
         },
     },
+    data() {
+        return {
+            treeItems: [...this.items] as Array<TreeItem<unknown>>,
+            selection: new Set<TreeItem<unknown>>(),
+        };
+    },
+    watch: {
+        items() {
+            this.treeItems = [...this.items] as Array<TreeItem<unknown>>;
+        },
+    },
     methods: {
         activateItem(evt: TreeItemEvent<unknown>) {
             this.$emit('activate-item', evt.item.data);
@@ -74,12 +85,6 @@ export default defineComponent({
                 }
             }
         },
-    },
-    data() {
-        return {
-            treeItems: [...this.items] as Array<TreeItem<unknown>>,
-            selection: new Set<TreeItem<unknown>>(),
-        };
     },
 });
 </script>
