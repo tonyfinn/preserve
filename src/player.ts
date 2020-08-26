@@ -185,14 +185,16 @@ export class AudioPlayer {
     _startPlayback(track: Track, index: number): void {
         this.element.play();
         this.playing = true;
+        const artist = artistNames(track);
         if (navigator.mediaSession) {
             navigator.mediaSession.metadata = new MediaMetadata({
                 title: track.name,
                 album: track.album.name,
-                artist: artistNames(track),
+                artist,
             });
             navigator.mediaSession.playbackState = 'playing';
         }
+        document.title = `${track.name} - ${artist} | Preserve`;
         this.playbackEvent.trigger({
             type: PlaybackEventType.Play,
             track,
@@ -255,6 +257,7 @@ export class AudioPlayer {
             }
         } else {
             this.playing = false;
+            document.title = 'Preserve';
             this.playbackEvent.trigger({
                 type: PlaybackEventType.End,
             });
@@ -281,6 +284,7 @@ export class AudioPlayer {
         } else {
             this.element.pause();
             this.playing = false;
+            document.title = 'Preserve';
             this.playbackEvent.trigger({
                 type: PlaybackEventType.End,
             });

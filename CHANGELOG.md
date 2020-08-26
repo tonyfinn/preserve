@@ -1,4 +1,10 @@
-# 0.2.0 (unreleased)
+# 0.2.1 (unreleased)
+
+## New features
+
+- Show now playing track in title.
+
+# 0.2.0
 
 ## New features
 
