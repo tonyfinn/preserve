@@ -78,6 +78,7 @@ export class AudioPlayer {
     shuffleOrder: Array<number>;
     playbackEvent: EventEmitter<PlaybackEvent>;
     playQueueUpdateHandler: number;
+    volume: number;
     static instance: AudioPlayer;
 
     constructor(library: Library) {
@@ -91,6 +92,7 @@ export class AudioPlayer {
         this.repeatMode = RepeatMode.Off;
         this.shuffle = false;
         this.shuffleOrder = [];
+        this.volume = 1;
         this.playbackEvent = new EventEmitter();
         this.element.addEventListener('ended', () => {
             this._handleTrackEnd();
@@ -366,5 +368,9 @@ export class AudioPlayer {
             this.repeatMode = RepeatMode.Off;
         }
         return this.repeatMode;
+    }
+
+    setVolume(volume: number): void {
+        this.element.volume = this.volume = volume;
     }
 }

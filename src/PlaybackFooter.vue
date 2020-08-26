@@ -1,6 +1,10 @@
 <template>
-    <footer id="playback-footer">
-        <section class="now-playing" v-if="activeTrack">
+    <footer id="playback-footer" aria-label="Music Player">
+        <section
+            class="now-playing"
+            v-if="activeTrack"
+            aria-label="Track Information"
+        >
             <div class="track-information">
                 <span class="track-title">{{ trackName }}</span>
                 <span class="artist-title">{{ artistName }}</span>
@@ -11,7 +15,10 @@
                 <span class="duration">{{ formatTime(duration) }}</span>
             </div>
         </section>
-        <section class="playback-controls button-group">
+        <section
+            class="playback-controls button-group"
+            aria-label="Playback Controls"
+        >
             <button title="Previous Track" @click="previousTrack">
                 <i class="fi-previous" title="Previous Track"></i>
             </button>
@@ -25,23 +32,45 @@
                 <i class="fi-next" title="Next Track"></i>
             </button>
         </section>
-        <section class="extra-controls button-group">
-            <button
-                title="Shuffle"
-                :class="{ active: shuffle }"
-                @click="toggleShuffle"
+        <div class="after-playback-controls">
+            <section
+                class="extra-controls button-group"
+                aria-label="Playback Modes"
             >
-                <i class="fi-shuffle" title="Shuffle"></i>
-            </button>
-            <button
-                title="Repeat"
-                :class="{ active: isRepeat() }"
-                @click="toggleRepeat"
-            >
-                <i class="fi-loop" title="Repeat" v-if="!isRepeatOne()"></i>
-                <span v-if="isRepeatOne()">1</span>
-            </button>
-        </section>
+                <button
+                    title="Shuffle"
+                    :class="{ active: shuffle }"
+                    @click="toggleShuffle"
+                >
+                    <i class="fi-shuffle" title="Shuffle"></i>
+                </button>
+                <button
+                    title="Repeat"
+                    :class="{ active: isRepeat() }"
+                    @click="toggleRepeat"
+                >
+                    <i class="fi-loop" title="Repeat" v-if="!isRepeatOne()"></i>
+                    <span v-if="isRepeatOne()">1</span>
+                </button>
+            </section>
+            <section class="volume-controls" aria-label="Volume Control">
+                <div class="sr-volume sr-only">
+                    <label for="player-volume">Volume:</label>
+                    <input
+                        type="number"
+                        name="player-volume"
+                        class="volume-input-number"
+                        v-model="volume"
+                        min="0"
+                        max="100"
+                    />
+                </div>
+                <div class="gui-volume">
+                    <i class="fi-volume"></i>
+                    <SliderBar v-model="volume"></SliderBar>
+                </div>
+            </section>
+        </div>
     </footer>
 </template>
 
@@ -49,8 +78,10 @@
 import { defineComponent } from 'vue';
 import { AudioPlayer, PlaybackEventType, RepeatMode } from './player';
 import { artistNames } from './library';
+import SliderBar from './common/SliderBar.vue';
 
 export default defineComponent({
+    components: { SliderBar },
     props: {
         player: {
             type: AudioPlayer,
@@ -65,7 +96,14 @@ export default defineComponent({
             shuffle: false,
             duration: this.player.activeTrack()?.duration || 0,
             currentTime: 0,
+            volume: 100,
         };
+    },
+    watch: {
+        volume(newValue) {
+            const bounded = Math.min(100, Math.max(newValue, 0));
+            this.player.setVolume(bounded / 100);
+        },
     },
     emits: ['toggle-play'],
     created() {
@@ -156,7 +194,7 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 @import './styles/colors.scss';
 @import './styles/dims.scss';
 
@@ -166,11 +204,11 @@ export default defineComponent({
     grid-template-columns: 1fr auto 1fr;
     grid-template-rows: 1fr;
     align-items: center;
+    padding: $dims-padding;
+    grid-gap: $dims-padding;
 }
 
-#playback-footer .now-playing {
-    padding-left: $dims-padding;
-    padding-right: $dims-padding;
+.now-playing {
     display: grid;
     grid-template-columns: 1fr auto;
     grid-auto-flow: column;
@@ -192,15 +230,14 @@ export default defineComponent({
     }
 }
 
-#playback-footer .button-group {
+.button-group {
     display: grid;
-    padding: $dims-padding;
     grid-auto-flow: column;
     grid-column-gap: $dims-padding;
     justify-content: center;
 }
 
-#playback-footer button {
+button {
     font-size: 1.2em;
     background-color: $colors-primary-bright;
     width: 2em;
@@ -227,16 +264,50 @@ export default defineComponent({
     }
 }
 
-#playback-footer .playback-controls {
+.playback-controls {
     grid-column: 2;
 }
 
-#playback-footer .extra-controls {
+.after-playback-controls {
+    display: grid;
+    grid-auto-flow: column;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.extra-controls {
     justify-content: start;
 
     button {
         width: 1.5em;
         height: 1.5em;
+    }
+}
+
+.volume-input-number {
+    width: 6em;
+}
+</style>
+
+<style lang="scss">
+@import './styles/dims.scss';
+#playback-footer .gui-volume {
+    display: grid;
+    grid-auto-flow: column;
+    grid-gap: $dims-padding;
+    align-items: center;
+
+    i::before {
+        line-height: inherit;
+    }
+    .slider {
+        width: 5em;
+        height: 1.2em;
+        border: 0;
+
+        .slider-highlight-wrapper {
+            clip-path: polygon(0 100%, 100% 0, 100% 100%);
+        }
     }
 }
 </style>
