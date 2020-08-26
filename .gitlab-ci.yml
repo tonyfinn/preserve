@@ -16,6 +16,6 @@ package:
           when: on_success
     artifacts:
         paths:
-            - dist/*.tar.gz
+            - target/*.tar.gz
     script:
         - make package
