@@ -6,6 +6,8 @@
 - View albums under an artist where they have songs but are not an album artist.
 - Drag and drop tracks from library to play queue.
 - Remember play queue across page visits.
+- Add repeat, and repeat one song mode.
+- Highlight currently playing track in play queue.
 
 ## Bug fixes
 

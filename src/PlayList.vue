@@ -25,6 +25,7 @@
                     :class="{
                         'playlist__track--selected': queueItem.selected,
                         'playlist__track--dragover': queueItem.dragCount !== 0,
+                        'playlist__track--playing': index === nowPlayingIndex,
                     }"
                     @click.exact="selectItem(queueItem)"
                     @mousedown.ctrl.prevent
@@ -51,7 +52,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import { Track, Library, ItemStub } from './library';
-import { AudioPlayer } from './player';
+import { AudioPlayer, PlaybackEventType } from './player';
 import PlayQueue, { PlayQueueItem, QueueManager } from './play-queue';
 
 interface RowItem<T> {
@@ -83,6 +84,7 @@ export default defineComponent({
             activeQueue: this.queueManager.getActiveQueue(),
             selectedItems: [] as Array<RowItem<PlayQueueItem>>,
             dragOver: 0,
+            nowPlayingIndex: -1,
             childDragOver: 0,
         };
     },
@@ -92,6 +94,13 @@ export default defineComponent({
         this.queueItems = this.rowItemsFromQueue(this.activeQueue);
         this.activeQueue.onChange.on(() => {
             this.queueItems = this.rowItemsFromQueue(this.activeQueue);
+        });
+        this.player.playbackEvent.on((evt) => {
+            if (evt.type === PlaybackEventType.Play) {
+                this.nowPlayingIndex = evt.queueIndex;
+            } else if (evt.type === PlaybackEventType.End) {
+                this.nowPlayingIndex = -1;
+            }
         });
     },
     destroyed() {
@@ -292,6 +301,12 @@ export default defineComponent({
 
 #playlist table tbody tr {
     cursor: pointer;
+
+    &.playlist__track--playing {
+        font-weight: bold;
+        font-style: italic;
+        background: $colors-active;
+    }
 
     &.playlist__track--selected {
         background: $colors-selected;

@@ -19,6 +19,7 @@ interface PlayBackEventBase {
 interface PlayEvent {
     type: PlaybackEventType.Play;
     track: Track;
+    queueIndex: number;
 }
 
 interface PauseEvent {
@@ -177,11 +178,11 @@ export class AudioPlayer {
         const track = this.playQueue.getTrack(index);
         if (track) {
             this.playQueue.index = index;
-            this.playTrack(track);
+            this.playTrack(track, index);
         }
     }
 
-    _startPlayback(track: Track): void {
+    _startPlayback(track: Track, index: number): void {
         this.element.play();
         this.playing = true;
         if (navigator.mediaSession) {
@@ -195,10 +196,11 @@ export class AudioPlayer {
         this.playbackEvent.trigger({
             type: PlaybackEventType.Play,
             track,
+            queueIndex: index,
         });
     }
 
-    _playHls(track: Track): void {
+    _playHls(track: Track, index: number): void {
         if (this.hls) {
             this.hls.destroy();
         }
@@ -212,26 +214,26 @@ export class AudioPlayer {
         this.hls.loadSource(playbackUrl);
         this.hls.attachMedia(this.element);
         this.hls.on(Hls.Events.MANIFEST_PARSED, () => {
-            this._startPlayback(track);
+            this._startPlayback(track, index);
         });
         this.hls.on(Hls.Events.ERROR, (_evt, data) => {
             console.error('HLS error', data);
         });
     }
 
-    _playNative(track: Track): void {
+    _playNative(track: Track, index: number): void {
         this.element.src = this.library.getPlaybackUrl(track);
         this.element.load();
         this.element.play().then(() => {
-            this._startPlayback(track);
+            this._startPlayback(track, index);
         });
     }
 
-    playTrack(track: Track): void {
+    playTrack(track: Track, index = -1): void {
         if (this.useHls) {
-            this._playHls(track);
+            this._playHls(track, index);
         } else {
-            this._playNative(track);
+            this._playNative(track, index);
         }
     }
 
@@ -240,7 +242,7 @@ export class AudioPlayer {
             repeatMode: this.repeatMode,
         });
         if (prevTrack) {
-            this.playTrack(prevTrack);
+            this.playTrack(prevTrack, this.playQueue.index);
         } else {
             this.playing = false;
             this.playbackEvent.trigger({
@@ -255,7 +257,7 @@ export class AudioPlayer {
             songEnded: songEnded,
         });
         if (nextTrack) {
-            this.playTrack(nextTrack);
+            this.playTrack(nextTrack, this.playQueue.index);
         } else {
             this.element.pause();
             this.playing = false;
