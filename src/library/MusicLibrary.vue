@@ -226,11 +226,11 @@ export default defineComponent({
         display: inline-block;
     }
 
-    &.artist > header .expander::after {
+    &.album > header .expander::after {
         content: '\f1a4'; // fi-record
     }
 
-    &.album > header .expander::after {
+    &.artist > header .expander::after {
         content: '\f1fe'; // fi-torso
     }
 }
