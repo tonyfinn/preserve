@@ -6,13 +6,13 @@
             searching: this.isSearching,
         }"
     >
-        <div class="search-controls">
+        <form role="search" @submit.prevent class="search-controls">
             <input
                 type="text"
                 v-model="searchText"
                 placeholder="Search your library"
             />
-        </div>
+        </form>
         <psv-tree
             v-if="loaded"
             class="library-tree"
