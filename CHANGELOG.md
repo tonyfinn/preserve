@@ -3,6 +3,7 @@
 ## New features
 
 - Show now playing track in title.
+- Keyboard controls for play queue
 
 # 0.2.0
 

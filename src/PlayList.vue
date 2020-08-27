@@ -2,6 +2,7 @@
     <section
         id="playlist"
         aria-label="Play Queue"
+        aria-multiselectable="true"
         :class="{
             'playlist--dragover': dragOver !== 0,
             'playlist--dragover-self': dragOver !== 0 && childDragOver === 0,
@@ -11,7 +12,7 @@
         @drop.stop.prevent="listDrop"
         @dragover.prevent
     >
-        <table>
+        <table role="grid">
             <thead>
                 <tr>
                     <th>Title</th>
@@ -27,8 +28,11 @@
                         'playlist__track--selected': queueItem.selected,
                         'playlist__track--dragover': queueItem.dragCount !== 0,
                         'playlist__track--playing': index === nowPlayingIndex,
+                        'playlist__track--focus': index === focusIndex,
                     }"
-                    @click.exact="selectItem(queueItem)"
+                    :aria-selected="queueItem.selected"
+                    @click.exact="selectItem(queueItem, index)"
+                    @keydown="handleKeyDown"
                     @mousedown.ctrl.prevent
                     @mousedown.shift.prevent
                     @click.ctrl.exact.prevent.stop="appendSelectItem(queueItem)"
@@ -41,7 +45,16 @@
                     @drop.stop.prevent="itemDrop(queueItem, index, $event)"
                     @dragover.prevent
                 >
-                    <td>{{ queueItem.data.track.name }}</td>
+                    <td
+                        :tabindex="
+                            index === focusIndex ||
+                            (focusIndex < 0 && index === 0)
+                                ? 0
+                                : -1
+                        "
+                    >
+                        {{ queueItem.data.track.name }}
+                    </td>
                     <td>{{ formatAlbumArtists(queueItem.data.track) }}</td>
                     <td>{{ queueItem.data.track.album.name }}</td>
                 </tr>
@@ -84,6 +97,7 @@ export default defineComponent({
             playQueues: this.queueManager.getQueues(),
             activeQueue: this.queueManager.getActiveQueue(),
             selectedItems: [] as Array<RowItem<PlayQueueItem>>,
+            focusIndex: -1,
             dragOver: 0,
             nowPlayingIndex: -1,
             childDragOver: 0,
@@ -91,7 +105,6 @@ export default defineComponent({
     },
     created() {
         this.player.setQueue(this.activeQueue);
-        window.addEventListener('keydown', this.handleKeyDown);
         this.queueItems = this.rowItemsFromQueue(this.activeQueue);
         this.activeQueue.onChange.on(() => {
             this.queueItems = this.rowItemsFromQueue(this.activeQueue);
@@ -103,9 +116,6 @@ export default defineComponent({
                 this.nowPlayingIndex = -1;
             }
         });
-    },
-    destroyed() {
-        window.removeEventListener('keydown', this.handleKeyDown);
     },
     emits: ['play-track'],
     methods: {
@@ -135,10 +145,16 @@ export default defineComponent({
             }
             return rowItems;
         },
-        selectItem(item: RowItem<PlayQueueItem>) {
+        selectItem(item: RowItem<PlayQueueItem>, index: number) {
             this.clearSelection();
             item.selected = true;
             this.selectedItems = [item];
+            this.focusIndex = index;
+            this.$el
+                .querySelector(
+                    `table tbody :nth-child(${index + 1}) td:nth-child(1)`
+                )
+                .focus();
         },
         appendSelectItem(item: RowItem<PlayQueueItem>) {
             item.selected = true;
@@ -149,13 +165,14 @@ export default defineComponent({
                 selectedItem.selected = false;
             }
             this.selectedItems = [];
+            this.focusIndex = -1;
         },
         extendSelectItem(
             selectTargetItem: RowItem<PlayQueueItem>,
             targetItemIndex: number
         ) {
             if (this.selectedItems.length === 0) {
-                this.selectItem(selectTargetItem);
+                this.selectItem(selectTargetItem, targetItemIndex);
             } else {
                 let firstSelectedIndex = -1;
                 for (let i = 0; i < this.queueItems.length; i++) {
@@ -183,6 +200,26 @@ export default defineComponent({
                 const itemsToRemove = this.selectedItems.map((x) => x.data);
                 this.activeQueue.remove(itemsToRemove);
                 this.selectedItems = [];
+            } else if (evt.key === 'ArrowUp' && !evt.shiftKey) {
+                const prevItem = Math.max(0, this.focusIndex - 1);
+                this.focusIndex = prevItem;
+                evt.preventDefault();
+            } else if (evt.key === 'ArrowDown' && !evt.shiftKey) {
+                const nextItem = Math.min(
+                    this.queueItems.length,
+                    this.focusIndex + 1
+                );
+                this.focusIndex = nextItem;
+                evt.preventDefault();
+            } else if (evt.key === 'Enter') {
+                this.playTrack(this.focusIndex);
+            } else if (evt.key === ' ') {
+                this.appendSelectItem(this.queueItems[this.focusIndex]);
+                evt.preventDefault();
+            } else if (evt.key === 'Home' && evt.ctrlKey) {
+                this.focusIndex = 0;
+            } else if (evt.key === 'End' && evt.ctrlKey) {
+                this.focusIndex = this.queueItems.length - 1;
             }
         },
         itemDragEnter(item: RowItem<PlayQueueItem>, evt: DragEvent) {
@@ -316,7 +353,8 @@ export default defineComponent({
         border-top: 3px dashed $colors-text;
     }
 
-    &:hover {
+    &:hover,
+    &.playlist__track--focus {
         background: $colors-highlight;
     }
 }
