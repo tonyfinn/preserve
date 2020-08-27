@@ -3,6 +3,7 @@
         id="playlist"
         aria-label="Play Queue"
         aria-multiselectable="true"
+        role="grid"
         :class="{
             'playlist--dragover': dragOver !== 0,
             'playlist--dragover-self': dragOver !== 0 && childDragOver === 0,
@@ -10,9 +11,10 @@
         @dragenter="listDragEnter"
         @dragleave="listDragLeave"
         @drop.stop.prevent="listDrop"
+        @keydown="handleKeyDown"
         @dragover.prevent
     >
-        <table role="grid">
+        <table>
             <thead>
                 <tr>
                     <th>Title</th>
@@ -32,7 +34,6 @@
                     }"
                     :aria-selected="queueItem.selected"
                     @click.exact="selectItem(queueItem, index)"
-                    @keydown="handleKeyDown"
                     @mousedown.ctrl.prevent
                     @mousedown.shift.prevent
                     @click.ctrl.exact.prevent.stop="appendSelectItem(queueItem)"
@@ -45,14 +46,7 @@
                     @drop.stop.prevent="itemDrop(queueItem, index, $event)"
                     @dragover.prevent
                 >
-                    <td
-                        :tabindex="
-                            index === focusIndex ||
-                            (focusIndex < 0 && index === 0)
-                                ? 0
-                                : -1
-                        "
-                    >
+                    <td :tabindex="index === focusIndex ? 0 : -1">
                         {{ queueItem.data.track.name }}
                     </td>
                     <td>{{ formatAlbumArtists(queueItem.data.track) }}</td>
@@ -302,7 +296,6 @@ export default defineComponent({
 @import './styles/dims.scss';
 
 #playlist {
-    padding: $dims-padding;
     overflow-y: scroll;
 }
 
@@ -316,15 +309,26 @@ export default defineComponent({
 
 #playlist table {
     width: 100%;
-    padding: 1em;
+    padding: $dims-padding;
     border-collapse: collapse;
     margin-bottom: $dims-bottom-spacing;
 }
 
 #playlist table th {
     padding: $dims-padding-dense;
-    border-bottom: 1px solid white;
+    background-color: $colors-background;
     text-align: left;
+    position: sticky;
+    top: 0;
+
+    &::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        border-bottom: 1px solid white;
+    }
 }
 
 #playlist table td {
