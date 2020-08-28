@@ -1,3 +1,7 @@
 node_modules
 dist/
 target/
+contrib/aur/**/src
+contrib/aur/**/preserve
+contrib/aur/**/pkg
+contrib/aur/**/*.tar.xz
