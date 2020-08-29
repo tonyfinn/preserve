@@ -248,18 +248,19 @@ button {
 
     &:hover {
         border: 2px solid $colors-primary-bright;
-        background: transparent;
+        background: lighten($colors-primary, 40%);
+        color: #fff;
     }
 
     &:hover.active {
-        background: lighten($colors-primary, 10%);
-        color: $colors-text;
+        background: lighten($colors-primary, 40%);
+        color: $colors-text-dark;
     }
 
     &:active,
     &.active {
         border: 2px solid $colors-primary-bright;
-        background: lighten($colors-primary, 50%);
+        background: lighten($colors-primary, 20%);
         color: $colors-text-dark;
     }
 }
