@@ -15,15 +15,15 @@
         >
             <header
                 v-if="!item.isLeaf"
-                @click.exact="selectItem(item)"
-                @click.ctrl.exact="appendSelection(item)"
-                @click.shift.exact="extendSelection(item)"
-                @dblclick="$emit('activate-item', { item })"
+                @mousedown.stop.exact="selectItem(item)"
+                @mousedown.stop.ctrl.exact="appendSelection(item)"
+                @mousedown.stop.shift.exact="extendSelection(item)"
+                @dblclick.stop="activateItem(item)"
             >
                 <h2>
                     <span
                         class="expander"
-                        @click.stop="toggleExpand(item)"
+                        @mousedown.stop="toggleExpand(item)"
                         :title="item.expanded ? 'Collapse' : 'Expand'"
                     >
                         <template v-if="item.expanded">&ndash;</template>
@@ -34,10 +34,10 @@
             </header>
             <p
                 v-if="item.isLeaf"
-                @click.exact="selectItem(item)"
-                @click.ctrl.exact="appendSelection(item)"
-                @click.shift.exact="extendSelection(item)"
-                @dblclick="$emit('activate-item', { item })"
+                @mousedown.stop.exact="selectItem(item)"
+                @mousedown.stop.ctrl.exact="appendSelection(item)"
+                @mousedown.stop.shift.exact="extendSelection(item)"
+                @dblclick.stop="activateItem(item)"
             >
                 {{ item.name }}
             </p>
@@ -128,6 +128,10 @@ export default defineComponent({
         extendSelection(item: TreeItem<unknown>) {
             this.selectItemInternal(item, SelectionType.Extend);
         },
+        activateItem(item: TreeItem<unknown>) {
+            this.$emit('activate-item', { item });
+            this.selectItem(item);
+        },
         toggleExpand(item: TreeItem<unknown>) {
             this.$emit('toggle-expand-item', {
                 item,
@@ -162,7 +166,11 @@ export default defineComponent({
 
 .psv-tree-node {
     width: 100%;
-    padding: $dims-padding-dense;
+
+    header,
+    p {
+        padding: $dims-padding-dense;
+    }
 }
 
 .psv-tree-node--selected {
