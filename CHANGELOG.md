@@ -5,6 +5,9 @@
 - Show now playing track in title.
 - Keyboard controls for play queue
 
+## Tech changes
+- Makefile now supports some standard overrides (prefix/DESTDIR)
+
 # 0.2.0
 
 ## New features
