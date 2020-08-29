@@ -78,8 +78,9 @@ module.exports = {
             chunkFilename: devMode ? '[id].css' : '[id].[hash].css',
         }),
         new HtmlWebpackPlugin({
-            title: 'Preserve',
+            favicon: 'static/logo-32.png',
             hash: !devMode,
+            title: 'Preserve',
         }),
         new VueLoaderPlugin(),
     ],
