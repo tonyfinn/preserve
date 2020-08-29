@@ -1,3 +1,10 @@
+# 0.2.2 (unreleased)
+
+## New features
+
+## Bug fixes
+
+
 # 0.2.1
 
 ## New features
