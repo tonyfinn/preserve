@@ -125,6 +125,7 @@ export default defineComponent({
         },
         addTracks(items: Array<Track>) {
             this.activeQueue.extend(items);
+            this.ensureVisible(this.activeQueue.size() - 2);
         },
         rowItemsFromQueue(queue: PlayQueue): Array<RowItem<PlayQueueItem>> {
             const rowItems = [];
@@ -197,13 +198,15 @@ export default defineComponent({
             } else if (evt.key === 'ArrowUp' && !evt.shiftKey) {
                 const prevItem = Math.max(0, this.focusIndex - 1);
                 this.focusIndex = prevItem;
+                this.ensureVisible(this.focusIndex);
                 evt.preventDefault();
             } else if (evt.key === 'ArrowDown' && !evt.shiftKey) {
                 const nextItem = Math.min(
-                    this.queueItems.length,
+                    this.queueItems.length - 1,
                     this.focusIndex + 1
                 );
                 this.focusIndex = nextItem;
+                this.ensureVisible(this.focusIndex);
                 evt.preventDefault();
             } else if (evt.key === 'Enter') {
                 this.playTrack(this.focusIndex);
@@ -212,8 +215,10 @@ export default defineComponent({
                 evt.preventDefault();
             } else if (evt.key === 'Home' && evt.ctrlKey) {
                 this.focusIndex = 0;
+                this.ensureVisible(this.focusIndex);
             } else if (evt.key === 'End' && evt.ctrlKey) {
                 this.focusIndex = this.queueItems.length - 1;
+                this.ensureVisible(this.focusIndex);
             }
         },
         itemDragEnter(item: RowItem<PlayQueueItem>, evt: DragEvent) {
@@ -285,6 +290,35 @@ export default defineComponent({
                     tracks = tracks.concat(itemTrackList);
                 }
                 this.activeQueue.insert(index, tracks);
+            }
+        },
+        ensureVisible(index: number) {
+            const trackRowRect = this.$el
+                .querySelector(`tbody tr:nth-child(${index + 1})`)
+                .getBoundingClientRect();
+            const containerRect = this.$el.getBoundingClientRect();
+            const elPosInContainer = trackRowRect.top - containerRect.top;
+
+            if (!trackRowRect) {
+                console.warn(`Tried to scroll to nonexistent index ${index}`);
+                return;
+            }
+
+            if (elPosInContainer < 3 * trackRowRect.height) {
+                this.$el.scrollBy(
+                    0,
+                    elPosInContainer - 3 * trackRowRect.height
+                );
+            } else if (
+                elPosInContainer + 3 * trackRowRect.height >
+                containerRect.height
+            ) {
+                this.$el.scrollBy(
+                    0,
+                    elPosInContainer +
+                        3 * trackRowRect.height -
+                        containerRect.height
+                );
             }
         },
     },
