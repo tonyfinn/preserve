@@ -18,7 +18,7 @@
                 @mousedown.stop.exact="selectItem(item)"
                 @mousedown.stop.ctrl.exact="appendSelection(item)"
                 @mousedown.stop.shift.exact="extendSelection(item)"
-                @dblclick.stop="activateItem(item)"
+                @dblclick.stop="activateItem(item, $event)"
             >
                 <h2>
                     <span
@@ -37,7 +37,7 @@
                 @mousedown.stop.exact="selectItem(item)"
                 @mousedown.stop.ctrl.exact="appendSelection(item)"
                 @mousedown.stop.shift.exact="extendSelection(item)"
-                @dblclick.stop="activateItem(item)"
+                @dblclick.stop="activateItem(item, $event)"
             >
                 {{ item.name }}
             </p>
@@ -128,8 +128,13 @@ export default defineComponent({
         extendSelection(item: TreeItem<unknown>) {
             this.selectItemInternal(item, SelectionType.Extend);
         },
-        activateItem(item: TreeItem<unknown>) {
-            this.$emit('activate-item', { item });
+        activateItem(item: TreeItem<unknown>, evt: MouseEvent) {
+            this.$emit('activate-item', {
+                item,
+                shiftKey: evt.shiftKey,
+                ctrlKey: evt.ctrlKey,
+                altKey: evt.altKey,
+            });
             this.selectItem(item);
         },
         toggleExpand(item: TreeItem<unknown>) {

@@ -1,9 +1,12 @@
 # 0.2.2 (unreleased)
 
 ## New features
+* Adding a track to the playlist by double clicking now plays it unless
+  a modifier key is pressed.
 
 ## Bug fixes
-
+* Dragging from a specific node now first selects that node
+  according to selection modifiers.
 
 # 0.2.1
 

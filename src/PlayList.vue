@@ -58,7 +58,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { defineComponent, nextTick } from 'vue';
 import { Track, Library, ItemStub } from './library';
 import { AudioPlayer, PlaybackEventType } from './player';
 import PlayQueue, { PlayQueueItem, QueueManager } from './play-queue';
@@ -123,9 +123,20 @@ export default defineComponent({
             }
             return albumArtists.join('; ');
         },
-        addTracks(items: Array<Track>) {
+        addTracks(
+            items: Array<Track>,
+            options: {
+                playNow: boolean;
+            }
+        ) {
+            const nextIndex = this.activeQueue.size();
             this.activeQueue.extend(items);
-            this.ensureVisible(this.activeQueue.size() - 2);
+            nextTick(() => {
+                this.ensureVisible(this.activeQueue.size() - 2);
+            });
+            if (options.playNow) {
+                this.playTrack(nextIndex);
+            }
         },
         rowItemsFromQueue(queue: PlayQueue): Array<RowItem<PlayQueueItem>> {
             const rowItems = [];

@@ -34,6 +34,9 @@ export enum SelectionType {
 
 export interface TreeItemEvent<T> {
     item: TreeItem<T>;
+    shiftKey: boolean;
+    altKey: boolean;
+    ctrlKey: boolean;
 }
 
 export interface SelectionEvent<T> extends TreeItemEvent<T> {

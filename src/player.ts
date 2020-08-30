@@ -133,7 +133,6 @@ export class AudioPlayer {
         }
 
         window.addEventListener('keydown', (evt) => {
-            console.log(evt);
             if (evt.key === 'MediaPause') {
                 this._pause();
             } else if (evt.key === 'MediaPlay') {

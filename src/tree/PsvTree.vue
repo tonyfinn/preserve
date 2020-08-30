@@ -5,7 +5,7 @@
         :populateChildren="populateChildren"
         @toggle-select-item="toggleSelect($event)"
         @toggle-expand-item="toggleExpand($event)"
-        @activate-item="activateItem($event)"
+        @activate-item="$emit('activate-item', $event)"
     ></psv-tree-node>
 </template>
 
@@ -16,14 +16,13 @@ import {
     SelectionType,
     SelectionEvent,
     ExpandEvent,
-    TreeItemEvent,
     TreeItemNode,
 } from './tree-item';
 import { PsvTreeNode } from '.';
 
 export default defineComponent({
     components: { PsvTreeNode },
-    events: ['update-selection', 'activate-item'],
+    emits: ['update-selection', 'activate-item'],
     props: {
         items: {
             type: Array as PropType<Array<TreeItem<unknown>>>,
@@ -50,9 +49,6 @@ export default defineComponent({
         },
     },
     methods: {
-        activateItem(evt: TreeItemEvent<unknown>) {
-            this.$emit('activate-item', evt.item.data);
-        },
         toggleExpand(evt: ExpandEvent<unknown>) {
             evt.item.expanded = evt.expanded;
         },

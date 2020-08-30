@@ -28,6 +28,7 @@ import PlaybackFooter from './PlaybackFooter.vue';
 import PlayList from './PlayList.vue';
 import { defineComponent } from 'vue';
 import { QueueManager } from './play-queue';
+import { TreeItemEvent } from './tree/tree-item';
 
 export default defineComponent({
     components: {
@@ -54,13 +55,15 @@ export default defineComponent({
         };
     },
     methods: {
-        async activateItem(item: LibraryItem) {
+        async activateItem(evt: TreeItemEvent<LibraryItem>) {
             const playlist = this.$refs.playlist as typeof PlayList;
-            const tracksToAdd = await this.library.getChildTracks(item);
-            playlist.addTracks(tracksToAdd);
+            const tracksToAdd = await this.library.getChildTracks(
+                evt.item.data
+            );
+            const playNow = !evt.shiftKey && !evt.ctrlKey && !evt.altKey;
+            playlist.addTracks(tracksToAdd, { playNow });
         },
         libraryDragStart(evt: DragEvent) {
-            console.log('Library drag start', evt, this.selectedItems);
             if (this.selectedItems.length > 0) {
                 const textValues = this.selectedItems
                     .map((item) => `${item.type}: ${item.name}`)

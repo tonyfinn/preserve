@@ -109,7 +109,7 @@ function libraryTreeNode(item: LibraryItem): TreeItem<LibraryItem> {
 
 export default defineComponent({
     components: { PsvTree },
-    events: ['activate-item', 'update-selection'],
+    emits: ['activate-item', 'update-selection'],
     data() {
         return {
             searchText: '',
@@ -175,7 +175,6 @@ export default defineComponent({
         },
         async doSearch() {
             const searchText = this.searchText.trim();
-            console.log('Searching ', searchText);
             let libraryItems = [];
             if (searchText === '') {
                 libraryItems = await this.library.getArtists();
