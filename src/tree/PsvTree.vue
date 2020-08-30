@@ -14,8 +14,8 @@ import { defineComponent, PropType } from 'vue';
 import {
     TreeItem,
     SelectionType,
-    SelectionEvent,
-    ExpandEvent,
+    TreeSelectionEvent,
+    TreeExpandEvent,
     TreeItemNode,
 } from './tree-item';
 import { PsvTreeNode } from '.';
@@ -49,10 +49,10 @@ export default defineComponent({
         },
     },
     methods: {
-        toggleExpand(evt: ExpandEvent<unknown>) {
+        toggleExpand(evt: TreeExpandEvent<unknown>) {
             evt.item.expanded = evt.expanded;
         },
-        toggleSelect(evt: SelectionEvent<unknown>) {
+        toggleSelect(evt: TreeSelectionEvent<unknown>) {
             evt.item.selected = evt.selected;
             if (evt.selected) {
                 if (evt.selectType === SelectionType.Replace) {

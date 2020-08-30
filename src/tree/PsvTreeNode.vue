@@ -57,7 +57,15 @@
 
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
-import { TreeItem, SelectionType, ChildrenLoadState } from './tree-item';
+import {
+    TreeItem,
+    SelectionType,
+    ChildrenLoadState,
+    TreeItemEventType,
+    TreeSelectionEvent,
+    TreeActivateEvent,
+    TreeExpandEvent,
+} from './tree-item';
 
 export default defineComponent({
     name: 'psv-tree-node',
@@ -102,21 +110,16 @@ export default defineComponent({
             return [...this.parents, item];
         },
         selectItemInternal(item: TreeItem<unknown>, selectType: SelectionType) {
-            if (item.selected) {
-                this.$emit('toggle-select-item', {
-                    item,
-                    selectType,
-                    selected: false,
-                });
-            } else {
-                this.$emit('toggle-select-item', {
-                    item,
-                    selectType,
-                    selected: true,
-                });
-                if (!item.expanded) {
-                    this.toggleExpand(item);
-                }
+            const event: TreeSelectionEvent<unknown> = {
+                item,
+                type: TreeItemEventType.Selection,
+                parents: this.parents,
+                selectType,
+                selected: !item.selected,
+            };
+            this.$emit('toggle-select-item', event);
+            if (item.selected && !item.expanded) {
+                this.toggleExpand(item);
             }
         },
         selectItem(item: TreeItem<unknown>) {
@@ -129,19 +132,25 @@ export default defineComponent({
             this.selectItemInternal(item, SelectionType.Extend);
         },
         activateItem(item: TreeItem<unknown>, evt: MouseEvent) {
-            this.$emit('activate-item', {
+            const event: TreeActivateEvent<unknown> = {
                 item,
+                parents: this.parents,
+                type: TreeItemEventType.Activate,
                 shiftKey: evt.shiftKey,
                 ctrlKey: evt.ctrlKey,
                 altKey: evt.altKey,
-            });
+            };
+            this.$emit('activate-item', event);
             this.selectItem(item);
         },
         toggleExpand(item: TreeItem<unknown>) {
-            this.$emit('toggle-expand-item', {
+            const expandEvent: TreeExpandEvent<unknown> = {
                 item,
+                parents: this.parents,
+                type: TreeItemEventType.Expand,
                 expanded: !item.expanded,
-            });
+            };
+            this.$emit('toggle-expand-item', expandEvent);
             if (
                 !item.isLeaf &&
                 item.childrenLoadState === ChildrenLoadState.Unloaded &&

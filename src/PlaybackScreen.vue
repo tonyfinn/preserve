@@ -28,7 +28,7 @@ import PlaybackFooter from './PlaybackFooter.vue';
 import PlayList from './PlayList.vue';
 import { defineComponent } from 'vue';
 import { QueueManager } from './play-queue';
-import { TreeItemEvent } from './tree/tree-item';
+import { TreeActivateEvent } from './tree/tree-item';
 
 export default defineComponent({
     components: {
@@ -55,7 +55,7 @@ export default defineComponent({
         };
     },
     methods: {
-        async activateItem(evt: TreeItemEvent<LibraryItem>) {
+        async activateItem(evt: TreeActivateEvent<LibraryItem>) {
             const playlist = this.$refs.playlist as typeof PlayList;
             const tracksToAdd = await this.library.getChildTracks(
                 evt.item.data

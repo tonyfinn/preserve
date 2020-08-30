@@ -32,20 +32,39 @@ export enum SelectionType {
     Extend,
 }
 
+export enum TreeItemEventType {
+    Selection,
+    Expand,
+    Activate,
+}
+
 export interface TreeItemEvent<T> {
     item: TreeItem<T>;
+    parents: Array<TreeItem<T>>;
+    type: TreeItemEventType;
+}
+
+export interface TreeSelectionEvent<T> extends TreeItemEvent<T> {
+    selectType: SelectionType;
+    selected: boolean;
+    type: TreeItemEventType.Selection;
+}
+
+export interface TreeExpandEvent<T> extends TreeItemEvent<T> {
+    expanded: boolean;
+    type: TreeItemEventType.Expand;
+}
+
+export interface TreeActivateEvent<T> extends TreeItemEvent<T> {
     shiftKey: boolean;
     altKey: boolean;
     ctrlKey: boolean;
+    type: TreeItemEventType.Activate;
 }
 
-export interface SelectionEvent<T> extends TreeItemEvent<T> {
-    selectType: SelectionType;
-    selected: boolean;
-}
-
-export interface ExpandEvent<T> extends TreeItemEvent<T> {
-    expanded: boolean;
-}
+export type TreeEvent<T> =
+    | TreeSelectionEvent<T>
+    | TreeExpandEvent<T>
+    | TreeActivateEvent<T>;
 
 export type TreeItem<T> = TreeItemNode<T> | TreeItemLeaf<T>;
