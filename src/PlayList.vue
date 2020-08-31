@@ -8,6 +8,7 @@
             'playlist--dragover': dragOver !== 0,
             'playlist--dragover-self': dragOver !== 0 && childDragOver === 0,
         }"
+        :tabindex="-1"
         @dragenter="listDragEnter"
         @dragleave="listDragLeave"
         @drop.stop.prevent="listDrop"
@@ -30,9 +31,15 @@
                         'playlist__track--selected': queueItem.selected,
                         'playlist__track--dragover': queueItem.dragCount !== 0,
                         'playlist__track--playing': index === nowPlayingIndex,
-                        'playlist__track--focus': index === focusIndex,
+                        'playlist__track--focused': index === focusIndex,
                     }"
                     :aria-selected="queueItem.selected"
+                    :tabindex="
+                        focusIndex === index || (focusIndex < 0 && index === 0)
+                            ? 0
+                            : -1
+                    "
+                    @focus.stop="focusItem(index)"
                     @click.exact="selectItem(queueItem, index)"
                     @mousedown.ctrl.prevent
                     @mousedown.shift.prevent
@@ -46,9 +53,7 @@
                     @drop.stop.prevent="itemDrop(queueItem, index, $event)"
                     @dragover.prevent
                 >
-                    <td :tabindex="index === focusIndex ? 0 : -1">
-                        {{ queueItem.data.track.name }}
-                    </td>
+                    <td>{{ queueItem.data.track.name }}</td>
                     <td>{{ formatAlbumArtists(queueItem.data.track) }}</td>
                     <td>{{ queueItem.data.track.album.name }}</td>
                 </tr>
@@ -155,12 +160,7 @@ export default defineComponent({
             this.clearSelection();
             item.selected = true;
             this.selectedItems = [item];
-            this.focusIndex = index;
-            this.$el
-                .querySelector(
-                    `table tbody :nth-child(${index + 1}) td:nth-child(1)`
-                )
-                .focus();
+            this.focusItem(index);
         },
         appendSelectItem(item: RowItem<PlayQueueItem>) {
             item.selected = true;
@@ -201,6 +201,13 @@ export default defineComponent({
         playTrack(index: number) {
             this.player.play(index);
         },
+        focusItem(index: number) {
+            this.focusIndex = index;
+            this.$el
+                .querySelector(`tbody tr:nth-child(${index + 1})`)
+                .focus({ preventScroll: true });
+            this.ensureVisible(index);
+        },
         handleKeyDown(evt: KeyboardEvent) {
             if (evt.key === 'Delete') {
                 const itemsToRemove = this.selectedItems.map((x) => x.data);
@@ -208,16 +215,14 @@ export default defineComponent({
                 this.selectedItems = [];
             } else if (evt.key === 'ArrowUp' && !evt.shiftKey) {
                 const prevItem = Math.max(0, this.focusIndex - 1);
-                this.focusIndex = prevItem;
-                this.ensureVisible(this.focusIndex);
+                this.focusItem(prevItem);
                 evt.preventDefault();
             } else if (evt.key === 'ArrowDown' && !evt.shiftKey) {
                 const nextItem = Math.min(
                     this.queueItems.length - 1,
                     this.focusIndex + 1
                 );
-                this.focusIndex = nextItem;
-                this.ensureVisible(this.focusIndex);
+                this.focusItem(nextItem);
                 evt.preventDefault();
             } else if (evt.key === 'Enter') {
                 this.playTrack(this.focusIndex);
@@ -225,11 +230,11 @@ export default defineComponent({
                 this.appendSelectItem(this.queueItems[this.focusIndex]);
                 evt.preventDefault();
             } else if (evt.key === 'Home' && evt.ctrlKey) {
-                this.focusIndex = 0;
-                this.ensureVisible(this.focusIndex);
+                this.focusItem(0);
+                evt.preventDefault();
             } else if (evt.key === 'End' && evt.ctrlKey) {
-                this.focusIndex = this.queueItems.length - 1;
-                this.ensureVisible(this.focusIndex);
+                this.focusItem(this.queueItems.length - 1);
+                evt.preventDefault();
             }
         },
         itemDragEnter(item: RowItem<PlayQueueItem>, evt: DragEvent) {
@@ -342,6 +347,7 @@ export default defineComponent({
 
 #playlist {
     overflow-y: scroll;
+    padding: $dims-padding-dense;
 }
 
 #playlist.playlist--dragover {
@@ -403,7 +409,7 @@ export default defineComponent({
     }
 
     &:hover,
-    &.playlist__track--focus {
+    &.playlist__track--focused {
         background: $colors-highlight;
     }
 }

@@ -30,80 +30,31 @@ import { Album, Artist, Library, LibraryItem, Track } from '.';
 import { PsvTree, TreeItem } from '../tree';
 import { defineComponent } from 'vue';
 
-import { ChildrenLoadState } from '../tree/tree-item';
+import { buildTreeNode, buildTreeLeaf } from '../tree/tree-item';
 import { debounced } from '../common/utils';
 
 type LibraryTree = Array<Artist>;
 
-function artistTreeNode(
-    artist: Artist,
-    searchRegex: RegExp | null
-): TreeItem<LibraryItem> {
-    const ownMatch = !searchRegex || searchRegex.test(artist.name);
-
-    return {
-        id: artist.id,
-        name: artist.name,
-        type: artist.type,
-        isLeaf: false,
-        expanded: false,
-        selected: false,
-        childrenSelected: false,
-        data: artist,
-        visible: ownMatch,
-        childrenLoadState: ChildrenLoadState.Unloaded,
-        children: [],
-    };
+function artistTreeNode(artist: Artist): TreeItem<LibraryItem> {
+    return buildTreeNode(artist.id, artist.name, artist.type, artist);
 }
 
-function albumTreeNode(
-    album: Album,
-    parentMatch: boolean,
-    searchRegex: RegExp | null
-): TreeItem<LibraryItem> {
-    const ownMatch = !searchRegex || searchRegex.test(album.name);
-
-    return {
-        id: album.id,
-        name: album.name,
-        type: album.type,
-        isLeaf: false,
-        expanded: false,
-        selected: false,
-        childrenSelected: false,
-        childrenLoadState: ChildrenLoadState.Unloaded,
-        data: album,
-        visible: parentMatch || ownMatch,
-        children: [],
-    };
+function albumTreeNode(album: Album): TreeItem<LibraryItem> {
+    return buildTreeNode(album.id, album.name, album.type, album);
 }
 
-function trackTreeNode(
-    track: Track,
-    parentMatch: boolean,
-    searchRegex: RegExp | null
-): TreeItem<Track> {
-    return {
-        id: track.id,
-        name: track.name,
-        type: track.type,
-        isLeaf: true,
-        expanded: false,
-        selected: false,
-        childrenSelected: false,
-        data: track,
-        visible: parentMatch || !searchRegex || searchRegex.test(track.name),
-    };
+function trackTreeNode(track: Track): TreeItem<Track> {
+    return buildTreeLeaf(track.id, track.name, track.type, track);
 }
 
 function libraryTreeNode(item: LibraryItem): TreeItem<LibraryItem> {
     switch (item.type) {
         case 'artist':
-            return artistTreeNode(item, null);
+            return artistTreeNode(item);
         case 'album':
-            return albumTreeNode(item, false, null);
+            return albumTreeNode(item);
         case 'track':
-            return trackTreeNode(item, false, null);
+            return trackTreeNode(item);
     }
 }
 
@@ -144,7 +95,7 @@ export default defineComponent({
                     item.id,
                     true
                 );
-                return albums.map((album) => albumTreeNode(album, true, null));
+                return albums.map((album) => albumTreeNode(album));
             } else if (item.type === 'album') {
                 const parent = parents[0]?.data;
 
@@ -169,7 +120,7 @@ export default defineComponent({
                     }
                 }
 
-                return tracks.map((t) => trackTreeNode(t, false, null));
+                return tracks.map((t) => trackTreeNode(t));
             }
             return [];
         },
@@ -203,7 +154,7 @@ export default defineComponent({
         this.debouncedSearch = debounced(this.doSearch.bind(this));
         this.libraryTree = artists;
         this.loaded = true;
-        this.treeItems = artists.map((a) => artistTreeNode(a, null));
+        this.treeItems = artists.map((a) => artistTreeNode(a));
     },
 });
 </script>
@@ -213,7 +164,7 @@ export default defineComponent({
 @import '../styles/dims.scss';
 
 #music-library {
-    padding: $dims-padding;
+    padding: $dims-padding-dense;
     display: grid;
     grid-template-rows: auto 1fr;
 }

@@ -1,17 +1,23 @@
 <template>
-    <ul class="psv-tree">
+    <ul class="psv-tree" role="group">
         <li
+            role="treeitem"
             class="psv-tree-node"
-            v-for="item in filteredItems"
+            v-for="item in items"
             :key="item.id"
             :class="{
                 'psv-tree-node--expanded': item.expanded,
                 'psv-tree-node--collapsed': !item.expanded,
                 'psv-tree-node--leaf': item.isLeaf,
                 'psv-tree-node--selected': item.selected,
+                'psv-tree-node--focused': item.focused,
                 'psv-tree-node--children-selected': item.childrenSelected,
                 [item.type]: true,
             }"
+            :aria-selected="item.selected"
+            :aria-expanded="ariaExpandedState(item)"
+            :tabindex="item.focused ? 0 : -1"
+            @focus="focusItem(item)"
         >
             <header
                 v-if="!item.isLeaf"
@@ -44,6 +50,7 @@
             <psv-tree-node
                 @toggle-select-item="$emit('toggle-select-item', $event)"
                 @toggle-expand-item="$emit('toggle-expand-item', $event)"
+                @focus-item="$emit('focus-item', $event)"
                 @activate-item="$emit('activate-item', $event)"
                 v-if="item.expanded && childrenLoaded(item)"
                 :items="item.children"
@@ -65,18 +72,25 @@ import {
     TreeSelectionEvent,
     TreeActivateEvent,
     TreeExpandEvent,
+    TreeFocusEvent,
+    TreeItemNode,
 } from './tree-item';
 
 export default defineComponent({
     name: 'psv-tree-node',
-    emits: ['toggle-select-item', 'toggle-expand-item', 'activate-item'],
+    emits: [
+        'toggle-select-item',
+        'toggle-expand-item',
+        'activate-item',
+        'focus-item',
+    ],
     props: {
         items: {
             type: Array as PropType<Array<TreeItem<unknown>>>,
             required: true,
         },
         parents: {
-            type: Array as PropType<Array<TreeItem<unknown>>>,
+            type: Array as PropType<Array<TreeItemNode<unknown>>>,
             required: true,
         },
         populateChildren: {
@@ -86,11 +100,6 @@ export default defineComponent({
                     parents: Array<TreeItem<unknown>>
                 ) => Promise<Array<TreeItem<unknown>>>
             >,
-        },
-    },
-    computed: {
-        filteredItems(): Array<TreeItem<unknown>> {
-            return this.items.filter((item) => item.visible !== false);
         },
     },
     methods: {
@@ -106,8 +115,22 @@ export default defineComponent({
                 item.childrenLoadState === ChildrenLoadState.Loading
             );
         },
+        ariaExpandedState(item: TreeItem<unknown>) {
+            if (item.isLeaf) {
+                return undefined;
+            }
+            return item.expanded;
+        },
         itemParents(item: TreeItem<unknown>): Array<TreeItem<unknown>> {
             return [...this.parents, item];
+        },
+        focusItem(item: TreeItem<unknown>) {
+            const focusEvent: TreeFocusEvent<unknown> = {
+                item: item,
+                type: TreeItemEventType.Focus,
+                parents: this.parents,
+            };
+            this.$emit('focus-item', focusEvent);
         },
         selectItemInternal(item: TreeItem<unknown>, selectType: SelectionType) {
             const event: TreeSelectionEvent<unknown> = {
@@ -120,6 +143,16 @@ export default defineComponent({
             this.$emit('toggle-select-item', event);
             if (item.selected && !item.expanded) {
                 this.toggleExpand(item);
+            }
+
+            if (item.selected) {
+                const focusEvent: TreeFocusEvent<unknown> = {
+                    item,
+                    type: TreeItemEventType.Focus,
+                    parents: this.parents,
+                };
+                console.log('Emitting focus event', focusEvent);
+                this.$emit('focus-item', focusEvent);
             }
         },
         selectItem(item: TreeItem<unknown>) {
@@ -181,6 +214,10 @@ export default defineComponent({
 .psv-tree-node {
     width: 100%;
 
+    .psv-tree-node {
+        margin: 0 $dims-padding;
+    }
+
     header,
     p {
         padding: $dims-padding-dense;
@@ -189,6 +226,10 @@ export default defineComponent({
 
 .psv-tree-node--selected {
     background-color: $colors-selected;
+}
+
+.psv-tree-node--focused {
+    background-color: $colors-highlight;
 }
 
 .psv-tree-node header,
