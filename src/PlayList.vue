@@ -15,6 +15,35 @@
         @keydown="handleKeyDown"
         @dragover.prevent
     >
+        <div class="playlist-picker">
+            <ul>
+                <li
+                    v-for="playQueue in playQueues"
+                    :key="playQueue.id"
+                    :class="{
+                        'playlist-picker__playlist': true,
+                        'playlist-picker__playlist--active':
+                            playQueue.name === activeQueue.name,
+                    }"
+                    @click="showQueue(playQueue)"
+                    @dblclick="renamingQueueId = playQueue.id"
+                >
+                    <span v-if="renamingQueueId != playQueue.id">
+                        {{ playQueue.name }}
+                    </span>
+                    <input
+                        type="text"
+                        v-model="playQueue.name"
+                        v-if="renamingQueueId === playQueue.id"
+                        @keydown.enter.stop="renamingQueueId = -1"
+                        @keydown.escape.stop="renamingQueueId = -1"
+                    />
+                </li>
+            </ul>
+            <button type="button" @click="newQueue">
+                <i class="fi-plus"></i>
+            </button>
+        </div>
         <table>
             <thead>
                 <tr>
@@ -30,7 +59,9 @@
                     :class="{
                         'playlist__track--selected': queueItem.selected,
                         'playlist__track--dragover': queueItem.dragCount !== 0,
-                        'playlist__track--playing': index === nowPlayingIndex,
+                        'playlist__track--playing':
+                            index === nowPlayingIndex &&
+                            activeQueue === playingQueue,
                         'playlist__track--focused': index === focusIndex,
                     }"
                     :aria-selected="queueItem.selected"
@@ -95,7 +126,9 @@ export default defineComponent({
             queueItems: [] as Array<RowItem<PlayQueueItem>>,
             playQueues: this.queueManager.getQueues(),
             activeQueue: this.queueManager.getActiveQueue(),
+            playingQueue: this.queueManager.getActiveQueue(),
             selectedItems: [] as Array<RowItem<PlayQueueItem>>,
+            renamingQueueIndex: -1,
             focusIndex: -1,
             dragOver: 0,
             nowPlayingIndex: -1,
@@ -116,7 +149,6 @@ export default defineComponent({
             }
         });
     },
-    emits: ['play-track'],
     methods: {
         formatAlbumArtists(item: Track) {
             if (item.albumArtists.size === 0) {
@@ -137,11 +169,22 @@ export default defineComponent({
             const nextIndex = this.activeQueue.size();
             this.activeQueue.extend(items);
             nextTick(() => {
-                this.ensureVisible(this.activeQueue.size() - 2);
+                this.ensureVisible(Math.max(0, this.activeQueue.size() - 2));
             });
             if (options.playNow) {
                 this.playTrack(nextIndex);
             }
+        },
+        newQueue() {
+            const newQueue = this.queueManager.newQueue();
+            this.playQueues = this.queueManager.getQueues();
+            this.activeQueue = newQueue;
+            this.queueItems = this.rowItemsFromQueue(this.activeQueue);
+        },
+        showQueue(queue: PlayQueue) {
+            this.queueManager.setActiveQueue(queue);
+            this.activeQueue = queue;
+            this.queueItems = this.rowItemsFromQueue(this.activeQueue);
         },
         rowItemsFromQueue(queue: PlayQueue): Array<RowItem<PlayQueueItem>> {
             const rowItems = [];
@@ -199,6 +242,10 @@ export default defineComponent({
             }
         },
         playTrack(index: number) {
+            if (this.activeQueue.name !== this.player.playQueue.name) {
+                this.player.setQueue(this.activeQueue);
+                this.playingQueue = this.activeQueue;
+            }
             this.player.play(index);
         },
         focusItem(index: number) {
@@ -341,13 +388,48 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 @import './styles/colors.scss';
 @import './styles/dims.scss';
+
+.playlist-picker {
+    background-color: $colors-primary;
+    height: 2em;
+    position: sticky;
+    top: 0;
+
+    display: grid;
+    grid-auto-flow: column;
+    justify-content: start;
+    align-items: stretch;
+
+    ul {
+        display: contents;
+    }
+
+    li,
+    button {
+        background-color: $colors-background;
+        padding: $dims-padding-dense $dims-padding;
+        border: 2px solid $colors-highlight;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        color: $colors-text;
+        vertical-align: bottom;
+    }
+
+    &__playlist {
+        &--active {
+            border-bottom-color: $colors-background !important;
+        }
+    }
+}
 
 #playlist {
     overflow-y: scroll;
     padding: $dims-padding-dense;
+    padding-top: 0;
 }
 
 #playlist.playlist--dragover {
@@ -370,7 +452,7 @@ export default defineComponent({
     background-color: $colors-background;
     text-align: left;
     position: sticky;
-    top: 0;
+    top: 2em;
 
     &::after {
         content: '';

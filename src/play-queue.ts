@@ -26,6 +26,7 @@ export interface PlayQueueItem {
 
 export default class PlayQueue {
     queueItems: Array<PlayQueueItem>;
+    id: number;
     index: number;
     name: string;
     loaded: boolean;
@@ -37,6 +38,7 @@ export default class PlayQueue {
         this.index = -1;
         this.nextItemId = 0;
         this.name = name;
+        this.id = new Date().getTime();
         this.loaded = false;
         this.onChange = new EventEmitter();
     }
@@ -169,6 +171,7 @@ interface StoredQueueStorage {
 export class QueueManager {
     queues: Map<string, PlayQueue>;
     activeQueue: string;
+    playingQueue: string;
 
     constructor(queues: Map<string, PlayQueue>, lastActive: string) {
         this.queues = queues;
@@ -176,6 +179,7 @@ export class QueueManager {
             this.saveOnQueueUpdate(queue);
         }
         this.activeQueue = lastActive;
+        this.playingQueue = lastActive;
     }
 
     static async create(library: Library): Promise<QueueManager> {
@@ -202,22 +206,26 @@ export class QueueManager {
         return new QueueManager(queues, lastActive);
     }
 
+    saveQueues(): void {
+        const storeQueues = [];
+        for (const queue of this.queues.values()) {
+            storeQueues.push({
+                name: queue.name,
+                trackIds: queue.queueItems.map((item) => {
+                    return item.track.id;
+                }),
+            });
+        }
+        const queues: StoredQueueStorage = {
+            queues: storeQueues,
+            lastActive: this.activeQueue,
+        };
+        window.localStorage.setItem('playQueues', JSON.stringify(queues));
+    }
+
     saveOnQueueUpdate(queue: PlayQueue): void {
         queue.onChange.on(() => {
-            const storeQueues = [];
-            for (const queue of this.queues.values()) {
-                storeQueues.push({
-                    name: queue.name,
-                    trackIds: queue.queueItems.map((item) => {
-                        return item.track.id;
-                    }),
-                });
-            }
-            const queues: StoredQueueStorage = {
-                queues: storeQueues,
-                lastActive: this.activeQueue,
-            };
-            window.localStorage.setItem('playQueues', JSON.stringify(queues));
+            this.saveQueues();
         });
     }
 
@@ -225,8 +233,40 @@ export class QueueManager {
         return this.queues.get(this.activeQueue) as PlayQueue;
     }
 
+    setActiveQueue(queue: PlayQueue): void {
+        this.activeQueue = queue.name;
+    }
+
     getQueues(): Array<PlayQueue> {
         return [...this.queues.values()];
+    }
+
+    newQueue(): PlayQueue {
+        let index = 0;
+        let foundFreeName = false;
+        let queueName = 'Untitled';
+        while (!foundFreeName) {
+            index += 1;
+            let valid = true;
+            for (const queue of this.queues.values()) {
+                if (queue.name === queueName) {
+                    valid = false;
+                    break;
+                }
+            }
+            if (valid) {
+                foundFreeName = true;
+                break;
+            } else {
+                queueName = `Untitled ${index}`;
+            }
+        }
+
+        const newQueue = new PlayQueue(queueName);
+        this.queues.set(newQueue.name, newQueue);
+        this.activeQueue = newQueue.name;
+        this.saveQueues();
+        return newQueue;
     }
 
     static async queueFromLibrary(

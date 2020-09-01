@@ -1,3 +1,9 @@
+# 0.2.3
+
+## New features
+* Multiple play queues
+
+
 # 0.2.2
 
 ## New features
