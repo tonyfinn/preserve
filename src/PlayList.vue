@@ -12,7 +12,13 @@
         @dragenter="listDragEnter"
         @dragleave="listDragLeave"
         @drop.stop.prevent="listDrop"
-        @keydown="handleKeyDown"
+        @keydown.up.exact.stop.prevent="focusPrevious"
+        @keydown.down.exact.stop.prevent="focusNext"
+        @keydown.space.stop.prevent="toggleSelectFocused"
+        @keydown.enter.stop.prevent="playFocusedItem"
+        @keydown.delete.stop.prevent="removeSelectedItems"
+        @keydown.home.ctrl.stop.prevent="focusFirst"
+        @keydown.end.ctrl.stop.prevent="focusLast"
         @dragover.prevent
     >
         <div class="playlist-picker">
@@ -128,7 +134,7 @@ export default defineComponent({
             activeQueue: this.queueManager.getActiveQueue(),
             playingQueue: this.queueManager.getActiveQueue(),
             selectedItems: [] as Array<RowItem<PlayQueueItem>>,
-            renamingQueueIndex: -1,
+            renamingQueueId: -1,
             focusIndex: -1,
             dragOver: 0,
             nowPlayingIndex: -1,
@@ -209,6 +215,17 @@ export default defineComponent({
             item.selected = true;
             this.selectedItems.push(item);
         },
+        toggleSelectItem(item: RowItem<PlayQueueItem>) {
+            console.log('Toggling select', item);
+            if (item.selected) {
+                item.selected = false;
+                this.selectedItems = this.selectedItems.filter(
+                    (i) => i.id !== item.id
+                );
+            } else {
+                this.appendSelectItem(item);
+            }
+        },
         clearSelection() {
             for (const selectedItem of this.selectedItems) {
                 selectedItem.selected = false;
@@ -255,34 +272,33 @@ export default defineComponent({
                 .focus({ preventScroll: true });
             this.ensureVisible(index);
         },
-        handleKeyDown(evt: KeyboardEvent) {
-            if (evt.key === 'Delete') {
-                const itemsToRemove = this.selectedItems.map((x) => x.data);
-                this.activeQueue.remove(itemsToRemove);
-                this.selectedItems = [];
-            } else if (evt.key === 'ArrowUp' && !evt.shiftKey) {
-                const prevItem = Math.max(0, this.focusIndex - 1);
-                this.focusItem(prevItem);
-                evt.preventDefault();
-            } else if (evt.key === 'ArrowDown' && !evt.shiftKey) {
-                const nextItem = Math.min(
-                    this.queueItems.length - 1,
-                    this.focusIndex + 1
-                );
-                this.focusItem(nextItem);
-                evt.preventDefault();
-            } else if (evt.key === 'Enter') {
-                this.playTrack(this.focusIndex);
-            } else if (evt.key === ' ') {
-                this.appendSelectItem(this.queueItems[this.focusIndex]);
-                evt.preventDefault();
-            } else if (evt.key === 'Home' && evt.ctrlKey) {
-                this.focusItem(0);
-                evt.preventDefault();
-            } else if (evt.key === 'End' && evt.ctrlKey) {
-                this.focusItem(this.queueItems.length - 1);
-                evt.preventDefault();
-            }
+        focusFirst() {
+            this.focusItem(0);
+        },
+        focusLast() {
+            this.focusItem(this.queueItems.length - 1);
+        },
+        focusPrevious() {
+            const prevItem = Math.max(0, this.focusIndex - 1);
+            this.focusItem(prevItem);
+        },
+        focusNext() {
+            const nextItem = Math.min(
+                this.queueItems.length - 1,
+                this.focusIndex + 1
+            );
+            this.focusItem(nextItem);
+        },
+        toggleSelectFocused() {
+            this.toggleSelectItem(this.queueItems[this.focusIndex]);
+        },
+        removeSelectedItems() {
+            const itemsToRemove = this.selectedItems.map((x) => x.data);
+            this.activeQueue.remove(itemsToRemove);
+            this.selectedItems = [];
+        },
+        playFocusedItem() {
+            this.playTrack(this.focusIndex);
         },
         itemDragEnter(item: RowItem<PlayQueueItem>, evt: DragEvent) {
             this.childDragOver += 1;

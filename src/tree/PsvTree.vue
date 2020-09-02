@@ -10,7 +10,15 @@
         @activate-item="$emit('activate-item', $event)"
         @focus-item="handleFocusItem"
         @focus="handleFocus"
-        @keydown="handleKeyDown"
+        @keydown.home.stop.prevent="focusFirst"
+        @keydown.end.stop.prevent="focusLast"
+        @keydown.up.stop.prevent="focusPrevious"
+        @keydown.down.stop.prevent="focusNext"
+        @keydown.left.stop.prevent="focusExit"
+        @keydown.right.stop.prevent="focusEnter"
+        @keydown.enter.stop.prevent="activateFocused"
+        @keydown.space.ctrl.exact.stop.prevent="appendSelectFocused"
+        @keydown.space.exact.stop.prevent="replaceSelectFocused"
     ></psv-tree-node>
 </template>
 
@@ -273,74 +281,57 @@ export default defineComponent({
                 this.focusLastOpenChild();
             }
         },
-        handleKeyDown(evt: KeyboardEvent) {
-            console.log(evt);
-            if (evt.key === 'ArrowDown') {
-                evt.preventDefault();
-                this.focusNext();
-            } else if (evt.key === 'ArrowUp') {
-                evt.preventDefault();
-                this.focusPrevious();
-            } else if (evt.key === 'ArrowRight') {
-                evt.preventDefault();
-                if (
-                    this.isTreeNode(this.focusedItem) &&
-                    this.hasExpandedChildren(this.focusedItem)
-                ) {
-                    this.focusFirstChild();
-                } else if (this.isTreeNode(this.focusedItem)) {
-                    this.focusedItem.expanded = true;
-                    this._populateChildren(this.focusedItem, this.focusParents);
-                }
-            } else if (evt.key === 'ArrowLeft') {
-                evt.preventDefault();
-                if (this.focusedItem && !this.focusedItem.expanded) {
-                    this.focusParent();
-                } else if (this.focusedItem?.expanded) {
-                    this.focusedItem.expanded = false;
-                }
-            } else if (evt.key === 'Home') {
-                evt.preventDefault();
-                this.focusFirst();
-            } else if (evt.key === 'End') {
-                evt.preventDefault();
-                this.focusLast();
-            } else if (
-                evt.key === ' ' &&
-                !evt.ctrlKey &&
-                !evt.shiftKey &&
-                this.focusedItem
+        focusEnter() {
+            if (
+                this.isTreeNode(this.focusedItem) &&
+                this.hasExpandedChildren(this.focusedItem)
             ) {
-                evt.preventDefault();
-                this._select(
-                    this.focusedItem,
-                    SelectionType.Replace,
-                    !this.focusedItem.selected
-                );
-            } else if (
-                evt.key === ' ' &&
-                evt.ctrlKey &&
-                !evt.shiftKey &&
-                this.focusedItem
-            ) {
-                evt.preventDefault();
-                this._select(
-                    this.focusedItem,
-                    SelectionType.Append,
-                    !this.focusedItem.selected
-                );
-            } else if (evt.key === 'Enter' && this.focusedItem) {
-                evt.preventDefault();
-                const event: TreeActivateEvent<unknown> = {
-                    item: this.focusedItem,
-                    type: TreeItemEventType.Activate,
-                    parents: this.focusParents,
-                    shiftKey: evt.shiftKey,
-                    ctrlKey: evt.ctrlKey,
-                    altKey: evt.altKey,
-                };
-                this.$emit('activate-item', event);
+                this.focusFirstChild();
+            } else if (this.isTreeNode(this.focusedItem)) {
+                this.focusedItem.expanded = true;
+                this._populateChildren(this.focusedItem, this.focusParents);
             }
+        },
+        focusExit() {
+            if (this.focusedItem && !this.focusedItem.expanded) {
+                this.focusParent();
+            } else if (this.focusedItem?.expanded) {
+                this.focusedItem.expanded = false;
+            }
+        },
+        activateFocused(evt: KeyboardEvent) {
+            if (!this.focusedItem) {
+                return;
+            }
+            const event: TreeActivateEvent<unknown> = {
+                item: this.focusedItem,
+                type: TreeItemEventType.Activate,
+                parents: this.focusParents,
+                shiftKey: evt.shiftKey,
+                ctrlKey: evt.ctrlKey,
+                altKey: evt.altKey,
+            };
+            this.$emit('activate-item', event);
+        },
+        replaceSelectFocused() {
+            if (!this.focusedItem) {
+                return;
+            }
+            this._select(
+                this.focusedItem,
+                SelectionType.Replace,
+                !this.focusedItem.selected
+            );
+        },
+        appendSelectFocused() {
+            if (!this.focusedItem) {
+                return;
+            }
+            this._select(
+                this.focusedItem,
+                SelectionType.Append,
+                !this.focusedItem.selected
+            );
         },
     },
 });
