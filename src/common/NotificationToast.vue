@@ -81,7 +81,7 @@ export default defineComponent({
 @import '../styles/dims.scss';
 
 .notification-grid {
-    margin-top: 2em;
+    margin-top: 1em;
     display: grid;
     grid-template-columns: auto;
     justify-content: center;
@@ -93,6 +93,7 @@ export default defineComponent({
     width: 60em;
     display: grid;
     grid-template-columns: 1fr 1.5em;
+    border-radius: 10px;
 }
 
 .notification-default {
@@ -101,9 +102,11 @@ export default defineComponent({
 
 .notification-success {
     background-color: $colors-success;
+    color: $colors-text-dark;
 }
 
 .notification-error {
     background-color: $colors-error;
+    color: $colors-text-dark;
 }
 </style>
