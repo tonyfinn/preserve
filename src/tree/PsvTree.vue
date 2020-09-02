@@ -130,7 +130,7 @@ export default defineComponent({
         handleFocus(_evt: FocusEvent) {
             if (this.focusedItem === null && this.items.length >= 1) {
                 this.focusedItem = this.items[0];
-                this.items[0].focused = true;
+                this.focusedItem.focused = true;
                 this.focusIndexInParent = 0;
                 this.$el
                     .querySelector('[role=tree] > .psv-tree-node:nth-child(1)')
