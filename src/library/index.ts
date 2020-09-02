@@ -109,6 +109,13 @@ export function artistNames(t: Track): string {
     return 'Unknown Artist';
 }
 
+export function albumArtistNames(t: Track): string {
+    if (t.albumArtists && t.albumArtists.size > 0) {
+        return [...t.albumArtists].map((a) => a.name).join('; ');
+    }
+    return 'Unknown Artist';
+}
+
 export class Library {
     connectionManager: Jellyfin.ConnectionManager;
     apiClient: Jellyfin.ApiClient;

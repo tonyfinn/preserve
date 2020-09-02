@@ -34,7 +34,7 @@ import {
     LoggedInConnectionResult,
     SuccessfulConnectionResult,
 } from 'jellyfin-apiclient';
-import { QueueManager } from './play-queue';
+import { QueueManager } from './queues/play-queue';
 
 export default defineComponent({
     components: {

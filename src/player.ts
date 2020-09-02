@@ -1,6 +1,6 @@
 import { Library, Track, artistNames } from './library';
 import EventEmitter from './common/events';
-import PlayQueue from './play-queue';
+import { PlayQueue } from './queues/play-queue';
 
 import Hls from 'hls.js';
 

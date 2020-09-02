@@ -7,12 +7,12 @@
             @update-selection="updateSelection"
             @dragstart="libraryDragStart"
         ></music-library>
-        <play-list
+        <play-queues
             ref="playlist"
             :library="library"
             :queueManager="queueManager"
             :player="player"
-        ></play-list>
+        ></play-queues>
         <playback-footer :player="player"></playback-footer>
         <div class="drag-counter">
             {{ selectedItems.length }} items selected
@@ -25,16 +25,15 @@ import MusicLibrary from './library/MusicLibrary.vue';
 import { AudioPlayer } from './player';
 import { Library, LibraryItem } from './library';
 import PlaybackFooter from './PlaybackFooter.vue';
-import PlayList from './PlayList.vue';
+import { PlayQueues, QueueManager } from './queues';
 import { defineComponent } from 'vue';
-import { QueueManager } from './play-queue';
 import { TreeActivateEvent } from './tree/tree-item';
 
 export default defineComponent({
     components: {
         MusicLibrary,
         PlaybackFooter,
-        PlayList,
+        PlayQueues,
     },
     props: {
         library: {
@@ -56,7 +55,7 @@ export default defineComponent({
     },
     methods: {
         async activateItem(evt: TreeActivateEvent<LibraryItem>) {
-            const playlist = this.$refs.playlist as typeof PlayList;
+            const playlist = this.$refs.playlist as typeof PlayQueues;
             const tracksToAdd = await this.library.getChildTracks(
                 evt.item.data
             );

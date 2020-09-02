@@ -101,9 +101,9 @@
 
 <script lang="ts">
 import { defineComponent, nextTick } from 'vue';
-import { Track, Library, ItemStub } from './library';
-import { AudioPlayer, PlaybackEventType } from './player';
-import PlayQueue, { PlayQueueItem, QueueManager } from './play-queue';
+import { Track, Library, ItemStub, albumArtistNames } from '../library';
+import { AudioPlayer, PlaybackEventType } from '../player';
+import { PlayQueue, PlayQueueItem, QueueManager } from './play-queue';
 
 interface RowItem<T> {
     id: string;
@@ -157,14 +157,7 @@ export default defineComponent({
     },
     methods: {
         formatAlbumArtists(item: Track) {
-            if (item.albumArtists.size === 0) {
-                return 'Unknown Artist';
-            }
-            let albumArtists = [];
-            for (const aa of item.albumArtists) {
-                albumArtists.push(aa.name);
-            }
-            return albumArtists.join('; ');
+            return albumArtistNames(item);
         },
         addTracks(
             items: Array<Track>,
@@ -405,8 +398,8 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@import './styles/colors.scss';
-@import './styles/dims.scss';
+@import '../styles/colors.scss';
+@import '../styles/dims.scss';
 
 .playlist-picker {
     background-color: $colors-primary;

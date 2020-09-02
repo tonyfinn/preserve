@@ -1,6 +1,6 @@
-import { Track, Library } from './library';
-import EventEmitter from './common/events';
-import { RepeatMode } from './player';
+import { Track, Library } from '../library';
+import EventEmitter from '../common/events';
+import { RepeatMode } from '../player';
 
 export enum QueueEventType {
     AddItems,
@@ -24,7 +24,7 @@ export interface PlayQueueItem {
     queueItemId: string;
 }
 
-export default class PlayQueue {
+export class PlayQueue {
     queueItems: Array<PlayQueueItem>;
     id: number;
     index: number;
