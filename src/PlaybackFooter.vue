@@ -66,7 +66,14 @@
                     />
                 </div>
                 <div class="gui-volume">
-                    <i class="fi-volume"></i>
+                    <i
+                        :class="{
+                            'fi-volume': !muted && volume > 0,
+                            'fi-volume-none': !muted && volume === 0,
+                            'fi-volume-strike': muted,
+                        }"
+                        @click="toggleMute"
+                    ></i>
                     <SliderBar v-model="volume"></SliderBar>
                 </div>
             </section>
@@ -95,6 +102,7 @@ export default defineComponent({
             playing: this.player.playing,
             repeatMode: this.player.repeatMode,
             shuffle: false,
+            muted: false,
             duration: this.player.activeTrack()?.duration || 0,
             currentTime: 0,
             volume: 100,
@@ -104,6 +112,7 @@ export default defineComponent({
         volume(newValue) {
             const bounded = Math.min(100, Math.max(newValue, 0));
             this.player.setVolume(bounded / 100);
+            this.muted = this.player.muted;
         },
     },
     emits: ['toggle-play'],
@@ -164,6 +173,9 @@ export default defineComponent({
         },
         toggleRepeat() {
             this.repeatMode = this.player.nextRepeatMode();
+        },
+        toggleMute() {
+            this.muted = this.player.toggleMute();
         },
         isRepeat() {
             return this.repeatMode !== RepeatMode.Off;

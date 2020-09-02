@@ -73,6 +73,7 @@ export class AudioPlayer {
     library: Library;
     playQueue: PlayQueue;
     playing: boolean;
+    muted: boolean;
     repeatMode: RepeatMode;
     shuffle: boolean;
     shuffleOrder: Array<number>;
@@ -93,6 +94,7 @@ export class AudioPlayer {
         this.shuffle = false;
         this.shuffleOrder = [];
         this.volume = 1;
+        this.muted = false;
         this.playbackEvent = new EventEmitter();
         this.element.addEventListener('ended', () => {
             this._handleTrackEnd();
@@ -131,20 +133,6 @@ export class AudioPlayer {
                 this.nextTrack();
             });
         }
-
-        window.addEventListener('keydown', (evt) => {
-            if (evt.key === 'MediaPause') {
-                this._pause();
-            } else if (evt.key === 'MediaPlay') {
-                this._play();
-            } else if (evt.key === 'MediaPlayPause') {
-                this.togglePlay();
-            } else {
-                return;
-            }
-            evt.preventDefault();
-            evt.stopPropagation();
-        });
     }
 
     static getOrCreateInstance(library: Library): AudioPlayer {
@@ -370,6 +358,17 @@ export class AudioPlayer {
     }
 
     setVolume(volume: number): void {
+        this.muted = false;
         this.element.volume = this.volume = volume;
+    }
+
+    toggleMute(): boolean {
+        this.muted = !this.muted;
+        if (this.muted) {
+            this.element.volume = 0;
+        } else {
+            this.element.volume = this.volume;
+        }
+        return this.muted;
     }
 }

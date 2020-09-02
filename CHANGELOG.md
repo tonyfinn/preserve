@@ -3,6 +3,7 @@
 ## New features
 * Multiple play queues
 * Control columns displayed in play queue
+* Muting of playback
 
 
 # 0.2.2
