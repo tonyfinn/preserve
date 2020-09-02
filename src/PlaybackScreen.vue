@@ -8,7 +8,6 @@
             @dragstart="libraryDragStart"
         ></music-library>
         <play-queues
-            ref="playlist"
             :library="library"
             :queueManager="queueManager"
             :player="player"
@@ -55,12 +54,15 @@ export default defineComponent({
     },
     methods: {
         async activateItem(evt: TreeActivateEvent<LibraryItem>) {
-            const playlist = this.$refs.playlist as typeof PlayQueues;
             const tracksToAdd = await this.library.getChildTracks(
                 evt.item.data
             );
+            const newIndex = this.queueManager.activeQueue.size();
+            this.queueManager.activeQueue.extend(tracksToAdd);
             const playNow = !evt.shiftKey && !evt.ctrlKey && !evt.altKey;
-            playlist.addTracks(tracksToAdd, { playNow });
+            if (playNow) {
+                this.player.play(newIndex);
+            }
         },
         libraryDragStart(evt: DragEvent) {
             if (this.selectedItems.length > 0) {

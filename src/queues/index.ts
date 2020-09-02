@@ -1,2 +1,2 @@
 export { default as PlayQueues } from './PlayQueues.vue';
-export { PlayQueue, QueueManager } from './play-queue';
+export { PlayQueue, PlayQueueItem, QueueManager } from './play-queue';

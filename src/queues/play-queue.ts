@@ -10,6 +10,7 @@ export enum QueueEventType {
 interface AddItemsEvent {
     type: QueueEventType.AddItems;
     items: Array<PlayQueueItem>;
+    position: number;
 }
 
 interface RemoveItemsEvent {
@@ -33,12 +34,12 @@ export class PlayQueue {
     nextItemId: number;
     onChange: EventEmitter<QueueEvent>;
 
-    constructor(name: string) {
+    constructor(name: string, id?: number) {
         this.queueItems = [];
         this.index = -1;
         this.nextItemId = 0;
         this.name = name;
-        this.id = new Date().getTime();
+        this.id = id || new Date().getTime();
         this.loaded = false;
         this.onChange = new EventEmitter();
     }
@@ -110,10 +111,12 @@ export class PlayQueue {
 
     extend(tracks: Array<Track>): void {
         const trackItems = this._makeTrackItems(tracks);
+        const position = this.queueItems.length;
         this.queueItems = this.queueItems.concat(trackItems);
         this.onChange.trigger({
             type: QueueEventType.AddItems,
             items: trackItems,
+            position,
         });
     }
 
@@ -123,6 +126,7 @@ export class PlayQueue {
         this.onChange.trigger({
             type: QueueEventType.AddItems,
             items: trackItems,
+            position,
         });
     }
 
@@ -160,6 +164,7 @@ export class PlayQueue {
 
 interface StoredQueue {
     name: string;
+    id?: number;
     trackIds: Array<string>;
 }
 
@@ -168,18 +173,34 @@ interface StoredQueueStorage {
     queues: Array<StoredQueue>;
 }
 
+interface QueueChangeEvent {
+    newQueue: PlayQueue;
+}
+
 export class QueueManager {
     queues: Map<string, PlayQueue>;
-    activeQueue: string;
-    playingQueue: string;
+    activeQueue: PlayQueue;
+    playingQueue: PlayQueue;
+    onSwitchActive: EventEmitter<QueueChangeEvent>;
+    onSwitchPlaying: EventEmitter<QueueChangeEvent>;
+    static nextQueueId: number = new Date().getTime();
 
     constructor(queues: Map<string, PlayQueue>, lastActive: string) {
         this.queues = queues;
         for (const queue of this.queues.values()) {
             this.saveOnQueueUpdate(queue);
         }
-        this.activeQueue = lastActive;
-        this.playingQueue = lastActive;
+        const lastActiveQueue = queues.get(lastActive);
+        if (lastActiveQueue) {
+            this.activeQueue = lastActiveQueue;
+            this.playingQueue = lastActiveQueue;
+        } else {
+            const defaultQueue = this.newQueue();
+            this.activeQueue = defaultQueue;
+            this.playingQueue = defaultQueue;
+        }
+        this.onSwitchActive = new EventEmitter();
+        this.onSwitchPlaying = new EventEmitter();
     }
 
     static async create(library: Library): Promise<QueueManager> {
@@ -193,6 +214,7 @@ export class QueueManager {
                 const queue = await this.queueFromLibrary(
                     storedQueue.name,
                     storedQueue.trackIds,
+                    storedQueue.id,
                     library
                 );
                 queues.set(queue.name, queue);
@@ -210,6 +232,7 @@ export class QueueManager {
         const storeQueues = [];
         for (const queue of this.queues.values()) {
             storeQueues.push({
+                id: queue.id,
                 name: queue.name,
                 trackIds: queue.queueItems.map((item) => {
                     return item.track.id;
@@ -218,7 +241,7 @@ export class QueueManager {
         }
         const queues: StoredQueueStorage = {
             queues: storeQueues,
-            lastActive: this.activeQueue,
+            lastActive: this.activeQueue.name,
         };
         window.localStorage.setItem('playQueues', JSON.stringify(queues));
     }
@@ -230,11 +253,21 @@ export class QueueManager {
     }
 
     getActiveQueue(): PlayQueue {
-        return this.queues.get(this.activeQueue) as PlayQueue;
+        return this.activeQueue;
     }
 
     setActiveQueue(queue: PlayQueue): void {
-        this.activeQueue = queue.name;
+        this.activeQueue = queue;
+        this.onSwitchActive.trigger({
+            newQueue: queue,
+        });
+    }
+
+    setPlayingQueue(queue: PlayQueue): void {
+        this.playingQueue = queue;
+        this.onSwitchPlaying.trigger({
+            newQueue: queue,
+        });
     }
 
     getQueues(): Array<PlayQueue> {
@@ -262,9 +295,9 @@ export class QueueManager {
             }
         }
 
-        const newQueue = new PlayQueue(queueName);
+        const newQueue = new PlayQueue(queueName, QueueManager.nextQueueId++);
         this.queues.set(newQueue.name, newQueue);
-        this.activeQueue = newQueue.name;
+        this.activeQueue = newQueue;
         this.saveQueues();
         return newQueue;
     }
@@ -272,9 +305,13 @@ export class QueueManager {
     static async queueFromLibrary(
         name: string,
         trackIds: Array<string>,
+        id: number | undefined,
         library: Library
     ): Promise<PlayQueue> {
-        const queue = new PlayQueue(name);
+        if (!id) {
+            id = QueueManager.nextQueueId++;
+        }
+        const queue = new PlayQueue(name, id);
         const tracks = await library.getTracksByIds(trackIds);
         queue.extend(tracks);
         return queue;
