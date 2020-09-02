@@ -264,6 +264,10 @@ button {
     grid-auto-flow: column;
     justify-content: space-between;
     align-items: center;
+
+    button {
+        padding: 0;
+    }
 }
 
 .extra-controls {
