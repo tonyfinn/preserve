@@ -79,6 +79,7 @@ import { defineComponent } from 'vue';
 import { AudioPlayer, PlaybackEventType, RepeatMode } from './player';
 import { artistNames } from './library';
 import SliderBar from './common/SliderBar.vue';
+import { formatTime } from './common/utils';
 
 export default defineComponent({
     components: { SliderBar },
@@ -171,18 +172,7 @@ export default defineComponent({
             return this.repeatMode === RepeatMode.RepeatOne;
         },
         formatTime(timeValue: number): string {
-            const seconds = Math.floor(timeValue % 60);
-            const secondString = seconds.toFixed().padStart(2, '0');
-            const minutes = Math.floor((timeValue % 3600) / 60);
-            const minuteString = minutes.toFixed().padStart(2, '0');
-            const hours = Math.floor(timeValue / 3600);
-
-            if (hours >= 1) {
-                const hourString = hours.toFixed().padStart(2, '0');
-                return `${hourString}:${minuteString}:${secondString}`;
-            } else {
-                return `${minuteString}:${secondString}`;
-            }
+            return formatTime(timeValue);
         },
         previousTrack() {
             this.player.previousTrack();

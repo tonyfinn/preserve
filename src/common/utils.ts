@@ -36,3 +36,18 @@ export function sorted<T>(
     output.sort(sortFunction);
     return output;
 }
+
+export function formatTime(timeSeconds: number): string {
+    const seconds = Math.floor(timeSeconds % 60);
+    const secondString = seconds.toFixed().padStart(2, '0');
+    const minutes = Math.floor((timeSeconds % 3600) / 60);
+    const minuteString = minutes.toFixed().padStart(2, '0');
+    const hours = Math.floor(timeSeconds / 3600);
+
+    if (hours >= 1) {
+        const hourString = hours.toFixed().padStart(2, '0');
+        return `${hourString}:${minuteString}:${secondString}`;
+    } else {
+        return `${minuteString}:${secondString}`;
+    }
+}

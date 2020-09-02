@@ -11,6 +11,34 @@
         @dragover.prevent
         @drop.stop.prevent="listDrop"
     >
+        <div
+            :class="{
+                'playlist__column-picker': true,
+                'playlist__column-picker--picking': pickingColumns,
+            }"
+        >
+            <i
+                class="fi-list-bullet"
+                v-if="!pickingColumns"
+                title="Customise Columns"
+                @click="pickingColumns = true"
+            ></i>
+            <ul class="columns" v-if="pickingColumns">
+                <li v-for="column in columns" :key="column.title">
+                    <input
+                        :id="'visibility-column-' + column.title"
+                        type="checkbox"
+                        v-model="column.visible"
+                    />
+                    <label :for="'visibility-column-' + column.title">{{
+                        column.title
+                    }}</label>
+                </li>
+            </ul>
+            <button v-if="pickingColumns" @click="pickingColumns = false">
+                Done
+            </button>
+        </div>
         <table
             role="grid"
             aria-label="Play Queue"
@@ -26,9 +54,9 @@
         >
             <thead>
                 <tr>
-                    <th>Title</th>
-                    <th>Album Artist</th>
-                    <th>Album</th>
+                    <th v-for="column in visibleColumns" :key="column.title">
+                        {{ column.title }}
+                    </th>
                 </tr>
             </thead>
             <tbody>
@@ -63,9 +91,9 @@
                     @drop.stop.prevent="itemDrop(queueItem, index, $event)"
                     @dragover.prevent
                 >
-                    <td>{{ queueItem.data.track.name }}</td>
-                    <td>{{ formatAlbumArtists(queueItem.data.track) }}</td>
-                    <td>{{ queueItem.data.track.album.name }}</td>
+                    <td v-for="column in visibleColumns" :key="column.title">
+                        {{ column.renderer(queueItem) }}
+                    </td>
                 </tr>
             </tbody>
         </table>
@@ -75,8 +103,15 @@
 <script lang="ts">
 import { defineComponent, nextTick } from 'vue';
 import { AudioPlayer, PlaybackEventType } from '../player';
-import { Library, Track, albumArtistNames, ItemStub } from '../library';
+import {
+    Library,
+    Track,
+    albumArtistNames,
+    ItemStub,
+    artistNames,
+} from '../library';
 import { QueueManager, PlayQueueItem, PlayQueue } from '.';
+import { formatTime } from '../common/utils';
 
 export interface RowItem<T> {
     id: string;
@@ -99,6 +134,12 @@ function rowItemsFromQueue(queue: PlayQueue): Array<RowItem<PlayQueueItem>> {
     return rowItems;
 }
 
+interface ColumnDef<T> {
+    title: string;
+    visible: boolean;
+    renderer: (row: RowItem<T>) => string;
+}
+
 export default defineComponent({
     props: {
         player: {
@@ -117,10 +158,68 @@ export default defineComponent({
     data() {
         const activeQueue = this.queueManager.getActiveQueue();
         const playingQueue = this.player.getQueue();
+
+        const columns: Array<ColumnDef<PlayQueueItem>> = [
+            {
+                title: 'Disc Number',
+                visible: false,
+                renderer(row: RowItem<PlayQueueItem>): string {
+                    return row.data.track.discNumber
+                        ? '' + row.data.track.discNumber
+                        : '--';
+                },
+            },
+            {
+                title: 'Track Number',
+                visible: false,
+                renderer(row: RowItem<PlayQueueItem>): string {
+                    return row.data.track.trackNumber
+                        ? '' + row.data.track.trackNumber
+                        : '--';
+                },
+            },
+            {
+                title: 'Title',
+                visible: true,
+                renderer(row: RowItem<PlayQueueItem>): string {
+                    return row.data.track.name;
+                },
+            },
+            {
+                title: 'Artist',
+                visible: true,
+                renderer(row: RowItem<PlayQueueItem>): string {
+                    return artistNames(row.data.track);
+                },
+            },
+            {
+                title: 'Album Artist',
+                visible: false,
+                renderer(row: RowItem<PlayQueueItem>): string {
+                    return albumArtistNames(row.data.track);
+                },
+            },
+            {
+                title: 'Album',
+                visible: true,
+                renderer(row: RowItem<PlayQueueItem>): string {
+                    return row.data.track.album.name;
+                },
+            },
+            {
+                title: 'Duration',
+                visible: false,
+                renderer(row: RowItem<PlayQueueItem>): string {
+                    return formatTime(row.data.track.duration);
+                },
+            },
+        ];
         return {
             playQueues: this.queueManager.getQueues(),
             activeQueue,
             playingQueue,
+            columns,
+            pickingColumns: false,
             queueItems: rowItemsFromQueue(activeQueue),
             selectedItems: [] as Array<RowItem<PlayQueueItem>>,
             queueTracksChangeHandlerId: -1,
@@ -154,12 +253,14 @@ export default defineComponent({
             this.readActiveQueueTracks
         );
     },
+    computed: {
+        visibleColumns(): Array<ColumnDef<PlayQueueItem>> {
+            return this.columns.filter((item) => item.visible);
+        },
+    },
     methods: {
         readActiveQueueTracks() {
             this.queueItems = rowItemsFromQueue(this.activeQueue);
-        },
-        formatAlbumArtists(item: Track) {
-            return albumArtistNames(item);
         },
         addTracks(
             items: Array<Track>,
@@ -379,6 +480,12 @@ export default defineComponent({
 @import '../styles/colors.scss';
 @import '../styles/dims.scss';
 
+.playlist__queue-wrapper {
+    display: grid;
+    width: 100%;
+    grid-template: auto 1fr / 1fr auto;
+}
+
 .playlist__queue-wrapper--dragover {
     border: 3px dashed $colors-text;
 }
@@ -387,11 +494,40 @@ export default defineComponent({
     border-bottom: 3px dashed $colors-text;
 }
 
+.playlist__column-picker {
+    grid-row: 1;
+    grid-column: 2;
+    position: sticky;
+    top: 2em;
+    z-index: 1;
+    padding: $dims-padding-dense;
+
+    &--picking {
+        padding: $dims-padding;
+        background-color: $colors-background;
+        border: 1px solid white;
+    }
+
+    ul {
+        list-style-type: none;
+    }
+
+    label {
+        display: inline-block;
+        padding: $dims-padding-dense;
+    }
+
+    button {
+        width: 100%;
+    }
+}
+
 .playlist__queue {
-    width: 100%;
     padding: $dims-padding;
     border-collapse: collapse;
     margin-bottom: $dims-bottom-spacing;
+    grid-row: 1 / 3;
+    grid-column: 1 / 3;
 }
 
 .playlist__queue th {

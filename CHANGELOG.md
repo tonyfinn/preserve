@@ -2,6 +2,7 @@
 
 ## New features
 * Multiple play queues
+* Control columns displayed in play queue
 
 
 # 0.2.2
