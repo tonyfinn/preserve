@@ -2,6 +2,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { VueLoaderPlugin } = require('vue-loader');
 const TerserPlugin = require('terser-webpack-plugin');
+const webpack = require('webpack');
 
 const devMode = process.env.NODE_ENV !== 'production';
 
@@ -83,6 +84,10 @@ module.exports = {
             title: 'Preserve',
         }),
         new VueLoaderPlugin(),
+        new webpack.DefinePlugin({
+            APP_NAME: JSON.stringify('Preserve'),
+            APP_VERSION: JSON.stringify(require('./package.json').version),
+        }),
     ],
     optimization: {
         usedExports: true,

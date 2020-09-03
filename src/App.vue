@@ -1,7 +1,7 @@
 <template>
     <div id="app">
         <header id="app-header">
-            <h1>Preserve</h1>
+            <h1>{{ appName }}</h1>
             <button v-if="loggedIn" @click="logout()">Logout</button>
         </header>
         <playback-screen
@@ -45,6 +45,8 @@ export default defineComponent({
     },
     data() {
         return {
+            // eslint-disable-next-line
+            appName: APP_NAME,
             loggedIn: false,
             loaded: false,
             library: null as Library | null,
