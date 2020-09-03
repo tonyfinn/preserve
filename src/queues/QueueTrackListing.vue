@@ -110,6 +110,7 @@ import {
     artistNames,
 } from '../library';
 import { QueueManager, PlayQueueItem, PlayQueue } from '.';
+import { ITEM_STUB_MIME_TYPE } from '../common/constants';
 import { formatTime } from '../common/utils';
 
 export interface RowItem<T> {
@@ -365,11 +366,7 @@ export default defineComponent({
         },
         itemDragEnter(item: RowItem<PlayQueueItem>, evt: DragEvent) {
             this.childDragOver += 1;
-            if (
-                evt.dataTransfer?.getData(
-                    'application/x-preserve-library-item-stub'
-                )
-            ) {
+            if (evt.dataTransfer?.getData(ITEM_STUB_MIME_TYPE)) {
                 item.dragCount += 1;
                 evt.preventDefault();
             }
@@ -379,11 +376,7 @@ export default defineComponent({
             item.dragCount -= 1;
         },
         listDragEnter(evt: DragEvent) {
-            if (
-                evt.dataTransfer?.getData(
-                    'application/x-preserve-library-item-stub'
-                )
-            ) {
+            if (evt.dataTransfer?.getData(ITEM_STUB_MIME_TYPE)) {
                 this.dragOver += 1;
                 evt.preventDefault();
             }
@@ -392,9 +385,7 @@ export default defineComponent({
             this.dragOver -= 1;
         },
         async listDrop(evt: DragEvent) {
-            const transferData = evt.dataTransfer?.getData(
-                'application/x-preserve-library-item-stub'
-            );
+            const transferData = evt.dataTransfer?.getData(ITEM_STUB_MIME_TYPE);
             this.dragOver = 0;
             this.childDragOver = 0;
             if (transferData) {
@@ -415,9 +406,7 @@ export default defineComponent({
             index: number,
             evt: DragEvent
         ) {
-            const transferData = evt.dataTransfer?.getData(
-                'application/x-preserve-library-item-stub'
-            );
+            const transferData = evt.dataTransfer?.getData(ITEM_STUB_MIME_TYPE);
             item.dragCount = 0;
             this.dragOver = 0;
             this.childDragOver = 0;

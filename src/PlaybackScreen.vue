@@ -20,6 +20,7 @@
 </template>
 
 <script lang="ts">
+import { ITEM_STUB_MIME_TYPE } from './common/constants';
 import MusicLibrary from './library/MusicLibrary.vue';
 import { AudioPlayer } from './player';
 import { Library, LibraryItem } from './library';
@@ -79,7 +80,7 @@ export default defineComponent({
                     };
                 });
                 evt.dataTransfer?.setData(
-                    'application/x-preserve-library-item-stub',
+                    ITEM_STUB_MIME_TYPE,
                     JSON.stringify(jsonValues)
                 );
                 const dragEl = this.$el.querySelector('.drag-counter');
@@ -96,6 +97,8 @@ export default defineComponent({
 </script>
 
 <style lang="scss">
+@import './styles/dims.scss';
+
 #playback-screen {
     display: grid;
     grid-template-rows: minmax(0, 1fr) auto;
@@ -107,7 +110,7 @@ export default defineComponent({
         left: -1000px;
         background-color: white;
         color: black;
-        border-radius: 25%;
+        border-radius: $dims-border-radius-subtle;
     }
 }
 

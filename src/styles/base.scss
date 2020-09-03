@@ -29,4 +29,5 @@ input[type='password'],
 input[type='submit'],
 button {
     padding: $dims-padding-dense;
+    border-radius: $dims-border-radius-subtle;
 }

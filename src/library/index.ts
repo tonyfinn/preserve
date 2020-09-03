@@ -1,8 +1,6 @@
-const UNKNOWN_ARTIST_NAME = 'Unknown Artist';
-const UNKNOWN_ALBUM_NAME = 'Unknown Album';
-
 import * as Jellyfin from 'jellyfin-apiclient';
 import { sorted } from '../common/utils';
+import { UNKNOWN_ARTIST_NAME, UNKNOWN_ALBUM_NAME } from '../common/constants';
 
 type ItemType = 'artist' | 'album' | 'track';
 
@@ -106,14 +104,14 @@ export function artistNames(t: Track): string {
     if (t.artists && t.artists.size > 0) {
         return [...t.artists].map((a) => a.name).join('; ');
     }
-    return 'Unknown Artist';
+    return UNKNOWN_ARTIST_NAME;
 }
 
 export function albumArtistNames(t: Track): string {
     if (t.albumArtists && t.albumArtists.size > 0) {
         return [...t.albumArtists].map((a) => a.name).join('; ');
     }
-    return 'Unknown Artist';
+    return UNKNOWN_ARTIST_NAME;
 }
 
 export class Library {

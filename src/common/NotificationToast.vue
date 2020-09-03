@@ -93,7 +93,7 @@ export default defineComponent({
     width: 60em;
     display: grid;
     grid-template-columns: 1fr 1.5em;
-    border-radius: 10px;
+    border-radius: $dims-border-radius;
 }
 
 .notification-default {

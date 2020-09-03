@@ -87,6 +87,11 @@ import { AudioPlayer, PlaybackEventType, RepeatMode } from './player';
 import { artistNames } from './library';
 import SliderBar from './common/SliderBar.vue';
 import { formatTime } from './common/utils';
+import {
+    UNKNOWN_ARTIST_NAME,
+    UNKNOWN_ALBUM_NAME,
+    UNKNOWN_TRACK_NAME,
+} from './common/constants';
 
 export default defineComponent({
     components: { SliderBar },
@@ -147,13 +152,13 @@ export default defineComponent({
         trackName(): string {
             const title = this.activeTrack && this.activeTrack.name;
 
-            return title || 'Unknown Track';
+            return title || UNKNOWN_TRACK_NAME;
         },
         artistName(): string {
             if (this.activeTrack) {
                 return artistNames(this.activeTrack);
             } else {
-                return 'Unknown Artist';
+                return UNKNOWN_ARTIST_NAME;
             }
         },
         albumName(): string {
@@ -161,7 +166,7 @@ export default defineComponent({
             if (album && album.name) {
                 return album.name;
             }
-            return 'Unknown Album';
+            return UNKNOWN_ALBUM_NAME;
         },
     },
     methods: {

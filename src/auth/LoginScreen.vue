@@ -3,7 +3,7 @@
         <h2>Login</h2>
 
         <form @submit.prevent="login">
-            <label for="server-name">Server Name</label>
+            <label for="server-name">Jellyfin Server Address</label>
             <input
                 id="server-name"
                 v-model="serverName"
@@ -101,6 +101,7 @@ export default defineComponent({
 
 <style lang="scss">
 @import '../styles/colors.scss';
+@import '../styles/dims.scss';
 
 #login-form {
     width: 30em;
@@ -109,9 +110,9 @@ export default defineComponent({
 
 #login-form .message {
     color: $colors-text-dark;
-    padding: 0.2em;
+    padding: $dims-padding-dense;
     margin: 0.5em 0;
-    border-radius: 5px;
+    border-radius: $dims-border-radius;
     background-color: $colors-success;
 
     &.error {
