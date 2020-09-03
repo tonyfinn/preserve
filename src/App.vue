@@ -19,6 +19,7 @@
             <p>Loading...</p>
         </div>
         <notification-toast class="notification-outlet"></notification-toast>
+        <div id="dialog-container"></div>
     </div>
 </template>
 
@@ -130,6 +131,13 @@ export default defineComponent({
     grid-column: 1;
     pointer-events: none;
     z-index: 10;
+}
+
+#dialog-container {
+    grid-row: 1 / 3;
+    grid-column: 1;
+    pointer-events: none;
+    z-index: 5;
 }
 
 .screen-root {
