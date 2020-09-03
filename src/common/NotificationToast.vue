@@ -85,7 +85,7 @@ export default defineComponent({
     display: grid;
     grid-template-columns: auto;
     justify-content: center;
-    pointer-events: auto;
+    pointer-events: none;
 }
 
 .notification {
@@ -94,6 +94,7 @@ export default defineComponent({
     display: grid;
     grid-template-columns: 1fr 1.5em;
     border-radius: $dims-border-radius;
+    pointer-events: auto;
 }
 
 .notification-default {

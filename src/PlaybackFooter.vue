@@ -201,7 +201,7 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 @import './styles/colors.scss';
 @import './styles/dims.scss';
 
@@ -213,91 +213,78 @@ export default defineComponent({
     align-items: center;
     padding: $dims-padding;
     grid-gap: $dims-padding;
-}
 
-.now-playing {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    grid-auto-flow: column;
+    .now-playing {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        grid-auto-flow: column;
 
-    .track-title {
-        display: block;
+        .track-title {
+            display: block;
+        }
+
+        .artist-title:after {
+            content: ' - ';
+        }
+
+        .playback-information {
+            margin: auto;
+        }
+
+        .current-time:after {
+            content: ' / ';
+        }
     }
 
-    .artist-title:after {
-        content: ' - ';
+    .button-group {
+        display: grid;
+        grid-auto-flow: column;
+        grid-column-gap: $dims-padding;
+        justify-content: center;
     }
-
-    .playback-information {
-        margin: auto;
-    }
-
-    .current-time:after {
-        content: ' / ';
-    }
-}
-
-.button-group {
-    display: grid;
-    grid-auto-flow: column;
-    grid-column-gap: $dims-padding;
-    justify-content: center;
-}
-
-button {
-    font-size: 1.2em;
-    background-color: $colors-primary-bright;
-    width: 2em;
-    height: 2em;
-    color: $colors-text;
-    border: none;
-    border-radius: 50%;
-
-    &:hover {
-        border: 2px solid $colors-primary-bright;
-        background: lighten($colors-primary, 40%);
-        color: #fff;
-    }
-
-    &:hover.active {
-        background: lighten($colors-primary, 40%);
-        color: $colors-text-dark;
-    }
-
-    &:active,
-    &.active {
-        border: 2px solid $colors-primary-bright;
-        background: lighten($colors-primary, 20%);
-        color: $colors-text-dark;
-    }
-}
-
-.playback-controls {
-    grid-column: 2;
-}
-
-.after-playback-controls {
-    display: grid;
-    grid-auto-flow: column;
-    justify-content: space-between;
-    align-items: center;
 
     button {
+        font-size: 1.2em;
+        width: 2em;
+        height: 2em;
+        border-radius: 50%;
         padding: 0;
+        border: 2px solid transparent;
+
+        &:hover,
+        &:active,
+        &.active {
+            border: 2px solid $colors-primary-bright;
+        }
     }
-}
 
-.extra-controls {
-    justify-content: start;
-
-    button {
-        width: 1.5em;
-        height: 1.5em;
+    .playback-controls {
+        grid-column: 2;
     }
-}
 
-.volume-input-number {
-    width: 6em;
+    .after-playback-controls {
+        display: grid;
+        grid-auto-flow: column;
+        justify-content: space-between;
+        align-items: center;
+
+        button {
+            padding: 0;
+        }
+    }
+
+    .extra-controls {
+        justify-content: start;
+
+        button {
+            width: 1.5em;
+            height: 1.5em;
+        }
+    }
+
+    .volume-input-number {
+        width: 6em;
+    }
 }
 </style>
 
