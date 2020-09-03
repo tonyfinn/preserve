@@ -61,6 +61,7 @@ export default defineComponent({
             this.queueManager.activeQueue.extend(tracksToAdd);
             const playNow = !evt.shiftKey && !evt.ctrlKey && !evt.altKey;
             if (playNow) {
+                this.player.setQueue(this.queueManager.activeQueue);
                 this.player.play(newIndex);
             }
         },

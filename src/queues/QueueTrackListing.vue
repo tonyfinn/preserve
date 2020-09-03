@@ -67,8 +67,7 @@
                         'playlist__track--selected': queueItem.selected,
                         'playlist__track--dragover': queueItem.dragCount !== 0,
                         'playlist__track--playing':
-                            index === nowPlayingIndex &&
-                            activeQueue === playingQueue,
+                            index === nowPlayingIndex && isPlaying(activeQueue),
                         'playlist__track--focused': index === focusIndex,
                     }"
                     :aria-selected="queueItem.selected"
@@ -220,9 +219,7 @@ export default defineComponent({
             playingQueue,
             columns,
             pickingColumns: false,
-            queueItems: rowItemsFromQueue(activeQueue),
             selectedItems: [] as Array<RowItem<PlayQueueItem>>,
-            queueTracksChangeHandlerId: -1,
             focusIndex: -1,
             dragOver: 0,
             nowPlayingIndex: -1,
@@ -239,28 +236,23 @@ export default defineComponent({
             }
         });
         this.queueManager.onSwitchActive.on((evt) => {
-            this.activeQueue.onChange.off(this.queueTracksChangeHandlerId);
             this.activeQueue = evt.newQueue;
-            this.readActiveQueueTracks();
-            this.queueTracksChangeHandlerId = this.activeQueue.onChange.on(
-                this.readActiveQueueTracks
-            );
         });
         this.queueManager.onSwitchPlaying.on((evt) => {
             this.playingQueue = evt.newQueue;
         });
-        this.queueTracksChangeHandlerId = this.activeQueue.onChange.on(
-            this.readActiveQueueTracks
-        );
     },
     computed: {
         visibleColumns(): Array<ColumnDef<PlayQueueItem>> {
             return this.columns.filter((item) => item.visible);
         },
+        queueItems(): Array<RowItem<PlayQueueItem>> {
+            return rowItemsFromQueue(this.activeQueue);
+        },
     },
     methods: {
-        readActiveQueueTracks() {
-            this.queueItems = rowItemsFromQueue(this.activeQueue);
+        isPlaying(queue: PlayQueue) {
+            return queue.id === this.player.getQueue().id;
         },
         addTracks(
             items: Array<Track>,
@@ -482,6 +474,7 @@ export default defineComponent({
 
 .playlist__queue-wrapper {
     display: grid;
+    align-items: start;
     width: 100%;
     grid-template: auto 1fr / 1fr auto;
 }

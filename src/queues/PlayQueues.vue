@@ -1,6 +1,9 @@
 <template>
     <section id="playlist" :tabindex="-1">
-        <QueuePicker :queueManager="queueManager"></QueuePicker>
+        <QueuePicker
+            :queueManager="queueManager"
+            :player="player"
+        ></QueuePicker>
         <QueueTrackListing
             :library="library"
             :player="player"

@@ -1,6 +1,6 @@
 import { Library, Track, artistNames } from './library';
 import EventEmitter from './common/events';
-import { PlayQueue } from './queues/play-queue';
+import { PlayQueue, QueueChangeEvent } from './queues/play-queue';
 
 import Hls from 'hls.js';
 
@@ -78,6 +78,7 @@ export class AudioPlayer {
     shuffle: boolean;
     shuffleOrder: Array<number>;
     playbackEvent: EventEmitter<PlaybackEvent>;
+    onQueueChange: EventEmitter<QueueChangeEvent>;
     playQueueUpdateHandler: number;
     volume: number;
     static instance: AudioPlayer;
@@ -96,6 +97,7 @@ export class AudioPlayer {
         this.volume = 1;
         this.muted = false;
         this.playbackEvent = new EventEmitter();
+        this.onQueueChange = new EventEmitter();
         this.element.addEventListener('ended', () => {
             this._handleTrackEnd();
         });
@@ -161,6 +163,9 @@ export class AudioPlayer {
         this.playQueue.onChange.off(this.playQueueUpdateHandler);
         this.playQueue = playQueue;
         this.playQueueUpdateHandler = this.listenToQueueUpdates(playQueue);
+        this.onQueueChange.trigger({
+            newQueue: playQueue,
+        });
     }
 
     play(index: number): void {
@@ -313,6 +318,17 @@ export class AudioPlayer {
             this._play();
         } else {
             this._pause();
+        }
+    }
+
+    stop(): void {
+        if (this.playing) {
+            this.element.pause();
+            this.playing = false;
+            document.title = 'Preserve';
+            this.playbackEvent.trigger({
+                type: PlaybackEventType.End,
+            });
         }
     }
 

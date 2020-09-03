@@ -6,25 +6,44 @@
                 :key="playQueue.id"
                 :class="{
                     'playlist-picker__playlist': true,
-                    'playlist-picker__playlist--active':
-                        playQueue.id === activeQueue.id,
+                    'playlist-picker__playlist--active': isActiveQueue(
+                        playQueue
+                    ),
+                    'playlist-picker__playlist--playing': isPlayingQueue(
+                        playQueue
+                    ),
                 }"
                 @click="showQueue(playQueue)"
                 @keydown.enter.stop="showQueue(playQueue)"
-                @keydown.f2.stop="renamingQueueId = playQueue.id"
-                @dblclick="renamingQueueId = playQueue.id"
+                @keydown.f2.stop="rename(playQueue)"
+                @dblclick="rename(playQueue)"
                 tabindex="0"
             >
-                <span v-if="renamingQueueId != playQueue.id">
+                <span v-if="!isRenaming(playQueue)">
                     {{ playQueue.name }}
                 </span>
                 <input
                     type="text"
-                    v-model="playQueue.name"
-                    v-if="renamingQueueId === playQueue.id"
-                    @keydown.enter.stop="renamingQueueId = -1"
-                    @keydown.escape.stop="renamingQueueId = -1"
+                    v-model="newName"
+                    v-if="isRenaming(playQueue)"
+                    @keydown.enter.stop="applyRename"
+                    @keydown.escape.stop="cancelRename"
                 />
+                <i
+                    class="fi-pencil"
+                    title="Rename Play Queue"
+                    tabindex="0"
+                    @click.stop="rename(playQueue)"
+                    @keydown.enter.stop="rename(playQueue)"
+                ></i>
+                <i
+                    class="fi-x-circle"
+                    title="Delete Play Queue"
+                    tabindex="0"
+                    v-if="playQueues.length > 1"
+                    @click.stop="deleteQueue(playQueue)"
+                    @keydown.enter.stop="deleteQueue(playQueue)"
+                ></i>
             </li>
         </ul>
         <button type="button" @click="newQueue">
@@ -36,6 +55,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import { QueueManager, PlayQueue } from './play-queue';
+import { AudioPlayer } from '../player';
 
 export default defineComponent({
     props: {
@@ -43,23 +63,80 @@ export default defineComponent({
             type: QueueManager,
             required: true,
         },
+        player: {
+            type: AudioPlayer,
+            required: true,
+        },
+    },
+    created() {
+        this.queueManager.onSwitchActive.on((evt) => {
+            this.activeQueue = evt.newQueue;
+        });
+        this.player.onQueueChange.on((evt) => {
+            this.playingQueue = evt.newQueue;
+        });
     },
     data() {
+        const playingQueue = this.player.getQueue();
         return {
             playQueues: this.queueManager.getQueues(),
             activeQueue: this.queueManager.getActiveQueue(),
-            renamingQueueId: -1,
+            playingQueue,
+            renamingQueue: null as PlayQueue | null,
+            actionsShownQueue: null as PlayQueue | null,
+            newName: '',
         };
     },
     methods: {
         newQueue() {
             const newQueue = this.queueManager.newQueue();
             this.playQueues = this.queueManager.getQueues();
-            this.activeQueue = newQueue;
+            this.queueManager.setActiveQueue(newQueue);
+        },
+        rename(queue: PlayQueue) {
+            this.renamingQueue = queue;
+            this.newName = queue.name;
+        },
+        applyRename() {
+            if (this.renamingQueue) {
+                this.renamingQueue.name = this.newName;
+            }
+            this.renamingQueue = null;
+        },
+        cancelRename() {
+            this.renamingQueue = null;
+        },
+        isRenaming(queue: PlayQueue) {
+            return this.renamingQueue && this.renamingQueue.id === queue.id;
+        },
+        isActiveQueue(queue: PlayQueue) {
+            return queue.id === this.activeQueue.id;
+        },
+        isPlayingQueue(queue: PlayQueue) {
+            return queue.id === this.playingQueue.id;
         },
         showQueue(queue: PlayQueue) {
             this.queueManager.setActiveQueue(queue);
-            this.activeQueue = queue;
+        },
+        deleteQueue(queue: PlayQueue) {
+            if (
+                queue.size() === 0 ||
+                window.confirm(
+                    `Are you sure you want to delete "${queue.name}"?`
+                )
+            ) {
+                const activeQueueId = this.activeQueue.id;
+                if (this.player.getQueue().id === queue.id) {
+                    this.player.stop();
+                    this.player.setQueue(this.activeQueue);
+                }
+                this.queueManager.deleteQueue(queue);
+                this.playQueues = this.queueManager.getQueues();
+                if (queue.id === activeQueueId) {
+                    const newActiveQueue = this.playQueues[0];
+                    this.queueManager.setActiveQueue(newActiveQueue);
+                }
+            }
         },
     },
 });
@@ -85,12 +162,13 @@ export default defineComponent({
     }
 
     li,
-    button {
+    & > button {
         background-color: $colors-background;
         padding: $dims-padding-dense $dims-padding;
         border: 2px solid $colors-highlight;
-        display: flex;
-        flex-direction: column;
+        display: grid;
+        grid-auto-flow: column;
+        grid-gap: $dims-padding;
         justify-content: center;
         color: $colors-text;
         vertical-align: bottom;
@@ -99,6 +177,10 @@ export default defineComponent({
     &__playlist {
         &--active {
             border-bottom-color: $colors-background !important;
+        }
+        &--playing {
+            font-weight: bold;
+            font-style: italic;
         }
     }
 }
