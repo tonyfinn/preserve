@@ -29,21 +29,25 @@
                     @keydown.enter.stop="applyRename"
                     @keydown.escape.stop="cancelRename"
                 />
-                <i
-                    class="fi-pencil"
+                <button
+                    type="button"
                     title="Rename Play Queue"
                     tabindex="0"
                     @click.stop="rename(playQueue)"
                     @keydown.enter.stop="rename(playQueue)"
-                ></i>
-                <i
-                    class="fi-x-circle"
-                    title="Delete Play Queue"
+                >
+                    <i class="fi-pencil"></i>
+                </button>
+                <button
+                    type="button"
                     tabindex="0"
                     v-if="playQueues.length > 1"
+                    title="Delete Play Queue"
                     @click.stop="deleteQueue(playQueue)"
                     @keydown.enter.stop="deleteQueue(playQueue)"
-                ></i>
+                >
+                    <i class="fi-x-circle"></i>
+                </button>
             </li>
         </ul>
         <button type="button" @click="newQueue">
@@ -172,6 +176,8 @@ export default defineComponent({
         justify-content: center;
         color: $colors-text;
         vertical-align: bottom;
+        align-items: start;
+        cursor: pointer;
     }
 
     &__playlist {
@@ -181,6 +187,14 @@ export default defineComponent({
         &--playing {
             font-weight: bold;
             font-style: italic;
+        }
+
+        button {
+            border: 0;
+            padding: 0;
+            background: transparent;
+            color: $colors-text;
+            cursor: pointer;
         }
     }
 }

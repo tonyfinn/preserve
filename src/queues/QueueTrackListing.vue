@@ -289,7 +289,6 @@ export default defineComponent({
             }
         },
         dragEnd() {
-            this.removeItems(this.draggingItems);
             this.draggingItems = [];
         },
         addTracks(
@@ -437,6 +436,10 @@ export default defineComponent({
                 }
                 this.activeQueue.extend(tracks);
             }
+            if (this.draggingItems) {
+                this.removeItems(this.draggingItems);
+                this.draggingItems = [];
+            }
         },
         async itemDrop(
             item: RowItem<PlayQueueItem>,
@@ -458,6 +461,10 @@ export default defineComponent({
                     tracks = tracks.concat(itemTrackList);
                 }
                 this.activeQueue.insert(index, tracks);
+            }
+            if (this.draggingItems) {
+                this.removeItems(this.draggingItems);
+                this.draggingItems = [];
             }
         },
         ensureVisible(index: number) {
