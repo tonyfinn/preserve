@@ -77,14 +77,15 @@
                             : -1
                     "
                     @focus.stop="focusItem(index)"
-                    @click.exact="selectItem(queueItem, index)"
-                    @mousedown.ctrl.prevent
-                    @mousedown.shift.prevent
-                    @click.ctrl.exact.prevent.stop="appendSelectItem(queueItem)"
-                    @click.shift.exact.prevent.stop="
+                    @mousedown.stop.exact="selectItem(queueItem, index)"
+                    @mousedown.ctrl.stop.exact="toggleSelectItem(queueItem)"
+                    @mousedown.shift.stop.exact="
                         extendSelectItem(queueItem, index)
                     "
                     @dblclick.prevent.stop="playTrack(index)"
+                    draggable="true"
+                    @dragstart.stop="itemDragStart($event)"
+                    @dragend.stop="dragEnd"
                     @dragenter="itemDragEnter(queueItem, $event)"
                     @dragleave="itemDragLeave(queueItem, $event)"
                     @drop.stop.prevent="itemDrop(queueItem, index, $event)"
@@ -96,6 +97,13 @@
                 </tr>
             </tbody>
         </table>
+        <div class="playlist__drag-info">
+            <ul>
+                <li v-for="item in draggingItems" :key="item.id">
+                    {{ item.data.track.name }}
+                </li>
+            </ul>
+        </div>
     </div>
 </template>
 
@@ -221,6 +229,7 @@ export default defineComponent({
             columns,
             pickingColumns: false,
             selectedItems: [] as Array<RowItem<PlayQueueItem>>,
+            draggingItems: [] as Array<RowItem<PlayQueueItem>>,
             focusIndex: -1,
             dragOver: 0,
             nowPlayingIndex: -1,
@@ -255,6 +264,34 @@ export default defineComponent({
         isPlaying(queue: PlayQueue) {
             return queue.id === this.player.getQueue().id;
         },
+        itemDragStart(evt: DragEvent) {
+            if (this.selectedItems.length > 0) {
+                const textValues = this.selectedItems
+                    .map((item) => `track: ${item.data.track.name}`)
+                    .join('\n');
+                evt.dataTransfer?.setData('text/plain', textValues);
+                const jsonValues = this.selectedItems.map((item) => {
+                    return {
+                        type: item.data.track.type,
+                        name: item.data.track.name,
+                        id: item.data.track.id,
+                    };
+                });
+                evt.dataTransfer?.setData(
+                    ITEM_STUB_MIME_TYPE,
+                    JSON.stringify(jsonValues)
+                );
+                this.draggingItems = [...this.selectedItems];
+                const dragEl = this.$el.querySelector('.playlist__drag-info');
+                evt.dataTransfer?.setDragImage(dragEl, 10, dragEl.width / 2);
+            } else {
+                evt.preventDefault();
+            }
+        },
+        dragEnd() {
+            this.removeItems(this.draggingItems);
+            this.draggingItems = [];
+        },
         addTracks(
             items: Array<Track>,
             options: {
@@ -276,10 +313,6 @@ export default defineComponent({
             this.selectedItems = [item];
             this.focusItem(index);
         },
-        appendSelectItem(item: RowItem<PlayQueueItem>) {
-            item.selected = true;
-            this.selectedItems.push(item);
-        },
         toggleSelectItem(item: RowItem<PlayQueueItem>) {
             if (item.selected) {
                 item.selected = false;
@@ -287,8 +320,10 @@ export default defineComponent({
                     (i) => i.id !== item.id
                 );
             } else {
-                this.appendSelectItem(item);
+                item.selected = true;
+                this.selectedItems.push(item);
             }
+            this.$forceUpdate();
         },
         clearSelection() {
             for (const selectedItem of this.selectedItems) {
@@ -356,9 +391,11 @@ export default defineComponent({
         toggleSelectFocused() {
             this.toggleSelectItem(this.queueItems[this.focusIndex]);
         },
+        removeItems(items: Array<RowItem<PlayQueueItem>>) {
+            this.activeQueue.remove(items.map((x) => x.data));
+        },
         removeSelectedItems() {
-            const itemsToRemove = this.selectedItems.map((x) => x.data);
-            this.activeQueue.remove(itemsToRemove);
+            this.removeItems(this.selectedItems);
             this.selectedItems = [];
         },
         playFocusedItem() {
@@ -558,6 +595,21 @@ export default defineComponent({
     &:hover,
     &.playlist__track--focused {
         background: $colors-highlight;
+    }
+}
+
+.playlist__drag-info {
+    position: absolute;
+    top: -1000px;
+    left: -1000px;
+    background-color: white;
+    color: black;
+    max-height: 5em;
+    overflow: hidden;
+    border-radius: $dims-border-radius-subtle;
+
+    ul {
+        list-style-type: none;
     }
 }
 </style>
