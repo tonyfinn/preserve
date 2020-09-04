@@ -43,9 +43,24 @@ server. See the options in contrib/webserver-config.
 Start your web server. For the local express server this can be done with `npm run
 serve`. By default the application will be available at http://localhost:5678/
 
+## Setup (docker)
+
+### Running
+
+```
+docker run -p 5678:5678 tonyfinn/preserve:latest
+```
+
+Visit http://localhost:5678
+
+Individual versions are also tagged, e.g. as `tonyfinn/preserve:0.2.3`. See [docker hub][]
+for more versions.
+
 ## License
 
 Preserve is (c) Tony Finn and licensed under GPLv2 or later. See LICENSE.txt for details.
 
+
+[docker hub]: https://hub.docker.com/r/tonyfinn/preserve/tags
 [jq]: https://github.com/stedolan/jq
 [node]: https://nodejs.org/en/

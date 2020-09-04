@@ -11,7 +11,7 @@ INSTALL_LOCATION = ${DESTDIR}${webappsdir}/preserve
 VERSION != jq -r '.version' package.json
 PACKAGE_NAME = ${srcdir}/target/preserve-${VERSION}.tar.gz
 
-.PHONY: clean dist package install
+.PHONY: clean dist docker podman package install
 
 package: $(PACKAGE_NAME)
 
@@ -41,3 +41,14 @@ dist/index.html: node_modules
 install: dist
 	${INSTALL} -d -m755 ${INSTALL_LOCATION}
 	cp -R dist/* ${INSTALL_LOCATION}
+
+docker: dist
+	docker build -f contrib/docker/Dockerfile -t  tonyfinn/preserve:${VERSION} .
+	docker tag tonyfinn/preserve:${VERSION} tonyfinn/preserve:latest
+
+publish-docker: docker
+	docker push tonyfinn/preserve:${VERSION}
+	docker push tonyfinn/preserve:latest
+
+podman: dist
+	podman build -f contrib/docker/Dockerfile -t tonyfinn/preserve:${VERSION} .
