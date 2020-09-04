@@ -3,6 +3,7 @@ import EventEmitter from './common/events';
 import { PlayQueue, QueueChangeEvent } from './queues/play-queue';
 
 import Hls from 'hls.js';
+import { NotificationService, NotificationType } from './common/notifications';
 
 export enum PlaybackEventType {
     Play,
@@ -220,9 +221,18 @@ export class AudioPlayer {
     _playNative(track: Track, index: number): void {
         this.element.src = this.library.getPlaybackUrl(track);
         this.element.load();
-        this.element.play().then(() => {
-            this._startPlayback(track, index);
-        });
+        this.element
+            .play()
+            .then(() => {
+                this._startPlayback(track, index);
+            })
+            .catch((e) => {
+                NotificationService.notify(
+                    `Error playing track: ${e}`,
+                    NotificationType.Error,
+                    30
+                );
+            });
     }
 
     playTrack(track: Track, index = -1): void {
