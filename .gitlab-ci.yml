@@ -26,7 +26,8 @@ package:
         paths:
             - target/*.tar.gz
     script:
-        - apt install jq
+        - wget https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 -o jq
+        - chmod +x jq
         - make package
 
 docker:
