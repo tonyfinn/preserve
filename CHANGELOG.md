@@ -1,3 +1,8 @@
+# 0.2.4
+
+## Tech changes
+* Build a docker image in pipeline
+
 # 0.2.3
 
 ## New features
