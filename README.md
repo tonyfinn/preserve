@@ -4,6 +4,8 @@ Clementine/foobar2000 inspired music player frontend for Jellyfin
 
 ![Screenshot of version 0.2.0](screenshot-v0.2.png)
 
+[Try it out here!][hosted] (requires your jellyfin instance to be reachable from the browser)
+
 ## Setup (Unix)
 
 ### Building
@@ -62,5 +64,6 @@ Preserve is (c) Tony Finn and licensed under GPLv2 or later. See LICENSE.txt for
 
 
 [docker hub]: https://hub.docker.com/r/tonyfinn/preserve/tags
+[hosted]: https://preserveplayer.com
 [jq]: https://github.com/stedolan/jq
 [node]: https://nodejs.org/en/
