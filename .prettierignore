@@ -1,5 +1,7 @@
 dist
 contrib
+build
+preserve-electron
 src/vendor
 node_modules
 package-lock.json

@@ -1,3 +1,8 @@
+# 0.2.5
+
+## Tech Change
+* Build electron app
+
 # 0.2.4
 
 ## Tech changes

@@ -79,7 +79,7 @@ module.exports = {
             chunkFilename: devMode ? '[id].css' : '[id].[hash].css',
         }),
         new HtmlWebpackPlugin({
-            favicon: 'static/logo-32.png',
+            favicon: 'static/favicon.ico',
             hash: !devMode,
             title: 'Preserve',
         }),

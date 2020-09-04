@@ -9,5 +9,5 @@
         "resolveJsonModule": true,
         "typeRoots": ["types", "node_modules/@types"]
     },
-    "exclude": ["node_modules", "contrib"]
+    "exclude": ["node_modules", "contrib", "preserve-electron"]
 }

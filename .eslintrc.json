@@ -3,7 +3,13 @@
         "browser": true,
         "es2020": true
     },
-    "ignorePatterns": ["dist/*.js", "node_modules/*.js", "contrib/**/*"],
+    "ignorePatterns": [
+        "dist/*.js",
+        "node_modules/*.js",
+        "contrib/**/*",
+        "build/**/*",
+        "preserve-electron/**/*"
+    ],
     "overrides": [
         {
             "files": ["webpack.config.js"],

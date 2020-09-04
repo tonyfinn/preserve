@@ -17,18 +17,44 @@ check:
         - make clean
         - make check
 
-package:
+package-web:
     stage: package
     rules:
         - if: $CI_COMMIT_TAG
           when: on_success
-    artifacts:
-        paths:
-            - target/*.tar.gz
     script:
         - wget https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 -O jq
         - chmod +x jq
-        - make package
+        - make package-web
+
+package-electron-linux:
+    stage: package
+    rules:
+        - if: $CI_COMMIT_TAG
+          when: on_success
+    script:
+        - apt-get update && apt-get install rpm jq fakeroot
+        - make package-electron-linux
+
+package-electron-windows:
+    stage: package
+    rules:
+        - if: $CI_COMMIT_TAG
+          when: on_success
+    script:
+        - apt-get update && apt-get install wine mono jq
+        - make package-electron-windows
+
+archive:
+    stage: publish
+    rules:
+        - if: $CI_COMMIT_TAG
+          when: on_success
+    artifacts:
+        expire_in:
+            - never
+        paths:
+            - target/*
 
 docker:
     stage: publish
