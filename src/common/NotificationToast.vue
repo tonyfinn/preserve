@@ -91,6 +91,7 @@ export default defineComponent({
 .notification {
     padding: $dims-padding;
     width: 60em;
+    max-width: 80vw;
     display: grid;
     grid-template-columns: 1fr 1.5em;
     border-radius: $dims-border-radius;
