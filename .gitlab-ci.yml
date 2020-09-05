@@ -1,5 +1,5 @@
 default:
-    image: node:12
+    image: node:12-buster
     cache:
         key: ${CI_COMMIT_REF_SLUG}
         paths:
