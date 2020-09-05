@@ -1,6 +1,6 @@
 {
     "name": "preserve",
-    "version": "0.2.6",
+    "version": "0.2.7",
     "description": "Dense Media Player for Jellyfin",
     "main": "index.js",
     "dependencies": {

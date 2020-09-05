@@ -5,13 +5,10 @@ default:
         paths:
             - node_modules/
             - dist/
-            - target/
-            - jq
 
 stages:
     - check
     - package
-    - publish
 
 check:
     stage: check
@@ -25,6 +22,10 @@ package-web:
     rules:
         - if: $CI_COMMIT_TAG
           when: on_success
+    artifacts:
+        expire_in: never
+        paths:
+            - target/*
     script:
         - apt-get update && apt-get install -y jq
         - make package-web
@@ -35,6 +36,10 @@ package-electron-linux:
     rules:
         - if: $CI_COMMIT_TAG
           when: on_success
+    artifacts:
+        expire_in: never
+        paths:
+            - target/*
     script:
         - apt-get update && apt-get install -y jq fakeroot dpkg
         - make package-electron-linux
@@ -45,6 +50,10 @@ package-electron-windows:
     rules:
         - if: $CI_COMMIT_TAG
           when: on_success
+    artifacts:
+        expire_in: never
+        paths:
+            - target/*
     script:
         # deps
         - apt-get update && apt-get install -y jq
@@ -54,20 +63,8 @@ package-electron-windows:
         # make package
         - make package-electron-windows
 
-archive:
-    stage: publish
-    rules:
-        - if: $CI_COMMIT_TAG
-          when: on_success
-    artifacts:
-        expire_in: never
-        paths:
-            - target/*
-    script:
-        - echo "Placeholder to collect artifacts in one place"
-
 docker:
-    stage: publish
+    stage: package
     services:
         - docker:19.03-dind
     image: docker:19.03

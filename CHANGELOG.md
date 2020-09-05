@@ -1,7 +1,7 @@
-# 0.2.5
+# 0.2.5 - 0.2.7
 
 ## Tech Change
-* Build electron app
+* CI pipeline changes for electron builds
 
 # 0.2.4
 
