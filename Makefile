@@ -41,7 +41,7 @@ install: dist
 	cp -R ${srcdir}/dist/* ${INSTALL_LOCATION}
 
 docker: dist
-	docker build -f ${srcdir}contrib/docker/Dockerfile -t  tonyfinn/preserve:${VERSION} ${srcdir}
+	docker build -f ${srcdir}/contrib/docker/Dockerfile -t  tonyfinn/preserve:${VERSION} ${srcdir}
 	docker tag tonyfinn/preserve:${VERSION} tonyfinn/preserve:latest
 
 publish-docker: docker
