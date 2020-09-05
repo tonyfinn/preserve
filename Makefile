@@ -13,6 +13,7 @@ PACKAGE_NAME = ${srcdir}/target/preserve-${VERSION}.tar.gz
 
 .PHONY: clean dist icons \
 		docker podman \
+		bump-major bump-minor bump-patch \
 		package package-web package-electron package-electron-linux package-electron-windows \
 		install
 
@@ -79,6 +80,15 @@ package-electron-windows: build/electron/index.html
 	mkdir -p ${srcdir}/target/
 	cd ${srcdir}/build/electron && ${NPM} run make -- --platform win32 --targets @electron-forge/maker-squirrel
 	cp ${srcdir}/build/electron/out/make/squirrel.windows/x64/*.exe ${srcdir}/target/
+
+bump-major:
+	${srcdir}/contrib/bumpver.sh major
+
+bump-minor:
+	${srcdir}/contrib/bumpver.sh minor
+
+bump-patch:
+	${srcdir}/contrib/bumpver.sh patch
 
 icons:
 	mkdir -p ${srcdir}/static
