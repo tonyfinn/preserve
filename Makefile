@@ -77,8 +77,8 @@ package-electron-linux: build/electron/index.html
 
 package-electron-windows: build/electron/index.html
 	mkdir -p ${srcdir}/target/
-	cp ${srcdir}/build/electron/out/make/squirrel.windows/x64/*.exe ${srcdir}/target/
 	cd ${srcdir}/build/electron && ${NPM} run make -- --platform win32 --targets @electron-forge/maker-squirrel
+	cp ${srcdir}/build/electron/out/make/squirrel.windows/x64/*.exe ${srcdir}/target/
 
 icons:
 	mkdir -p ${srcdir}/static
