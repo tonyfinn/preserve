@@ -20,7 +20,8 @@
     "config": {
         "forge": {
             "packagerConfig": {
-                "icon": "src/static/favicon.ico"
+                "icon": "src/static/favicon.ico",
+                "name": "Preserve"
             },
             "makers": [
                 {

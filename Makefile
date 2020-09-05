@@ -9,13 +9,15 @@ webappsdir = ${datarootdir}/webapps
 INSTALL_LOCATION = ${DESTDIR}${webappsdir}/preserve
 
 VERSION != jq -r '.version' package.json
-PACKAGE_NAME = ${srcdir}/target/preserve-${VERSION}.tar.gz
+PACKAGE_WEB_PATH = ${srcdir}/target/preserve-${VERSION}.tar.gz
 
 .PHONY: clean dist icons \
 		docker podman \
 		bump-major bump-minor bump-patch \
 		package package-web package-electron package-electron-linux package-electron-windows \
 		install
+
+.INTERMEDIATE: node_modules
 
 default: package
 
@@ -24,6 +26,7 @@ clean:
 	rm -rf ${srcdir}/node_modules/
 	rm -rf ${srcdir}/preserve-electron/node_modules
 	rm -rf ${srcdir}/build/
+	rm -rf ${srcdir}/target/
 
 check: node_modules
 	cd ${srcdir} && ${NPM} run lint
@@ -63,10 +66,11 @@ start-electron: build/electron/index.html
 
 package: package-web package-electron
 
-package-web: $(PACKAGE_NAME)
+package-web: $(PACKAGE_WEB_PATH)
 
-$(PACKAGE_NAME): dist/index.html node_modules
-	cd ${srcdir} && ${NPM} run package
+$(PACKAGE_WEB_PATH): dist/index.html
+	mkdir -p ${srcdir}/target/ 
+	cd ${srcdir} && tar -czf ${PACKAGE_WEB_PATH} --transform=s/dist/preserve-${VERSION}/g dist/*
 
 package-electron: package-electron-linux package-electron-windows
 
