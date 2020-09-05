@@ -1,4 +1,4 @@
-# 0.2.5 - 0.2.7
+# 0.2.5 - 0.2.8
 
 ## Tech Change
 * CI pipeline changes for electron builds
