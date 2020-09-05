@@ -1,3 +1,7 @@
+# 0.3.0
+
+Public Alpha release (unchanged from 0.2.10)
+
 # 0.2.4 - 0.2.10
 
 ## New features
