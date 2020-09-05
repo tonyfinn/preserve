@@ -25,12 +25,10 @@ clean:
 	rm -rf ${srcdir}/build/
 
 check: node_modules
-	cd ${srcdir}; \
-	${NPM} run lint
+	cd ${srcdir} && ${NPM} run lint
 
 node_modules:
-	cd ${srcdir}; \
-	${NPM} ci
+	cd ${srcdir} && ${NPM} ci
 
 dist: dist/index.html
 
@@ -70,14 +68,16 @@ $(PACKAGE_NAME): dist/index.html node_modules
 	cd ${srcdir} && ${NPM} run package
 
 package-electron: package-electron-linux package-electron-windows
-	cp ${srcdir}/build/electron/out/make/deb/x64/* ${srcdir}/target/
-	cp ${srcdir}/build/electron/out/make/rpm/x64/* ${srcdir}/target/
-	cp ${srcdir}/build/electron/out/make/squirrel.windows/x64/*.exe ${srcdir}/target/
 
 package-electron-linux: build/electron/index.html
+	mkdir -p ${srcdir}/target/
 	cd ${srcdir}/build/electron && ${NPM} run make
+	cp ${srcdir}/build/electron/out/make/deb/x64/* ${srcdir}/target/
+	cp ${srcdir}/build/electron/out/make/rpm/x64/* ${srcdir}/target/
 
 package-electron-windows: build/electron/index.html
+	mkdir -p ${srcdir}/target/
+	cp ${srcdir}/build/electron/out/make/squirrel.windows/x64/*.exe ${srcdir}/target/
 	cd ${srcdir}/build/electron && ${NPM} run make -- --platform win32 --targets @electron-forge/maker-squirrel
 
 icons:
