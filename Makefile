@@ -17,7 +17,10 @@ PACKAGE_WEB_PATH = ${srcdir}/target/preserve-${VERSION}.tar.gz
 		package package-web package-electron package-electron-linux package-electron-windows \
 		install
 
+# Don't rebuild node_modules if missing unless needed,
+# but also do not automatically clean it up
 .INTERMEDIATE: node_modules
+.SECONDARY: node_modules
 
 default: package
 
