@@ -16,7 +16,8 @@ check:
     cache:
         policy: push
     artifacts:
-        - dist/
+        paths:
+            - dist/
     script:
         - apt-get update && apt-get install -y jq
         - make clean
