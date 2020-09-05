@@ -1,7 +1,7 @@
 {
     "name": "preserve-electron",
     "productName": "preserve-electron",
-    "version": "0.2.8",
+    "version": "0.2.10",
     "description": "Build an electron wrapped version of preserve",
     "main": "src/index.js",
     "scripts": {
@@ -21,13 +21,14 @@
         "forge": {
             "packagerConfig": {
                 "icon": "src/static/favicon.ico",
+                "executableName": "preserve-electron",
                 "name": "Preserve"
             },
             "makers": [
                 {
                     "name": "@electron-forge/maker-squirrel",
                     "config": {
-                        "name": "preserve_electron"
+                        "exe": "preserve-electron.exe"
                     }
                 },
                 {

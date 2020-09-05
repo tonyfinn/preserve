@@ -1,9 +1,8 @@
-# 0.2.5 - 0.2.8
+# 0.2.4 - 0.2.10
 
-## Tech Change
-* CI pipeline changes for electron builds
-
-# 0.2.4
+## New features
+* Electron
+* Fix notification display on narrower monitors
 
 ## Tech changes
 * Build a docker image in pipeline
