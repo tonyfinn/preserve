@@ -185,6 +185,15 @@ declare module 'jellyfin-apiclient' {
         User: User;
     }
 
+    interface QueryOptions {
+        Limit?: number;
+        SortBy?: string;
+        SortOrder?: string;
+        recursive?: boolean;
+        IncludeItemTypes?: string;
+        StartIndex?: number;
+    }
+
     class ApiClient {
         accessToken(): string;
         authenticateUserByName(
@@ -195,13 +204,17 @@ declare module 'jellyfin-apiclient' {
         getCurrentUserId(): string;
         getItems<T extends Item>(
             userId: string,
-            filter: unknown
+            options: QueryOptions
         ): Promise<QueryResult<T>>;
-        getArtists(userId: string): Promise<QueryResult<Artist>>;
+        getArtists(
+            userId: string,
+            options?: QueryOptions
+        ): Promise<QueryResult<Artist>>;
         getUrl(
             name: string,
             params?: { [name: string]: string },
             serverAddress?: string
         ): string;
+        serverId(): string | undefined;
     }
 }

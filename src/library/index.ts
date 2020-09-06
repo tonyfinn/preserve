@@ -1,6 +1,7 @@
 import * as Jellyfin from 'jellyfin-apiclient';
 import { sorted } from '../common/utils';
 import { UNKNOWN_ARTIST_NAME, UNKNOWN_ALBUM_NAME } from '../common/constants';
+import { reactive } from 'vue';
 
 type ItemType = 'artist' | 'album' | 'track';
 
@@ -113,13 +114,25 @@ export function albumArtistNames(t: Track): string {
     }
     return UNKNOWN_ARTIST_NAME;
 }
+class LibraryLoadState {
+    artistTotal: number;
+    albumTotal: number;
+    trackTotal: number;
+    artistLoaded: number;
+    albumLoaded: number;
+    trackLoaded: number;
+    done: boolean;
+
+    constructor() {
+        this.artistTotal = this.albumTotal = this.trackTotal = -1;
+        this.artistLoaded = this.albumLoaded = this.trackLoaded = 0;
+        this.done = false;
+    }
+}
 
 export class Library {
-    connectionManager: Jellyfin.ConnectionManager;
-    apiClient: Jellyfin.ApiClient;
-    serverId: string;
-    loaded: boolean;
-    loadingPromise: Promise<void>;
+    apiClient: Jellyfin.ApiClient | null;
+    loadingState: LibraryLoadState;
     albums: Array<Album>;
     tracks: Array<Track>;
     artists: Array<Artist>;
@@ -131,59 +144,125 @@ export class Library {
     trackByAlbumLookup: Map<string, Array<Track>>;
     static instance: Library;
 
-    constructor(connectionManager: Jellyfin.ConnectionManager) {
-        this.connectionManager = connectionManager;
-        this.serverId = this.connectionManager.getLastUsedServer().Id;
-        this.apiClient = this.connectionManager.getOrCreateApiClient(
-            this.serverId
-        );
-        const userId = this.apiClient.getCurrentUserId();
-        this.loaded = false;
+    constructor() {
         this.artists = [];
         this.albums = [];
         this.tracks = [];
+        this.apiClient = null;
         this.artistByIdLookup = new Map();
         this.albumByIdLookup = new Map();
         this.trackByIdLookup = new Map();
         this.albumByFeaturedArtistLookup = new Map();
         this.albumByAlbumArtistLookup = new Map();
         this.trackByAlbumLookup = new Map();
-        const artistLoading = this.apiClient
-            .getArtists(userId)
-            .then((artistsResult) =>
-                artistsResult.Items.map(this.loadArtist.bind(this))
-            );
-        const albumLoading = this.apiClient
-            .getItems<Jellyfin.Album>(userId, {
-                recursive: true,
-                IncludeItemTypes: 'MusicAlbum',
-            })
-            .then((albumResult) =>
-                albumResult.Items.map(this.loadAlbum.bind(this))
-            );
-        const trackLoading = this.apiClient
-            .getItems<Jellyfin.Track>(userId, {
-                recursive: true,
-                IncludeItemTypes: 'Audio',
-            })
-            .then((trackResult) =>
-                trackResult.Items.map(this.loadTrack.bind(this))
-            );
-
-        this.loadingPromise = Promise.all([
-            artistLoading,
-            albumLoading,
-            trackLoading,
-        ]).then(([_artists, _albums, tracks]) => {
-            this.buildSyntheticArtists(tracks);
-            this.buildSyntheticArtists(this.albums);
-            this.buildSyntheticAlbums(tracks);
-            this.artists.sort(sortArtists);
-            this.loaded = true;
-        });
+        this.loadingState = reactive(new LibraryLoadState());
 
         window.library = this;
-        Library.instance = this;
+    }
+
+    serverId(): string | null {
+        return this.apiClient?.serverId() || null;
+    }
+
+    requireApiClient(): Jellyfin.ApiClient {
+        if (!this.apiClient) {
+            throw new Error('Tried to populate library when disconnected');
+        }
+        return this.apiClient;
+    }
+
+    async populate(apiClient: Jellyfin.ApiClient): Promise<void> {
+        this.apiClient = apiClient;
+        const artistLoading = this.loadArtists(apiClient);
+        const albumLoading = this.loadAlbums(apiClient);
+        const trackLoading = this.loadTracks(apiClient);
+
+        return Promise.all([artistLoading, albumLoading, trackLoading]).then(
+            ([_artists, _albums, tracks]) => {
+                this.buildSyntheticArtists(tracks);
+                this.buildSyntheticArtists(this.albums);
+                this.buildSyntheticAlbums(tracks);
+                this.artists.sort(sortArtists);
+                this.loadingState.done = true;
+            }
+        );
+    }
+
+    async loadArtists(apiClient: Jellyfin.ApiClient): Promise<Array<Artist>> {
+        let startIndex = 0;
+        const userId = apiClient.getCurrentUserId();
+        let items = [];
+        do {
+            const firstResult = await apiClient.getArtists(userId, {
+                Limit: 500,
+                StartIndex: startIndex,
+                SortBy: 'Name',
+                SortOrder: 'Ascending',
+            });
+            this.loadingState.artistTotal = firstResult.TotalRecordCount;
+            items = firstResult.Items;
+            startIndex = this.loadingState.artistLoaded +=
+                firstResult.Items.length;
+            for (const item of items) {
+                this.loadArtist(item);
+            }
+        } while (
+            items.length > 0 &&
+            this.loadingState.artistLoaded < this.loadingState.artistTotal
+        );
+        return this.artists;
+    }
+
+    async loadAlbums(apiClient: Jellyfin.ApiClient): Promise<Array<Album>> {
+        let startIndex = 0;
+        const userId = apiClient.getCurrentUserId();
+        let items = [];
+        do {
+            const result = await apiClient.getItems<Jellyfin.Album>(userId, {
+                Limit: 500,
+                recursive: true,
+                IncludeItemTypes: 'MusicAlbum',
+                StartIndex: startIndex,
+                SortBy: 'Name',
+                SortOrder: 'Ascending',
+            });
+            this.loadingState.albumTotal = result.TotalRecordCount;
+            items = result.Items;
+            startIndex = this.loadingState.albumLoaded += result.Items.length;
+            for (const item of items) {
+                this.loadAlbum(item);
+            }
+        } while (
+            items.length > 0 &&
+            this.loadingState.albumLoaded < this.loadingState.albumTotal
+        );
+        return this.albums;
+    }
+
+    async loadTracks(apiClient: Jellyfin.ApiClient): Promise<Array<Track>> {
+        let startIndex = 0;
+        const userId = apiClient.getCurrentUserId();
+        let items = [];
+        do {
+            const result = await apiClient.getItems<Jellyfin.Track>(userId, {
+                Limit: 500,
+                recursive: true,
+                IncludeItemTypes: 'Audio',
+                StartIndex: startIndex,
+                SortBy: 'Name',
+                SortOrder: 'Ascending',
+            });
+            this.loadingState.trackTotal = result.TotalRecordCount;
+            items = result.Items;
+            startIndex = this.loadingState.trackLoaded += result.Items.length;
+            for (const item of items) {
+                this.loadTrack(item);
+            }
+        } while (
+            items.length > 0 &&
+            this.loadingState.trackLoaded < this.loadingState.trackTotal
+        );
+        return this.tracks;
     }
 
     // actually totally synchronous but marked as async to allow for future
@@ -215,7 +294,6 @@ export class Library {
     }
 
     async getTracksByIds(trackIds: Array<string>): Promise<Array<Track>> {
-        await this.loadingPromise;
         const result = [];
 
         for (const trackId of trackIds) {
@@ -426,10 +504,11 @@ export class Library {
     }
 
     getPlaybackUrl(track: Track): string {
-        return this.apiClient.getUrl(`/Audio/${track.id}/universal`, {
-            UserId: this.apiClient.getCurrentUserId(),
-            DeviceId: this.apiClient.deviceId(),
-            api_key: this.apiClient.accessToken(),
+        const apiClient = this.requireApiClient();
+        return this.requireApiClient().getUrl(`/Audio/${track.id}/universal`, {
+            UserId: apiClient.getCurrentUserId(),
+            DeviceId: apiClient.deviceId(),
+            api_key: apiClient.accessToken(),
             PlaySessionId: new Date().getTime().toString(),
             MaxStreamingBitrate: '140000000',
             Container: 'opus,mp3|mp3,aac,m4a,m4b|aac,flac,webma,webm,wav,ogg',
@@ -477,7 +556,6 @@ export class Library {
     }
 
     async search(searchText: string): Promise<Array<LibraryItem>> {
-        await this.loadingPromise;
         const searchRegex = new RegExp(searchText, 'i');
         const artistResults = [];
         const albumResults = [];
@@ -510,24 +588,19 @@ export class Library {
     }
 
     async getArtists(): Promise<Array<Artist>> {
-        await this.loadingPromise;
         return this.artists;
     }
 
     async getAlbums(): Promise<Array<Album>> {
-        await this.loadingPromise;
         return this.albums;
     }
 
     async getTracks(): Promise<Array<Track>> {
-        await this.loadingPromise;
         return this.tracks;
     }
 
-    static createInstance(
-        connectionManager: Jellyfin.ConnectionManager
-    ): Library {
-        const library = new Library(connectionManager);
+    static createInstance(): Library {
+        const library = new Library();
         Library.instance = library;
         return library;
     }

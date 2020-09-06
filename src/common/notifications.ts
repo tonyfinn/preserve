@@ -41,12 +41,16 @@ export class NotificationService {
             expiryTimeout: null,
         };
 
-        notification.expiryTimeout = window.setTimeout(() => {
-            this.notifications = this.notifications.filter((x) => x.id !== id);
-            notification.expiryTimeout = null;
-            this.onExpire.trigger(notification);
-            this.onChange.trigger();
-        }, timeout * 1000);
+        if (timeout > 0) {
+            notification.expiryTimeout = window.setTimeout(() => {
+                this.notifications = this.notifications.filter(
+                    (x) => x.id !== id
+                );
+                notification.expiryTimeout = null;
+                this.onExpire.trigger(notification);
+                this.onChange.trigger();
+            }, timeout * 1000);
+        }
 
         this.notifications.push(notification);
         this.onNotify.trigger(notification);
@@ -81,6 +85,23 @@ export class NotificationService {
             message,
             type,
             timeout
+        );
+    }
+
+    // eslint-disable-next-line
+    static notifyError(error: any): number {
+        let message = 'Error';
+        if (error instanceof Error) {
+            message = error.message;
+        } else if (typeof error === 'string') {
+            message = error;
+        } else {
+            message = '' + error;
+        }
+        return NotificationService.getInstance().addNotification(
+            message,
+            NotificationType.Error,
+            0
         );
     }
 

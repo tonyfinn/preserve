@@ -1,3 +1,8 @@
+# 0.3.1
+
+* Paginated loading
+* Progress bar on loading
+
 # 0.3.0
 
 Public Alpha release (unchanged from 0.2.10)
