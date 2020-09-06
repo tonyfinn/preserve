@@ -1,7 +1,11 @@
 <template>
     <div id="app">
         <header id="app-header">
-            <h1>{{ appName }}</h1>
+            <div>
+                <h1>{{ appName }}</h1>
+                <p>v{{ appVersion }}</p>
+            </div>
+
             <button v-if="loggedIn" @click="logout()">Logout</button>
         </header>
         <playback-screen
@@ -55,8 +59,10 @@ export default defineComponent({
     },
     data() {
         return {
-            // eslint-disable-next-line
+            /* eslint-disable -- eslint does not understand these values from DefinePlugin */
             appName: APP_NAME,
+            appVersion: APP_VERSION,
+            /* eslint-enable */
             loggedIn: false,
             library: Library.createInstance(),
             servers: connectionManager.getSavedServers() || [],
@@ -164,6 +170,14 @@ export default defineComponent({
     padding: $dims-padding;
     display: grid;
     grid-template-columns: 1fr auto;
+
+    div {
+        display: grid;
+        grid-auto-flow: column;
+        justify-content: start;
+        grid-gap: 1em;
+        align-items: center;
+    }
 }
 
 .notification-outlet {

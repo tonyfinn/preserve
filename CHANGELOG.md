@@ -1,3 +1,10 @@
+# 0.3.2
+
+## Tech Changes
+
+* Automate release creation
+* Display version number in header bar
+
 # 0.3.1
 
 * Paginated loading

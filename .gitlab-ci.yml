@@ -10,6 +10,7 @@ default:
 stages:
     - check
     - package
+    - release
 
 check:
     stage: check
@@ -81,10 +82,35 @@ docker:
     image: docker:19.03
     cache:
         policy: pull
+    artifacts:
+        expire_in: never
+        paths:
+            - target/*
     rules:
         - if: $CI_COMMIT_TAG
           when: on_success
     script:
         - apk add make jq
+        - mkdir -p target/
         - echo -n $DOCKER_PASSWORD | docker login -u tonyfinn --password-stdin https://index.docker.io/v1/
         - make docker && make publish-docker
+        - docker images --no-trunc --quiet tonyfinn/preserve:latest > target/docker-tag.txt
+
+release:
+    stage: release
+    image: registry.gitlab.com/gitlab-org/release-cli
+    rules:
+        - if: $CI_COMMIT_TAG
+          when: on_success
+    script:
+        - >
+            VERSION=$(echo $CI_COMMIT_TAG | tr -d 'v') &&
+            DOCKER_SHA=$(cat target/docker-tag.txt | tr ':' '-') &&
+            CHANGELOG=$(awk '/^# /{f=1} f; /^# / && ++c==2{exit}' CHANGELOG.md | head -n -1) &&
+            release-cli create --name $CI_COMMIT_TAG --description "$CHANGELOG"
+            --tag-name $CI_COMMIT_TAG --ref $CI_COMMIT_SHA
+            --assets-link "{\"name\":\"Windows Installer (Desktop App)\",\"url\":\"https://gitlab.com/tonyfinn/preserve/-/jobs/artifacts/v${VERSION}/raw/target/Preserve-${VERSION}%20Setup.exe?job=package-electron-windows\",\"link_type\":\"package\"}"
+            --assets-link "{\"name\":\".rpm for Fedora (Desktop App)\",\"url\":\"https://gitlab.com/tonyfinn/preserve/-/jobs/artifacts/v${VERSION}/raw/target/preserve-electron-${VERSION}-1.x86_64.rpm?job=package-electron-linux\",\"link_type\":\"package\"}"
+            --assets-link "{\"name\":\".deb for Debian/Ubuntu (Desktop App)\",\"url\":\"https://gitlab.com/tonyfinn/preserve/-/jobs/artifacts/v${VERSION}/raw/target/preserve-electron_${VERSION}_amd64.deb?job=package-electron-linux\",\"link_type\":\"package\"}"
+            --assets-link "{\"name\":\"Packaged Web Application\",\"url\":\"https://gitlab.com/tonyfinn/preserve/-/jobs/artifacts/v${VERSION}/raw/target/preserve-${VERSION}.tar.gz?job=package-web\",\"link_type\":\"package\"}"
+            --assets-link "{\"name\":\"Docker image\",\"url\":\"https://hub.docker.com/layers/tonyfinn/preserve/${VERSION}/images/${DOCKER_SHA}?context=repo\",\"link_type\":\"image\"}"
