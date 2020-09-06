@@ -98,7 +98,7 @@ docker:
 
 release:
     stage: release
-    image: registry.gitlab.com/gitlab-org/release-cli
+    image: registry.gitlab.com/gitlab-org/release-cli:edge
     rules:
         - if: $CI_COMMIT_TAG
           when: on_success
