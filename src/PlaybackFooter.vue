@@ -6,9 +6,15 @@
             aria-label="Track Information"
         >
             <div class="track-information">
-                <span class="track-title">{{ trackName }}</span>
-                <span class="artist-title">{{ artistName }}</span>
-                <span class="album-title">{{ albumName }}</span>
+                <span class="track-title" :title="trackName">{{
+                    trackName
+                }}</span>
+                <span class="artist-title" :title="artistName">{{
+                    artistName
+                }}</span>
+                <span class="album-title" :title="albumName">{{
+                    albumName
+                }}</span>
             </div>
             <div class="playback-information">
                 <span class="current-time">{{ formatTime(currentTime) }}</span>
