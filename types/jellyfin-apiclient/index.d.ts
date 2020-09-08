@@ -201,6 +201,7 @@ declare module 'jellyfin-apiclient' {
             password: string
         ): Promise<AuthenticateUserResult>;
         deviceId(): string;
+        getCurrentUser(enableCache?: boolean): Promise<User>;
         getCurrentUserId(): string;
         getItems<T extends Item>(
             userId: string,

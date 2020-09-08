@@ -5,8 +5,13 @@
                 <h1>{{ appName }}</h1>
                 <p>v{{ appVersion }}</p>
             </div>
-
-            <button v-if="loggedIn" @click="logout()">Logout</button>
+            <div class="user-menu">
+                <p v-if="!loggedIn">Not Logged in</p>
+                <p v-if="loggedIn">{{ userName }} ({{ serverName }})</p>
+                <div class="menu-contents">
+                    <button v-if="loggedIn" @click="logout()">Logout</button>
+                </div>
+            </div>
         </header>
         <playback-screen
             v-if="appLoaded && loggedIn"
@@ -67,6 +72,8 @@ export default defineComponent({
             library: Library.createInstance(),
             servers: connectionManager.getSavedServers() || [],
             queueManager: null as QueueManager | null,
+            userName: '',
+            serverName: '',
         };
     },
     computed: {
@@ -124,6 +131,10 @@ export default defineComponent({
             const server = conResult.Servers[0];
             this.loggedIn = server.AccessToken !== null;
             if (this.loggedIn) {
+                this.serverName = server.Name || '';
+                this.userName = (
+                    await conResult.ApiClient.getCurrentUser()
+                ).Name;
                 await this.library.populate(conResult.ApiClient);
                 this.queueManager = await QueueManager.create(this.library);
                 NotificationService.notify(
