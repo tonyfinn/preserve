@@ -1,3 +1,13 @@
+# 0.3.3
+
+## Tech changes
+
+* The version number can now be ctrl-clicked to display the exact git commit.
+
+## Bugfixes
+
+* Playlists are now saved after renaming
+
 # 0.3.2
 
 ## Tech Changes
