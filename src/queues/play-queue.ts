@@ -6,6 +6,7 @@ import { reactive } from 'vue';
 export enum QueueEventType {
     AddItems,
     RemoveItems,
+    Rename,
 }
 
 interface AddItemsEvent {
@@ -19,7 +20,12 @@ interface RemoveItemsEvent {
     items: Array<PlayQueueItem>;
 }
 
-export type QueueEvent = AddItemsEvent | RemoveItemsEvent;
+interface RenameEvent {
+    type: QueueEventType.Rename;
+    name: string;
+}
+
+export type QueueEvent = AddItemsEvent | RemoveItemsEvent | RenameEvent;
 
 export interface PlayQueueItem {
     track: Track;
@@ -30,7 +36,7 @@ export class PlayQueue {
     queueItems: Array<PlayQueueItem>;
     id: number;
     index: number;
-    name: string;
+    _name: string;
     loaded: boolean;
     nextItemId: number;
     onChange: EventEmitter<QueueEvent>;
@@ -39,10 +45,22 @@ export class PlayQueue {
         this.queueItems = [];
         this.index = -1;
         this.nextItemId = 0;
-        this.name = name;
+        this._name = name;
         this.id = id || new Date().getTime();
         this.loaded = false;
         this.onChange = new EventEmitter();
+    }
+
+    get name(): string {
+        return this._name;
+    }
+
+    set name(newName: string) {
+        this._name = newName;
+        this.onChange.trigger({
+            type: QueueEventType.Rename,
+            name: newName,
+        });
     }
 
     previousTrack(options: { repeatMode: RepeatMode }): Track | null {

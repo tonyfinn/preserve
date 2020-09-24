@@ -6,3 +6,4 @@ contrib/aur/**/src
 contrib/aur/**/preserve
 contrib/aur/**/pkg
 contrib/aur/**/*.tar.xz
+contrib/aur/**/*.tar.xz.sig
