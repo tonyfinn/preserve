@@ -3,7 +3,19 @@
         <header id="app-header">
             <div>
                 <h1>{{ appName }}</h1>
-                <p>v{{ appVersion }}</p>
+                <p
+                    :title="'VCS version: ' + appSha"
+                    v-if="releaseVersionVisible"
+                    @click.ctrl="releaseVersionVisible = false"
+                >
+                    v{{ appVersion }}
+                </p>
+                <p
+                    v-if="!releaseVersionVisible"
+                    @click.ctrl="releaseVersionVisible = true"
+                >
+                    {{ appSha }}
+                </p>
             </div>
             <div class="user-menu">
                 <p v-if="!loggedIn">Not Logged in</p>
@@ -67,11 +79,13 @@ export default defineComponent({
             /* eslint-disable -- eslint does not understand these values from DefinePlugin */
             appName: APP_NAME,
             appVersion: APP_VERSION,
+            appSha: APP_SHA,
             /* eslint-enable */
             loggedIn: false,
             library: Library.createInstance(),
             servers: connectionManager.getSavedServers() || [],
             queueManager: null as QueueManager | null,
+            releaseVersionVisible: true,
             userName: '',
             serverName: '',
         };
