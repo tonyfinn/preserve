@@ -23,18 +23,10 @@
                 title="Customise Columns"
                 @click="pickingColumns = true"
             ></i>
-            <ul class="columns" v-if="pickingColumns">
-                <li v-for="column in columns" :key="column.title">
-                    <input
-                        :id="'visibility-column-' + column.title"
-                        type="checkbox"
-                        v-model="column.visible"
-                    />
-                    <label :for="'visibility-column-' + column.title">{{
-                        column.title
-                    }}</label>
-                </li>
-            </ul>
+            <column-picker
+                v-if="pickingColumns"
+                v-model="columns"
+            ></column-picker>
             <button v-if="pickingColumns" @click="pickingColumns = false">
                 Done
             </button>
@@ -110,23 +102,11 @@
 <script lang="ts">
 import { defineComponent, nextTick } from 'vue';
 import { AudioPlayer, PlaybackEventType } from '../player';
-import {
-    Library,
-    Track,
-    albumArtistNames,
-    ItemStub,
-    artistNames,
-} from '../library';
+import { Library, Track, ItemStub } from '../library';
 import { QueueManager, PlayQueueItem, PlayQueue } from '.';
 import { ITEM_STUB_MIME_TYPE } from '../common/constants';
-import { formatTime } from '../common/utils';
-
-export interface RowItem<T> {
-    id: string;
-    selected: boolean;
-    data: T;
-    dragCount: number;
-}
+import { RowItem, ColumnDef, ColumnPicker } from '../common/table';
+import { PLAY_QUEUE_COLUMNS } from './columns';
 
 function rowItemsFromQueue(queue: PlayQueue): Array<RowItem<PlayQueueItem>> {
     const rowItems = [];
@@ -142,13 +122,8 @@ function rowItemsFromQueue(queue: PlayQueue): Array<RowItem<PlayQueueItem>> {
     return rowItems;
 }
 
-interface ColumnDef<T> {
-    title: string;
-    visible: boolean;
-    renderer: (row: RowItem<T>) => string;
-}
-
 export default defineComponent({
+    components: { ColumnPicker },
     props: {
         player: {
             type: AudioPlayer,
@@ -166,67 +141,11 @@ export default defineComponent({
     data() {
         const activeQueue = this.queueManager.getActiveQueue();
         const playingQueue = this.player.getQueue();
-
-        const columns: Array<ColumnDef<PlayQueueItem>> = [
-            {
-                title: 'Disc Number',
-                visible: false,
-                renderer(row: RowItem<PlayQueueItem>): string {
-                    return row.data.track.discNumber
-                        ? '' + row.data.track.discNumber
-                        : '--';
-                },
-            },
-            {
-                title: 'Track Number',
-                visible: false,
-                renderer(row: RowItem<PlayQueueItem>): string {
-                    return row.data.track.trackNumber
-                        ? '' + row.data.track.trackNumber
-                        : '--';
-                },
-            },
-            {
-                title: 'Title',
-                visible: true,
-                renderer(row: RowItem<PlayQueueItem>): string {
-                    return row.data.track.name;
-                },
-            },
-            {
-                title: 'Artist',
-                visible: true,
-                renderer(row: RowItem<PlayQueueItem>): string {
-                    return artistNames(row.data.track);
-                },
-            },
-            {
-                title: 'Album Artist',
-                visible: false,
-                renderer(row: RowItem<PlayQueueItem>): string {
-                    return albumArtistNames(row.data.track);
-                },
-            },
-            {
-                title: 'Album',
-                visible: true,
-                renderer(row: RowItem<PlayQueueItem>): string {
-                    return row.data.track.album.name;
-                },
-            },
-            {
-                title: 'Duration',
-                visible: false,
-                renderer(row: RowItem<PlayQueueItem>): string {
-                    return formatTime(row.data.track.duration);
-                },
-            },
-        ];
         return {
             playQueues: this.queueManager.getQueues(),
             activeQueue,
             playingQueue,
-            columns,
+            columns: [...PLAY_QUEUE_COLUMNS.map((x) => Object.assign({}, x))],
             pickingColumns: false,
             selectedItems: [] as Array<RowItem<PlayQueueItem>>,
             draggingItems: [] as Array<RowItem<PlayQueueItem>>,
@@ -532,15 +451,6 @@ export default defineComponent({
         padding: $dims-padding;
         background-color: $colors-background;
         border: 1px solid white;
-    }
-
-    ul {
-        list-style-type: none;
-    }
-
-    label {
-        display: inline-block;
-        padding: $dims-padding-dense;
     }
 
     button {

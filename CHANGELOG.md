@@ -6,6 +6,7 @@
 
 ## Bugfixes
 
+* Fix loading screen can block login
 * Playlists are now saved after renaming
 
 # 0.3.2

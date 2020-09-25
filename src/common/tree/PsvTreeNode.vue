@@ -204,8 +204,8 @@ export default defineComponent({
 </script>
 
 <style lang="scss">
-@import '../styles/colors.scss';
-@import '../styles/dims.scss';
+@import '../../styles/colors.scss';
+@import '../../styles/dims.scss';
 
 .psv-tree {
     list-style: none;

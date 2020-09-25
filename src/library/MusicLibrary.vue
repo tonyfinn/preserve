@@ -27,10 +27,10 @@
 
 <script lang="ts">
 import { Album, Artist, Library, LibraryItem, Track } from '.';
-import { PsvTree, TreeItem } from '../tree';
+import { PsvTree, TreeItem } from '../common/tree';
 import { defineComponent } from 'vue';
 
-import { buildTreeNode, buildTreeLeaf } from '../tree/tree-item';
+import { buildTreeNode, buildTreeLeaf } from '../common/tree/tree-item';
 import { debounced } from '../common/utils';
 
 type LibraryTree = Array<Artist>;

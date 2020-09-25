@@ -44,7 +44,9 @@
             </p>
         </div>
         <notification-toast class="notification-outlet"></notification-toast>
-        <div id="dialog-container"></div>
+        <div id="dialog-container">
+            <!--<settings-dialog></settings-dialog>-->
+        </div>
     </div>
 </template>
 
@@ -61,6 +63,7 @@ import {
     SuccessfulConnectionResult,
 } from 'jellyfin-apiclient';
 import { QueueManager } from './queues/play-queue';
+// import SettingsDialog from './SettingsDialog.vue';
 
 interface LoadingItem {
     name: string;
@@ -73,6 +76,7 @@ export default defineComponent({
         LoginScreen,
         PlaybackScreen,
         NotificationToast,
+        // SettingsDialog,
     },
     data() {
         return {
@@ -125,6 +129,7 @@ export default defineComponent({
                     if (conResult.State === 'SignedIn') {
                         return conResult as LoggedInConnectionResult;
                     }
+                    console.log(conResult);
                     return Promise.reject('Not signed in previously');
                 })
                 .then(this.setupServer.bind(this))
@@ -132,6 +137,7 @@ export default defineComponent({
                     console.log(err);
                     NotificationService.notifyError(err);
                     this.loggedIn = false;
+                    this.servers = [];
                 });
         }
     },
@@ -217,6 +223,14 @@ export default defineComponent({
     grid-column: 1;
     pointer-events: none;
     z-index: 5;
+
+    .dialog {
+        margin: 1em auto;
+        max-width: 60em;
+        padding: $dims-padding;
+        background-color: $colors-background;
+        border: 2px solid $colors-primary;
+    }
 }
 
 .screen-root {

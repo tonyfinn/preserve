@@ -27,7 +27,7 @@ import { Library, LibraryItem } from './library';
 import PlaybackFooter from './PlaybackFooter.vue';
 import { PlayQueues, QueueManager } from './queues';
 import { defineComponent } from 'vue';
-import { TreeActivateEvent } from './tree/tree-item';
+import { TreeActivateEvent } from './common/tree/tree-item';
 
 export default defineComponent({
     components: {
