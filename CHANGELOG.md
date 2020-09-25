@@ -1,3 +1,9 @@
+# 0.3.4
+
+## Bugfixes
+
+* Load app after login without refresh
+
 # 0.3.3
 
 ## Tech changes

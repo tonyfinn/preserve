@@ -152,6 +152,7 @@ export default defineComponent({
             this.loggedIn = server.AccessToken !== null;
             if (this.loggedIn) {
                 this.serverName = server.Name || '';
+                this.servers = connectionManager.getSavedServers();
                 this.userName = (
                     await conResult.ApiClient.getCurrentUser()
                 ).Name;
