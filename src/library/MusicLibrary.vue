@@ -26,7 +26,8 @@
 </template>
 
 <script lang="ts">
-import { Album, Artist, Library, LibraryItem, Track } from '.';
+import { Album, Artist, LibraryItem, Track } from './types';
+import Library from './library';
 import { PsvTree, TreeItem } from '../common/tree';
 import { defineComponent } from 'vue';
 
