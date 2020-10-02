@@ -1,14 +1,14 @@
 <template>
     <ul class="column-picker">
-        <li v-for="column in modelValue" :key="column.title">
+        <li v-for="column in modelValue" :key="column.def.field">
             <input
-                :id="'column-picker-column-' + column.title"
+                :id="'column-picker-column-' + column.def.title"
                 :checked="column.visible"
                 type="checkbox"
                 @change="toggleColumn(column)"
             />
-            <label :for="'column-picker-column-' + column.title">{{
-                column.title
+            <label :for="'column-picker-column-' + column.def.title">{{
+                column.def.title
             }}</label>
         </li>
     </ul>
@@ -16,28 +16,26 @@
 
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
-import { ColumnDef } from './types';
+import { Column } from './types';
 
 export default defineComponent({
     emits: ['update:modelValue'],
     props: {
         modelValue: {
             required: true,
-            type: Array as PropType<Array<ColumnDef<unknown>>>,
+            type: Array as PropType<Array<Column<unknown, unknown>>>,
         },
     },
     methods: {
-        toggleColumn(def: ColumnDef<unknown>) {
+        toggleColumn(toggledColumn: Column<unknown, unknown>) {
             this.$emit('update:modelValue', [
-                ...this.modelValue.map((cdef) => {
-                    return {
-                        title: cdef.title,
-                        visible:
-                            def.title === cdef.title
-                                ? !cdef.visible
-                                : cdef.visible,
-                        renderer: cdef.renderer,
-                    };
+                ...this.modelValue.map((col) => {
+                    return new Column(
+                        col.def,
+                        toggledColumn.def.field === col.def.field
+                            ? !col.visible
+                            : col.visible
+                    );
                 }),
             ]);
         },

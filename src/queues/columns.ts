@@ -1,12 +1,24 @@
+import { Settings } from '../common/settings';
 import { ColumnDef, RowItem } from '../common/table';
+import { Column } from '../common/table/types';
 import { formatTime } from '../common/utils';
 import { albumArtistNames, artistNames } from '../library';
 import { PlayQueueItem } from './play-queue';
 
-export const PLAY_QUEUE_COLUMNS: Array<ColumnDef<PlayQueueItem>> = [
+export enum PlayColumn {
+    DiscNumber,
+    TrackNumber,
+    Title,
+    Artist,
+    AlbumArtist,
+    Album,
+    Duration,
+}
+
+export const PLAY_QUEUE_COLUMNS: Array<ColumnDef<PlayColumn, PlayQueueItem>> = [
     {
         title: 'Disc Number',
-        visible: false,
+        field: PlayColumn.DiscNumber,
         renderer(row: RowItem<PlayQueueItem>): string {
             return row.data.track.discNumber
                 ? '' + row.data.track.discNumber
@@ -15,7 +27,7 @@ export const PLAY_QUEUE_COLUMNS: Array<ColumnDef<PlayQueueItem>> = [
     },
     {
         title: 'Track Number',
-        visible: false,
+        field: PlayColumn.TrackNumber,
         renderer(row: RowItem<PlayQueueItem>): string {
             return row.data.track.trackNumber
                 ? '' + row.data.track.trackNumber
@@ -24,37 +36,46 @@ export const PLAY_QUEUE_COLUMNS: Array<ColumnDef<PlayQueueItem>> = [
     },
     {
         title: 'Title',
-        visible: true,
+        field: PlayColumn.Title,
         renderer(row: RowItem<PlayQueueItem>): string {
             return row.data.track.name;
         },
     },
     {
         title: 'Artist',
-        visible: true,
+        field: PlayColumn.Artist,
         renderer(row: RowItem<PlayQueueItem>): string {
             return artistNames(row.data.track);
         },
     },
     {
         title: 'Album Artist',
-        visible: false,
+        field: PlayColumn.AlbumArtist,
         renderer(row: RowItem<PlayQueueItem>): string {
             return albumArtistNames(row.data.track);
         },
     },
     {
         title: 'Album',
-        visible: true,
+        field: PlayColumn.Album,
         renderer(row: RowItem<PlayQueueItem>): string {
             return row.data.track.album.name;
         },
     },
     {
         title: 'Duration',
-        visible: false,
+        field: PlayColumn.Duration,
         renderer(row: RowItem<PlayQueueItem>): string {
             return formatTime(row.data.track.duration);
         },
     },
 ];
+
+export function savedQueueColumns(
+    settings: Settings
+): Array<Column<PlayColumn, PlayQueueItem>> {
+    const visibleColumns = settings.playlistColumns;
+    return PLAY_QUEUE_COLUMNS.map(
+        (def) => new Column(def, visibleColumns.includes(def.field))
+    );
+}

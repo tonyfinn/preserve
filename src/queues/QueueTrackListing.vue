@@ -46,8 +46,11 @@
         >
             <thead>
                 <tr>
-                    <th v-for="column in visibleColumns" :key="column.title">
-                        {{ column.title }}
+                    <th
+                        v-for="column in visibleColumns"
+                        :key="column.def.field"
+                    >
+                        {{ column.def.title }}
                     </th>
                 </tr>
             </thead>
@@ -83,8 +86,11 @@
                     @drop.stop.prevent="itemDrop(queueItem, index, $event)"
                     @dragover.prevent
                 >
-                    <td v-for="column in visibleColumns" :key="column.title">
-                        {{ column.renderer(queueItem) }}
+                    <td
+                        v-for="column in visibleColumns"
+                        :key="column.def.field"
+                    >
+                        {{ column.def.renderer(queueItem) }}
                     </td>
                 </tr>
             </tbody>
@@ -105,8 +111,8 @@ import { AudioPlayer, PlaybackEventType } from '../player';
 import { Library, Track, ItemStub } from '../library';
 import { QueueManager, PlayQueueItem, PlayQueue } from '.';
 import { ITEM_STUB_MIME_TYPE } from '../common/constants';
-import { RowItem, ColumnDef, ColumnPicker } from '../common/table';
-import { PLAY_QUEUE_COLUMNS } from './columns';
+import { RowItem, Column, ColumnPicker } from '../common/table';
+import { PlayColumn, savedQueueColumns } from './columns';
 
 function rowItemsFromQueue(queue: PlayQueue): Array<RowItem<PlayQueueItem>> {
     const rowItems = [];
@@ -138,6 +144,7 @@ export default defineComponent({
             required: true,
         },
     },
+    inject: ['settings'],
     data() {
         const activeQueue = this.queueManager.getActiveQueue();
         const playingQueue = this.player.getQueue();
@@ -145,7 +152,7 @@ export default defineComponent({
             playQueues: this.queueManager.getQueues(),
             activeQueue,
             playingQueue,
-            columns: [...PLAY_QUEUE_COLUMNS.map((x) => Object.assign({}, x))],
+            columns: savedQueueColumns((this as any).settings),
             pickingColumns: false,
             selectedItems: [] as Array<RowItem<PlayQueueItem>>,
             draggingItems: [] as Array<RowItem<PlayQueueItem>>,
@@ -172,7 +179,7 @@ export default defineComponent({
         });
     },
     computed: {
-        visibleColumns(): Array<ColumnDef<PlayQueueItem>> {
+        visibleColumns(): Array<Column<PlayColumn, PlayQueueItem>> {
             return this.columns.filter((item) => item.visible);
         },
         queueItems(): Array<RowItem<PlayQueueItem>> {

@@ -5,8 +5,18 @@ export interface RowItem<T> {
     dragCount: number;
 }
 
-export interface ColumnDef<T> {
+export interface ColumnDef<T, I> {
     title: string;
+    field: T;
+    renderer: (row: RowItem<I>) => string;
+}
+
+export class Column<T, I> {
+    def: ColumnDef<T, I>;
     visible: boolean;
-    renderer: (row: RowItem<T>) => string;
+
+    constructor(def: ColumnDef<T, I>, visible: boolean) {
+        this.def = def;
+        this.visible = visible;
+    }
 }
