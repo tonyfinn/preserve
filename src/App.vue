@@ -20,6 +20,17 @@
             <div class="user-menu">
                 <p v-if="!loggedIn">Not Logged in</p>
                 <p v-if="loggedIn">{{ userName }} ({{ serverName }})</p>
+                <i
+                    v-if="loggedIn"
+                    class="fi-widget settings-icon"
+                    title="Settings"
+                    @click="settingsOpen = !settingsOpen"
+                ></i>
+                <settings-dialog
+                    v-if="settingsOpen"
+                    v-model="settings"
+                    @close-dialog="settingsOpen = false"
+                ></settings-dialog>
                 <div class="menu-contents">
                     <button v-if="loggedIn" @click="logout()">Logout</button>
                 </div>
@@ -44,9 +55,7 @@
             </p>
         </div>
         <notification-toast class="notification-outlet"></notification-toast>
-        <div id="dialog-container">
-            <!--<settings-dialog></settings-dialog>-->
-        </div>
+        <div id="dialog-container"></div>
     </div>
 </template>
 
@@ -63,7 +72,8 @@ import {
     SuccessfulConnectionResult,
 } from 'jellyfin-apiclient';
 import { QueueManager } from './queues/play-queue';
-// import SettingsDialog from './SettingsDialog.vue';
+import SettingsDialog from './SettingsDialog.vue';
+import { Settings, SETTINGS_STORAGE_KEY } from './common/settings';
 
 interface LoadingItem {
     name: string;
@@ -76,22 +86,38 @@ export default defineComponent({
         LoginScreen,
         PlaybackScreen,
         NotificationToast,
-        // SettingsDialog,
+        SettingsDialog,
     },
     data() {
+        const settingsString = window.localStorage.getItem(
+            SETTINGS_STORAGE_KEY
+        );
+        const savedSettings: Partial<Settings> = settingsString
+            ? JSON.parse(settingsString)
+            : {};
+        const settings = new Settings(savedSettings);
+        const library = Library.createInstance();
         return {
+            settings,
             /* eslint-disable -- eslint does not understand these values from DefinePlugin */
             appName: APP_NAME,
             appVersion: APP_VERSION,
             appSha: APP_SHA,
             /* eslint-enable */
             loggedIn: false,
-            library: Library.createInstance(),
+            library,
             servers: connectionManager.getSavedServers() || [],
             queueManager: null as QueueManager | null,
             releaseVersionVisible: true,
+            settingsOpen: false,
             userName: '',
             serverName: '',
+        };
+    },
+    provide() {
+        return {
+            library: this.library,
+            settings: this.settings,
         };
     },
     computed: {
@@ -140,6 +166,16 @@ export default defineComponent({
                     this.servers = [];
                 });
         }
+        this.$watch(
+            'settings',
+            (newSettings: Settings) => {
+                window.localStorage.setItem(
+                    SETTINGS_STORAGE_KEY,
+                    JSON.stringify(newSettings)
+                );
+            },
+            { deep: true, immediate: true }
+        );
     },
     methods: {
         logout() {
@@ -210,6 +246,10 @@ export default defineComponent({
         grid-gap: 1em;
         align-items: center;
     }
+
+    .settings-icon {
+        cursor: pointer;
+    }
 }
 
 .notification-outlet {
@@ -224,14 +264,6 @@ export default defineComponent({
     grid-column: 1;
     pointer-events: none;
     z-index: 5;
-
-    .dialog {
-        margin: 1em auto;
-        max-width: 60em;
-        padding: $dims-padding;
-        background-color: $colors-background;
-        border: 2px solid $colors-primary;
-    }
 }
 
 .screen-root {
