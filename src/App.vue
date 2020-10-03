@@ -40,6 +40,7 @@
             v-if="appLoaded && loggedIn"
             :library="library"
             :queueManager="queueManager"
+            :settings="settings"
             class="screen-root"
         ></playback-screen>
         <login-screen
@@ -169,10 +170,7 @@ export default defineComponent({
         this.$watch(
             'settings',
             (newSettings: Settings) => {
-                window.localStorage.setItem(
-                    SETTINGS_STORAGE_KEY,
-                    JSON.stringify(newSettings)
-                );
+                newSettings.save();
             },
             { deep: true, immediate: true }
         );

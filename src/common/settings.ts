@@ -9,12 +9,22 @@ export class Settings {
 
     constructor(savedSettings: Partial<Settings>) {
         this.libraryGrouping =
-            savedSettings.libraryGrouping ||
-            LibraryGroupOption.AlbumArtist_Album;
+            savedSettings.libraryGrouping !== undefined
+                ? savedSettings.libraryGrouping
+                : LibraryGroupOption.AlbumArtist_Album;
         this.playlistColumns = savedSettings.playlistColumns || [
             PlayColumn.Title,
             PlayColumn.Artist,
             PlayColumn.Album,
         ];
+    }
+
+    set<K extends keyof Settings>(k: K, v: this[K]): void {
+        this[k] = v;
+        this.save();
+    }
+
+    save(): void {
+        window.localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(this));
     }
 }

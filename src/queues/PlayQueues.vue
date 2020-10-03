@@ -8,6 +8,7 @@
             :library="library"
             :player="player"
             :queueManager="queueManager"
+            :settings="settings"
         ></QueueTrackListing>
     </section>
 </template>
@@ -17,6 +18,7 @@ import { defineComponent } from 'vue';
 import { Library } from '../library';
 import { AudioPlayer } from '../player';
 import { QueueManager } from './play-queue';
+import { Settings } from '../common/settings';
 import QueueTrackListing from './QueueTrackListing.vue';
 import QueuePicker from './QueuePicker.vue';
 
@@ -33,6 +35,10 @@ export default defineComponent({
         },
         queueManager: {
             type: QueueManager,
+            required: true,
+        },
+        settings: {
+            type: Settings,
             required: true,
         },
     },

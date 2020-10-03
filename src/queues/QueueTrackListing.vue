@@ -113,6 +113,7 @@ import { QueueManager, PlayQueueItem, PlayQueue } from '.';
 import { ITEM_STUB_MIME_TYPE } from '../common/constants';
 import { RowItem, Column, ColumnPicker } from '../common/table';
 import { PlayColumn, savedQueueColumns } from './columns';
+import { Settings } from '../common/settings';
 
 function rowItemsFromQueue(queue: PlayQueue): Array<RowItem<PlayQueueItem>> {
     const rowItems = [];
@@ -143,8 +144,11 @@ export default defineComponent({
             type: QueueManager,
             required: true,
         },
+        settings: {
+            type: Settings,
+            required: true,
+        },
     },
-    inject: ['settings'],
     data() {
         const activeQueue = this.queueManager.getActiveQueue();
         const playingQueue = this.player.getQueue();
@@ -152,7 +156,7 @@ export default defineComponent({
             playQueues: this.queueManager.getQueues(),
             activeQueue,
             playingQueue,
-            columns: savedQueueColumns((this as any).settings),
+            columns: savedQueueColumns(this.settings),
             pickingColumns: false,
             selectedItems: [] as Array<RowItem<PlayQueueItem>>,
             draggingItems: [] as Array<RowItem<PlayQueueItem>>,
@@ -161,6 +165,14 @@ export default defineComponent({
             nowPlayingIndex: -1,
             childDragOver: 0,
         };
+    },
+    watch: {
+        columns(newColumns: Array<Column<PlayColumn, PlayQueueItem>>) {
+            this.settings.set(
+                'playlistColumns',
+                newColumns.filter((x) => x.visible).map((x) => x.def.field)
+            );
+        },
     },
     created() {
         this.player.setQueue(this.activeQueue);

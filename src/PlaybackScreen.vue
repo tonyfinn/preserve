@@ -11,6 +11,7 @@
             :library="library"
             :queueManager="queueManager"
             :player="player"
+            :settings="settings"
         ></play-queues>
         <playback-footer :player="player"></playback-footer>
         <div class="drag-counter">
@@ -24,6 +25,7 @@ import { ITEM_STUB_MIME_TYPE } from './common/constants';
 import MusicLibrary from './library/MusicLibrary.vue';
 import { AudioPlayer } from './player';
 import { Library, LibraryItem } from './library';
+import { Settings } from './common/settings';
 import PlaybackFooter from './PlaybackFooter.vue';
 import { PlayQueues, QueueManager } from './queues';
 import { defineComponent } from 'vue';
@@ -42,6 +44,10 @@ export default defineComponent({
         },
         queueManager: {
             type: QueueManager,
+            required: true,
+        },
+        settings: {
+            type: Settings,
             required: true,
         },
     },
