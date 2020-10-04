@@ -1,15 +1,19 @@
 srcdir = .
+prefix = /usr/local
+datarootdir = ${prefix}/share
+webappsdir = ${datarootdir}/webapps
+
 NPM = npm
 INSTALL = install
 INSTALL_PROGRAM = ${INSTALL}
 INSTALL_DATA = ${INSTALL} -m 644
-prefix = /usr/local
-datarootdir = ${prefix}/share
-webappsdir = ${datarootdir}/webapps
 INSTALL_LOCATION = ${DESTDIR}${webappsdir}/preserve
 
-VERSION != jq -r '.version' package.json
+VERSION != jq -r '.version' preserve-ui/package.json
 PACKAGE_WEB_PATH = ${srcdir}/target/preserve-${VERSION}.tar.gz
+
+UI_SRC_DIR = ${srcdir}/preserve-ui
+ELECTRON_SRC_DIR = ${srcdir}/preserve-electron
 
 .PHONY: clean dist icons \
 		docker podman \
@@ -19,28 +23,35 @@ PACKAGE_WEB_PATH = ${srcdir}/target/preserve-${VERSION}.tar.gz
 
 # Don't rebuild node_modules if missing unless needed,
 # but also do not automatically clean it up
-.INTERMEDIATE: node_modules
-.SECONDARY: node_modules
+.INTERMEDIATE: preserve-ui/node_modules
+.SECONDARY: preserve-ui/node_modules
 
 default: package
 
 clean:
-	cd ${srcdir} && ${NPM} run clean
-	rm -rf ${srcdir}/node_modules/
-	rm -rf ${srcdir}/preserve-electron/node_modules
+	cd ${UI_SRC_DIR} && ${NPM} run clean
+	rm -rf ${UI_SRC_DIR}/node_modules/
+	rm -rf ${ELECTRON_SRC_DIR}/node_modules
 	rm -rf ${srcdir}/build/
 	rm -rf ${srcdir}/target/
 
-check: node_modules
-	cd ${srcdir} && ${NPM} run lint
+check: preserve-ui/node_modules
+	cd ${UI_SRC_DIR} && ${NPM} run lint
 
-node_modules:
-	cd ${srcdir} && ${NPM} ci
+devserver: preserve-ui/node_modules
+	cd ${UI_SRC_DIR} && ${NPM} run start
+
+
+preserve-ui/node_modules:
+	cd ${UI_SRC_DIR} && ${NPM} ci
 
 dist: dist/index.html
 
-dist/index.html: node_modules
-	cd ${srcdir} &&	${NPM} run build:prod
+dist/index.html: preserve-ui/node_modules
+	cd ${UI_SRC_DIR} &&	${NPM} run build:prod
+
+serve: dist
+	cd ${UI_SRC_DIR} && ${NPM} run serve
 
 install: dist
 	${INSTALL} -d -m755 ${INSTALL_LOCATION}
@@ -55,13 +66,13 @@ publish-docker: docker
 	docker push tonyfinn/preserve:latest
 
 podman: dist
-	podman build -f ${srcdir}/contrib/docker/Dockerfile -t tonyfinn/preserve:${VERSION} .
+	podman build -f ${srcdir}/contrib/docker/Dockerfile -t tonyfinn/preserve:${VERSION} ${srcdir}
 
 build/electron/index.html: dist
 	mkdir -p ${srcdir}/build/electron
-	cp -R ${srcdir}/preserve-electron/* ${srcdir}/build/electron
+	cp -R ${ELECTRON_SRC_DIR}/* ${srcdir}/build/electron
 	cp -R ${srcdir}/dist/* ${srcdir}/build/electron/src
-	cp -R ${srcdir}/static/ ${srcdir}/build/electron/src
+	cp -R ${UI_SRC_DIR}/static/ ${srcdir}/build/electron/src
 	cd ${srcdir}/build/electron && npm ci
 
 start-electron: build/electron/index.html
@@ -98,8 +109,8 @@ bump-patch:
 	${srcdir}/contrib/bumpver.sh patch
 
 icons:
-	mkdir -p ${srcdir}/static
+	mkdir -p ${UI_SRC_DIR}/static
 	for size in 16 32 48 96 128 144 192 256 ; do \
-		rsvg-convert -w $$size -h $$size ${srcdir}/res/logo.svg --output ${srcdir}/static/logo-$$size.png ; \
+		rsvg-convert -w $$size -h $$size ${UI_SRC_DIR}/res/logo.svg --output ${UI_SRC_DIR}/static/logo-$$size.png ; \
 	done
-	icotool --create ${srcdir}/static/*.png --output=${srcdir}/static/favicon.ico
+	icotool --create ${UI_SRC_DIR}/static/*.png --output=${UI_SRC_DIR}/static/favicon.ico

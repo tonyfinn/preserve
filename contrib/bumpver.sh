@@ -15,5 +15,5 @@ fi
     
 echo "New version is $newver"
 
-cat package.json | jq --indent 4 --arg newver $newver '.version = $newver' | tee package.json
+cat preserve-ui/package.json | jq --indent 4 --arg newver $newver '.version = $newver' | tee preserve-ui/package.json
 cat preserve-electron/package.json | jq --indent 4 --arg newver $newver '.version = $newver' | tee preserve-electron/package.json

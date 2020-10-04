@@ -2,6 +2,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { VueLoaderPlugin } = require('vue-loader');
 const TerserPlugin = require('terser-webpack-plugin');
+const path = require('path');
 const webpack = require('webpack');
 
 const devMode = process.env.NODE_ENV !== 'production';
@@ -17,7 +18,7 @@ module.exports = {
     },
     output: {
         filename: devMode ? '[name].js' : '[name].[hash].js',
-        path: __dirname + '/dist',
+        path: path.resolve(__dirname, '../dist'),
     },
     module: {
         rules: [
