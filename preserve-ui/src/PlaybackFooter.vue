@@ -1,6 +1,6 @@
 <template>
     <footer id="playback-footer" aria-label="Music Player">
-        <section class="scrubber">
+        <section class="scrubber" v-if="playing">
             <div class="gui-scrubber">
                 <SliderBar
                     :modelValue="scrubberTime"
