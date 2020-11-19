@@ -22,7 +22,16 @@
                     {{ downloadType.label }}
                 </option>
             </select>
-            <button @click="doDownload">Export</button>
+            <select
+                id="selected-export-playlist"
+                v-if="selectedDownloadType != jsonType"
+                v-model="selectedExportQueue"
+            >
+                <option v-for="queue in queues" :key="queue.id" :value="queue">
+                    {{ queue.name }}
+                </option>
+            </select>
+            <button @click="exportPlaylist">Export</button>
         </div>
     </psv-dialog>
 </template>
@@ -31,7 +40,12 @@
 import { defineComponent } from 'vue';
 import PsvDialog from './common/PsvDialog.vue';
 import { LibraryGroupOption, GROUP_OPTIONS } from './library';
+import { PlayQueue, QueueManager } from './queues';
 import { Settings } from './common/settings';
+import queueToXspf from './queues/xspf';
+import queueToM3u from './queues/m3u';
+
+const FILENAME_DISALLOWED_CHARACTERS = /[\\/*?<>|:?]/;
 
 enum DownloadType {
     JSON,
@@ -53,18 +67,74 @@ export default defineComponent({
             type: Settings,
             required: true,
         },
+        queueManager: {
+            type: QueueManager,
+            required: true,
+        },
     },
     data() {
+        const queues = this.queueManager.getQueues();
         return {
             settings: this.modelValue,
             groupOptions: GROUP_OPTIONS,
             downloadTypes: DOWNLOAD_TYPE_OPTIONS,
+            jsonType: DownloadType.JSON,
+            queues: queues,
+            selectedExportQueue: queues[0],
             selectedDownloadType: DownloadType.JSON,
         };
     },
     methods: {
-        doDownload() {
-            alert('Export not yet implemented');
+        exportPlaylist() {
+            switch (this.selectedDownloadType) {
+                case DownloadType.JSON: {
+                    const exportString = this.queueManager.queuesToExportString();
+                    const playlistBlob = new Blob([exportString], {
+                        type: 'application/x-preserve-playlist',
+                    });
+                    this.triggerDownload(
+                        'preserve-playlists.json',
+                        playlistBlob
+                    );
+                    break;
+                }
+                case DownloadType.XSPF: {
+                    const exportString = queueToXspf(this.selectedExportQueue);
+                    const playlistBlob = new Blob([exportString], {
+                        type: 'application/xspf+xml',
+                    });
+                    this.triggerDownload(
+                        `${this.exportFilename(this.selectedExportQueue)}.xspf`,
+                        playlistBlob
+                    );
+                    break;
+                }
+                case DownloadType.M3U: {
+                    const exportString = queueToM3u(this.selectedExportQueue);
+                    const playlistBlob = new Blob([exportString], {
+                        type: 'application/x-mpegurl',
+                    });
+                    this.triggerDownload(
+                        `${this.exportFilename(this.selectedExportQueue)}.m3u8`,
+                        playlistBlob
+                    );
+                    break;
+                }
+            }
+        },
+        exportFilename(queue: PlayQueue) {
+            return queue.name.replace(FILENAME_DISALLOWED_CHARACTERS, '_');
+        },
+        triggerDownload(name: string, blob: Blob) {
+            const anchor = document.createElement('a');
+            const objectUrl = URL.createObjectURL(blob);
+            anchor.href = objectUrl;
+            anchor.download = name;
+            anchor.style.display = 'none';
+            document.body.appendChild(anchor);
+            anchor.click();
+            document.body.removeChild(anchor);
+            URL.revokeObjectURL(objectUrl);
         },
     },
     watch: {

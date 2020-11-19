@@ -29,6 +29,7 @@
                 <settings-dialog
                     v-if="settingsOpen"
                     v-model="settings"
+                    :queueManager="queueManager"
                     @close-settings="settingsOpen = false"
                 ></settings-dialog>
                 <div class="menu-contents">

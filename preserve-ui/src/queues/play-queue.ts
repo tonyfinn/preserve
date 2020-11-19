@@ -251,7 +251,7 @@ export class QueueManager {
         return new QueueManager(queues, lastActive);
     }
 
-    saveQueues(): void {
+    queuesToExportString(): string {
         const storeQueues = [];
         for (const queue of this.queues.values()) {
             storeQueues.push({
@@ -267,7 +267,11 @@ export class QueueManager {
             queues: storeQueues,
             lastActive: this.activeQueue.id,
         };
-        window.localStorage.setItem('playQueues', JSON.stringify(queues));
+        return JSON.stringify(queues);
+    }
+
+    saveQueues(): void {
+        window.localStorage.setItem('playQueues', this.queuesToExportString());
     }
 
     saveOnQueueUpdate(queue: PlayQueue): void {
