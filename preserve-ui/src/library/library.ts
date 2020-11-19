@@ -47,6 +47,8 @@ export default class Library {
     trackByIdLookup: ItemLookup<Track>;
     albumByFeaturedArtistLookup: Map<string, Array<Album>>;
     albumByAlbumArtistLookup: Map<string, Array<Album>>;
+    trackByAlbumArtistLookup: Map<string, Array<Track>>;
+    trackByArtistLookup: Map<string, Array<Track>>;
     trackByAlbumLookup: Map<string, Array<Track>>;
     static instance: Library;
 
@@ -61,6 +63,8 @@ export default class Library {
         this.albumByFeaturedArtistLookup = new Map();
         this.albumByAlbumArtistLookup = new Map();
         this.trackByAlbumLookup = new Map();
+        this.trackByAlbumArtistLookup = new Map();
+        this.trackByArtistLookup = new Map();
         this.loadingState = reactive(new LibraryLoadState());
 
         window.library = this;
@@ -173,7 +177,7 @@ export default class Library {
 
     // actually totally synchronous but marked as async to allow for future
     // dynamic library loading
-    async getArtistAlbums(
+    async getAlbumsOfArtist(
         artistId: string,
         includeFeatured: boolean
     ): Promise<Array<Album>> {
@@ -188,6 +192,25 @@ export default class Library {
                 this.albumByFeaturedArtistLookup.get(artistId) || [];
             featuredAlbums.sort(sortAlbums);
             return [...ownAlbums, ...featuredAlbums];
+        }
+    }
+
+    // actually totally synchronous but marked as async to allow for future
+    // dynamic library loading
+    async getTracksOfArtist(
+        artistId: string,
+        includeFeatured: boolean
+    ): Promise<Array<Track>> {
+        const ownTracks = this.trackByAlbumArtistLookup.get(artistId) || [];
+
+        ownTracks.sort(sortTracks);
+
+        if (!includeFeatured) {
+            return [...ownTracks];
+        } else {
+            const featuredTracks = this.trackByArtistLookup.get(artistId) || [];
+            featuredTracks.sort(sortTracks);
+            return [...ownTracks, ...featuredTracks];
         }
     }
 
@@ -224,7 +247,7 @@ export default class Library {
                 childTracks.push(track);
             }
         } else if (item.type === 'artist') {
-            const albums = await this.getArtistAlbums(item.id, false);
+            const albums = await this.getAlbumsOfArtist(item.id, false);
 
             const tracksByAlbum = await Promise.all(
                 sorted(albums, sortAlbums).map((album) =>
@@ -309,6 +332,25 @@ export default class Library {
                 } else {
                     this.albumByFeaturedArtistLookup.set(artist.id, [album]);
                 }
+            }
+        }
+    }
+
+    createTrackLookups(track: Track): void {
+        for (const albumArtist of track.albumArtists) {
+            const lookup = this.trackByAlbumArtistLookup.get(albumArtist.id);
+            if (lookup) {
+                lookup.push(track);
+            } else {
+                this.trackByAlbumArtistLookup.set(albumArtist.id, [track]);
+            }
+        }
+        for (const artist of track.artists) {
+            const lookup = this.trackByArtistLookup.get(artist.id);
+            if (lookup) {
+                lookup.push(track);
+            } else {
+                this.trackByArtistLookup.set(artist.id, [track]);
             }
         }
     }
@@ -437,6 +479,7 @@ export default class Library {
         } else {
             this.trackByAlbumLookup.set(track.album.id, [track]);
         }
+        this.createTrackLookups(track);
         return track;
     }
 
@@ -495,6 +538,18 @@ export default class Library {
 
     async getArtists(): Promise<Array<Artist>> {
         return this.artists;
+    }
+
+    async getAlbumArtists(): Promise<Array<Artist>> {
+        const albumArtists = [];
+        for (const albumArtistId of this.albumByAlbumArtistLookup.keys()) {
+            const artist = this.artistByIdLookup.get(albumArtistId);
+            if (artist) {
+                albumArtists.push(artist);
+            }
+        }
+        albumArtists.sort(sortArtists);
+        return albumArtists;
     }
 
     async getAlbums(): Promise<Array<Album>> {

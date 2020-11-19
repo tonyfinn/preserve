@@ -1,6 +1,7 @@
 # 0.3.5
 
 * Scrub to specific point in song
+* Custom Tree Layout
 
 # 0.3.4
 

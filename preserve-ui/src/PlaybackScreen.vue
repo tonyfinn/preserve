@@ -3,6 +3,7 @@
         <music-library
             draggable="true"
             :library="library"
+            :settings="settings"
             @activate-item="activateItem"
             @update-selection="updateSelection"
             @dragstart="libraryDragStart"
