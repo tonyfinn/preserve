@@ -177,6 +177,12 @@ export class AudioPlayer {
         }
     }
 
+    setTime(time: number): void {
+        if (this.element) {
+            this.element.currentTime = time;
+        }
+    }
+
     _startPlayback(track: Track, index: number): void {
         this.element.play();
         this.playing = true;

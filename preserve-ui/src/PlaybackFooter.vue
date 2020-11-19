@@ -1,89 +1,107 @@
 <template>
     <footer id="playback-footer" aria-label="Music Player">
-        <section
-            class="now-playing"
-            v-if="activeTrack"
-            aria-label="Track Information"
-        >
-            <div class="track-information">
-                <span class="track-title" :title="trackName">{{
-                    trackName
-                }}</span>
-                <span class="artist-title" :title="artistName">{{
-                    artistName
-                }}</span>
-                <span class="album-title" :title="albumName">{{
-                    albumName
-                }}</span>
-            </div>
-            <div class="playback-information">
-                <span class="current-time">{{ formatTime(currentTime) }}</span>
-                <span class="duration">{{ formatTime(duration) }}</span>
+        <section class="scrubber">
+            <div class="gui-scrubber">
+                <SliderBar
+                    :modelValue="scrubberTime"
+                    @update:modelValue="scrubTo"
+                    :min="0"
+                    :max="duration"
+                ></SliderBar>
             </div>
         </section>
-        <section
-            class="playback-controls button-group"
-            aria-label="Playback Controls"
-        >
-            <button title="Previous Track" @click="previousTrack">
-                <i class="fi-previous" title="Previous Track"></i>
-            </button>
-            <button title="Play" v-if="!playing" @click="togglePlay">
-                <i class="fi-play" title="Play"></i>
-            </button>
-            <button title="Pause" v-if="playing" @click="togglePlay">
-                <i class="fi-pause" title="Pause"></i>
-            </button>
-            <button title="Next Track" @click="nextTrack">
-                <i class="fi-next" title="Next Track"></i>
-            </button>
-        </section>
-        <div class="after-playback-controls">
+        <section class="main-footer">
             <section
-                class="extra-controls button-group"
-                aria-label="Playback Modes"
+                class="now-playing"
+                v-if="activeTrack"
+                aria-label="Track Information"
             >
-                <button
-                    title="Shuffle"
-                    :class="{ active: shuffle }"
-                    @click="toggleShuffle"
-                >
-                    <i class="fi-shuffle" title="Shuffle"></i>
-                </button>
-                <button
-                    title="Repeat"
-                    :class="{ active: isRepeat() }"
-                    @click="toggleRepeat"
-                >
-                    <i class="fi-loop" title="Repeat" v-if="!isRepeatOne()"></i>
-                    <span v-if="isRepeatOne()">1</span>
-                </button>
-            </section>
-            <section class="volume-controls" aria-label="Volume Control">
-                <div class="sr-volume sr-only">
-                    <label for="player-volume">Volume:</label>
-                    <input
-                        type="number"
-                        name="player-volume"
-                        class="volume-input-number"
-                        v-model="volume"
-                        min="0"
-                        max="100"
-                    />
+                <div class="track-information">
+                    <span class="track-title" :title="trackName">{{
+                        trackName
+                    }}</span>
+                    <span class="artist-title" :title="artistName">{{
+                        artistName
+                    }}</span>
+                    <span class="album-title" :title="albumName">{{
+                        albumName
+                    }}</span>
                 </div>
-                <div class="gui-volume">
-                    <i
-                        :class="{
-                            'fi-volume': !muted && volume > 0,
-                            'fi-volume-none': !muted && volume === 0,
-                            'fi-volume-strike': muted,
-                        }"
-                        @click="toggleMute"
-                    ></i>
-                    <SliderBar v-model="volume"></SliderBar>
+                <div class="playback-information">
+                    <span class="current-time">{{
+                        formatTime(currentTime)
+                    }}</span>
+                    <span class="duration">{{ formatTime(duration) }}</span>
                 </div>
             </section>
-        </div>
+            <section
+                class="playback-controls button-group"
+                aria-label="Playback Controls"
+            >
+                <button title="Previous Track" @click="previousTrack">
+                    <i class="fi-previous" title="Previous Track"></i>
+                </button>
+                <button title="Play" v-if="!playing" @click="togglePlay">
+                    <i class="fi-play" title="Play"></i>
+                </button>
+                <button title="Pause" v-if="playing" @click="togglePlay">
+                    <i class="fi-pause" title="Pause"></i>
+                </button>
+                <button title="Next Track" @click="nextTrack">
+                    <i class="fi-next" title="Next Track"></i>
+                </button>
+            </section>
+            <div class="after-playback-controls">
+                <section
+                    class="extra-controls button-group"
+                    aria-label="Playback Modes"
+                >
+                    <button
+                        title="Shuffle"
+                        :class="{ active: shuffle }"
+                        @click="toggleShuffle"
+                    >
+                        <i class="fi-shuffle" title="Shuffle"></i>
+                    </button>
+                    <button
+                        title="Repeat"
+                        :class="{ active: isRepeat() }"
+                        @click="toggleRepeat"
+                    >
+                        <i
+                            class="fi-loop"
+                            title="Repeat"
+                            v-if="!isRepeatOne()"
+                        ></i>
+                        <span v-if="isRepeatOne()">1</span>
+                    </button>
+                </section>
+                <section class="volume-controls" aria-label="Volume Control">
+                    <div class="sr-volume sr-only">
+                        <label for="player-volume">Volume:</label>
+                        <input
+                            type="number"
+                            name="player-volume"
+                            class="volume-input-number"
+                            v-model="volume"
+                            min="0"
+                            max="100"
+                        />
+                    </div>
+                    <div class="gui-volume">
+                        <i
+                            :class="{
+                                'fi-volume': !muted && volume > 0,
+                                'fi-volume-none': !muted && volume === 0,
+                                'fi-volume-strike': muted,
+                            }"
+                            @click="toggleMute"
+                        ></i>
+                        <SliderBar v-model="volume"></SliderBar>
+                    </div>
+                </section>
+            </div>
+        </section>
     </footer>
 </template>
 
@@ -114,8 +132,10 @@ export default defineComponent({
             repeatMode: this.player.repeatMode,
             shuffle: false,
             muted: false,
+            scrubbing: false,
             duration: this.player.activeTrack()?.duration || 0,
             currentTime: 0,
+            scrubberTime: 0,
             volume: 100,
         };
     },
@@ -150,6 +170,7 @@ export default defineComponent({
                     break;
                 case PlaybackEventType.Time:
                     this.currentTime = evt.time;
+                    this.scrubberTime = evt.time;
                     break;
             }
         });
@@ -203,6 +224,10 @@ export default defineComponent({
         nextTrack() {
             this.player.nextTrack();
         },
+        scrubTo(newValue: number) {
+            this.scrubberTime = newValue;
+            this.player.setTime(newValue);
+        },
     },
 });
 </script>
@@ -211,7 +236,7 @@ export default defineComponent({
 @import './styles/colors.scss';
 @import './styles/dims.scss';
 
-#playback-footer {
+#playback-footer > .main-footer {
     background-color: $colors-primary;
     display: grid;
     grid-template-columns: 1fr auto 1fr;
@@ -292,10 +317,18 @@ export default defineComponent({
         width: 6em;
     }
 }
-</style>
 
-<style lang="scss">
-@import './styles/dims.scss';
+#playback-footer .scrubber {
+    .slider {
+        height: 0.3em;
+        border: 0;
+
+        &:hover {
+            height: 1em;
+        }
+    }
+}
+
 #playback-footer .gui-volume {
     display: grid;
     grid-auto-flow: column;

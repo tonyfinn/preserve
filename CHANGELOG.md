@@ -1,3 +1,7 @@
+# 0.3.5
+
+* Scrub to specific point in song
+
 # 0.3.4
 
 ## Bugfixes

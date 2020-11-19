@@ -41,15 +41,13 @@ export default defineComponent({
     },
     methods: {
         valueToPercent(value: number): number {
-            return Math.floor(((value - this.min) / this.max) * 100);
+            return ((value - this.min) / this.max) * 100;
         },
         percentToValue(percent: number): number {
             return this.min + ((this.max - this.min) * percent) / 100;
         },
         handleWheel(evt: WheelEvent) {
-            const increment =
-                evt.deltaMode === WheelEvent.DOM_DELTA_PIXEL ? 1 : 5;
-            const increase = -evt.deltaY * increment;
+            const increase = -evt.deltaY;
             const newPercent = Math.max(
                 0,
                 Math.min(100, this.percentValue + increase)
