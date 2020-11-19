@@ -1,13 +1,14 @@
 <template>
-    <psv-dialog :title="'Settings'" @close-dialog="$emit('close-dialog')">
+    <psv-dialog :title="'Settings'" @close-dialog="$emit('close-settings')">
         <h2>Tree Layout</h2>
         <select v-model="settings.libraryGrouping">
             <option
                 v-for="groupOption in groupOptions"
                 :key="groupOption.value"
                 :value="groupOption.value"
-                >{{ groupOption.label }}</option
             >
+                {{ groupOption.label }}
+            </option>
         </select>
         <h2>Download Playlists</h2>
         <div class="download-type">
@@ -17,8 +18,9 @@
                     v-for="downloadType in downloadTypes"
                     :key="downloadType.value"
                     :value="downloadType.value"
-                    >{{ downloadType.label }}</option
                 >
+                    {{ downloadType.label }}
+                </option>
             </select>
             <button @click="doDownload">Export</button>
         </div>
@@ -45,7 +47,7 @@ const DOWNLOAD_TYPE_OPTIONS = [
 
 export default defineComponent({
     components: { PsvDialog },
-    emits: ['close-dialog', 'update:modelValue'],
+    emits: ['close-settings', 'update:modelValue'],
     props: {
         modelValue: {
             type: Settings,

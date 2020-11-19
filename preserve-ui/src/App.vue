@@ -29,7 +29,7 @@
                 <settings-dialog
                     v-if="settingsOpen"
                     v-model="settings"
-                    @close-dialog="settingsOpen = false"
+                    @close-settings="settingsOpen = false"
                 ></settings-dialog>
                 <div class="menu-contents">
                     <button v-if="loggedIn" @click="logout()">Logout</button>
