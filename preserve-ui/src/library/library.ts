@@ -381,17 +381,15 @@ export default class Library {
         return album;
     }
 
-    artistsFromArtistStubs(stubs: Array<Jellyfin.ArtistStub>): Set<ItemStub> {
-        const artists = new Set<ItemStub>(
-            stubs.map((aa) => ({
-                id: this.artistIdFromStub(aa),
-                name: aa.Name || UNKNOWN_ARTIST_NAME,
-                type: 'artist',
-            }))
-        );
+    artistsFromArtistStubs(stubs: Array<Jellyfin.ArtistStub>): Array<ItemStub> {
+        const artists: Array<ItemStub> = stubs.map((aa) => ({
+            id: this.artistIdFromStub(aa),
+            name: aa.Name || UNKNOWN_ARTIST_NAME,
+            type: 'artist',
+        }));
 
-        if (artists.size === 0) {
-            artists.add({
+        if (artists.length === 0) {
+            artists.push({
                 id: `synth-${UNKNOWN_ARTIST_NAME}`,
                 name: UNKNOWN_ARTIST_NAME,
                 type: 'artist',
@@ -441,8 +439,8 @@ export default class Library {
             id: albumId,
             name: track.album.name || UNKNOWN_ALBUM_NAME,
             serverId: track.serverId,
-            albumArtists: new Set(track.albumArtists),
-            artists: new Set(track.artists),
+            albumArtists: [...track.albumArtists],
+            artists: [...track.artists],
             albumArtId: track.albumArtId,
             year: track.year,
             tracks: [],

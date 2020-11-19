@@ -20,16 +20,16 @@ export interface Artist extends Item {
 }
 
 export interface HasArtists {
-    artists: Set<ItemStub>;
-    albumArtists: Set<ItemStub>;
+    artists: Array<ItemStub>;
+    albumArtists: Array<ItemStub>;
 }
 
 export interface Album extends Item {
     name: string;
     synthetic: boolean;
     year: number;
-    artists: Set<ItemStub>;
-    albumArtists: Set<ItemStub>;
+    artists: Array<ItemStub>;
+    albumArtists: Array<ItemStub>;
     tracks: Array<Track>;
     albumArtId?: string;
     type: 'album';
@@ -37,8 +37,8 @@ export interface Album extends Item {
 
 export interface Track extends Item {
     name: string;
-    artists: Set<ItemStub>;
-    albumArtists: Set<ItemStub>;
+    artists: Array<ItemStub>;
+    albumArtists: Array<ItemStub>;
     album: ItemStub;
     year: number;
     albumArtId?: string;

@@ -12,7 +12,7 @@ function queueItemToXmlNode(
     trackEl.appendChild(identifierEl);
 
     const artistEl = doc.createElement('creator');
-    const firstArtist = [...queueItem.track.artists.values()][0];
+    const firstArtist = queueItem.track.artists[0];
     artistEl.appendChild(doc.createTextNode(firstArtist.name));
     trackEl.appendChild(artistEl);
 

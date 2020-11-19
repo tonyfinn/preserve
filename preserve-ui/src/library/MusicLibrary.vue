@@ -18,7 +18,7 @@
             class="library-tree"
             :items="treeItems"
             :populateChildren="populateChildren"
-            @activate-item="$emit('activate-item', $event)"
+            @tree-activate-item="$emit('activate-item', $event)"
             @update-selection="updateSelection"
         ></psv-tree>
         <p v-if="!loaded">Loading...</p>
@@ -105,7 +105,8 @@ export default defineComponent({
                     this.settings.libraryGrouping ===
                         LibraryGroupOption.Artist_Album ||
                     this.settings.libraryGrouping ===
-                        LibraryGroupOption.AlbumArtist_Album
+                        LibraryGroupOption.AlbumArtist_Album ||
+                    this.searchText !== ''
                 ) {
                     const includeFeatured =
                         this.settings.libraryGrouping ===
@@ -147,7 +148,7 @@ export default defineComponent({
 
                     if (!isOwnAlbum) {
                         tracks = tracks.filter((t) => {
-                            return [...t.artists]
+                            return t.artists
                                 .map((aa) => aa.id)
                                 .includes(artist.id);
                         });

@@ -40,15 +40,15 @@ export function sortArtists(a: Artist, b: Artist): number {
 }
 
 export function artistNames(t: Track): string {
-    if (t.artists && t.artists.size > 0) {
-        return [...t.artists].map((a) => a.name).join('; ');
+    if (t.artists && t.artists.length > 0) {
+        return t.artists.map((a) => a.name).join('; ');
     }
     return UNKNOWN_ARTIST_NAME;
 }
 
 export function albumArtistNames(t: Track): string {
-    if (t.albumArtists && t.albumArtists.size > 0) {
-        return [...t.albumArtists].map((a) => a.name).join('; ');
+    if (t.albumArtists && t.albumArtists.length > 0) {
+        return t.albumArtists.map((a) => a.name).join('; ');
     }
     return UNKNOWN_ARTIST_NAME;
 }

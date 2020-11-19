@@ -7,7 +7,7 @@
         :populateChildren="populateChildren"
         @toggle-select-item="toggleSelect($event)"
         @toggle-expand-item="toggleExpand($event)"
-        @activate-item="$emit('activate-item', $event)"
+        @activate-item="$emit('tree-activate-item', $event)"
         @focus-item="handleFocusItem"
         @focus="handleFocus"
         @keydown.home.stop.prevent="focusFirst"
@@ -39,7 +39,7 @@ import { PsvTreeNode } from '.';
 
 export default defineComponent({
     components: { PsvTreeNode },
-    emits: ['update-selection', 'activate-item'],
+    emits: ['update-selection', 'tree-activate-item'],
     props: {
         items: {
             type: Array as PropType<Array<TreeItem<unknown>>>,
