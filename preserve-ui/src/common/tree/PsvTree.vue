@@ -311,7 +311,7 @@ export default defineComponent({
                 ctrlKey: evt.ctrlKey,
                 altKey: evt.altKey,
             };
-            this.$emit('activate-item', event);
+            this.$emit('tree-activate-item', event);
         },
         replaceSelectFocused() {
             if (!this.focusedItem) {
