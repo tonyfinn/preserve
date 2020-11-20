@@ -2,6 +2,10 @@
 
 * Scrub to specific point in song
 * Custom Tree Layout
+* Add support for exporting playlists to JSON, m3u and XSPF files.
+  * Note: This is mostly only useful for players that support fuzzy lookup
+    of tracks in their libraries as these players cannot play from the jellyfin
+    URIs.
 
 # 0.3.4
 
