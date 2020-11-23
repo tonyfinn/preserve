@@ -22,12 +22,22 @@
             @update-selection="updateSelection"
         ></psv-tree>
         <p v-if="!loaded">Loading...</p>
+        <select class="sort-mode" v-model="libraryGrouping">
+            <option
+                v-for="groupOption in groupOptions"
+                :key="groupOption.value"
+                :value="groupOption.value"
+            >
+                {{ groupOption.label }}
+            </option>
+        </select>
     </section>
 </template>
 
 <script lang="ts">
 import { Album, Artist, LibraryItem, Track } from './types';
 import Library from './library';
+import { GROUP_OPTIONS } from './options';
 import { Settings } from '../common/settings';
 import { PsvTree, TreeItem } from '../common/tree';
 import { defineComponent } from 'vue';
@@ -69,6 +79,8 @@ export default defineComponent({
             searchText: '',
             debouncedSearch: null as (() => void) | null,
             treeItems: [] as Array<TreeItem<LibraryItem>>,
+            groupOptions: GROUP_OPTIONS,
+            libraryGrouping: this.settings.libraryGrouping,
             loaded: false,
             libraryTree: [] as LibraryTree,
             isSearching: false,
@@ -92,6 +104,9 @@ export default defineComponent({
         },
         'settings.libraryGrouping'() {
             this.populateLibraryTree();
+        },
+        libraryGrouping(newValue) {
+            this.settings.set('libraryGrouping', newValue);
         },
     },
     methods: {
@@ -225,7 +240,7 @@ export default defineComponent({
 #music-library {
     padding: $dims-padding-dense;
     display: grid;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: auto 1fr auto;
 }
 
 #music-library.searching .psv-tree > .psv-tree-node {
@@ -251,6 +266,10 @@ export default defineComponent({
 
 .search-controls input {
     width: 100%;
+}
+
+.sort-mode {
+    margin-top: $dims-padding;
 }
 
 #music-library > .psv-tree {
