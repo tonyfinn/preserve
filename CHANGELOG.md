@@ -1,3 +1,13 @@
+# 0.3.6
+
+## New features
+
+* Tree sorting dropdown now added to tree itself.
+
+## Bugfixes
+
+* The tree now remembers the sort when you clear a search
+
 # 0.3.5
 
 * Scrub to specific point in song
