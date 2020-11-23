@@ -163,13 +163,13 @@ export default defineComponent({
             const searchText = this.searchText.trim();
             let libraryItems = [];
             if (searchText === '') {
-                libraryItems = await this.library.getArtists();
+                await this.populateLibraryTree();
                 this.isSearching = false;
             } else {
                 libraryItems = await this.library.search(searchText);
+                this.treeItems = libraryItems.map(libraryTreeNode);
                 this.isSearching = true;
             }
-            this.treeItems = libraryItems.map(libraryTreeNode);
             this.$forceUpdate();
         },
         updateSelection(selection: Array<TreeItem<LibraryItem>>) {
