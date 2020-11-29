@@ -1,0 +1,524 @@
+import {
+    Configuration,
+    BaseItemDto,
+    NameGuidPair,
+    ArtistsApi,
+    ItemsApi,
+} from 'jellyfin-axios-client';
+import {
+    UNKNOWN_ALBUM_NAME,
+    UNKNOWN_ARTIST_NAME,
+} from 'preserve-ui/src/common/constants';
+import {
+    Track,
+    Artist,
+    Album,
+    sortArtists,
+    sortTracks,
+    sortAlbums,
+} from 'preserve-ui/src/library';
+import {
+    HasArtists,
+    Item,
+    ItemLookup,
+    ItemStub,
+} from 'preserve-ui/src/library/types';
+import { reactive } from 'vue';
+import {
+    LibraryLoadStage,
+    LibraryLoadState,
+    MediaServerLibrary,
+} from '../interface';
+
+function artistIdFromStub(stub: NameGuidPair): string {
+    if (stub.Id) {
+        return stub.Id;
+    } else if (stub.Name) {
+        return `synth-${stub.Name}`;
+    } else {
+        return `synth-${UNKNOWN_ARTIST_NAME}`;
+    }
+}
+
+function normaliseArtistStubs(stubs: Array<NameGuidPair>): Array<ItemStub> {
+    const artists: Array<ItemStub> = stubs.map((aa) => ({
+        id: artistIdFromStub(aa),
+        name: aa.Name || UNKNOWN_ARTIST_NAME,
+        type: 'artist',
+    }));
+
+    if (artists.length === 0) {
+        artists.push({
+            id: `synth-${UNKNOWN_ARTIST_NAME}`,
+            name: UNKNOWN_ARTIST_NAME,
+            type: 'artist',
+        });
+    }
+
+    return artists;
+}
+
+function albumIdFromBaseItem(item: BaseItemDto): string {
+    if (item.AlbumId) {
+        return item.AlbumId;
+    }
+
+    const albumArtists = item.AlbumArtists || [];
+    const primaryArtistId = albumArtists[0]?.Id || UNKNOWN_ARTIST_NAME;
+    const albumName = item.Album || UNKNOWN_ALBUM_NAME;
+    return `synth-${primaryArtistId}-${albumName}`;
+}
+
+function normaliseArtist(artist: BaseItemDto): Artist | null {
+    if (
+        artist.Type !== 'MusicArtist' ||
+        !artist.Id ||
+        !artist.ServerId ||
+        !artist.Name
+    ) {
+        return null;
+    }
+    return {
+        id: artist.Id,
+        name: artist.Name,
+        serverId: artist.ServerId,
+        albums: [],
+        synthetic: false,
+        type: 'artist',
+    };
+}
+
+function normaliseAlbum(album: BaseItemDto): Album | null {
+    if (
+        album.Type !== 'MusicAlbum' ||
+        !album.Id ||
+        !album.ServerId ||
+        !album.Name
+    ) {
+        return null;
+    }
+    return {
+        id: album.Id,
+        name: album.Name,
+        serverId: album.ServerId,
+        albumArtists: normaliseArtistStubs(album.AlbumArtists || []),
+        artists: normaliseArtistStubs(album.ArtistItems || []),
+        tracks: [],
+        albumArtId: album.ImageTags?.Primary,
+        year: album.ProductionYear || undefined,
+        type: 'album',
+        synthetic: false,
+    };
+}
+
+function normaliseTrack(track: BaseItemDto): Track | null {
+    if (
+        track.Type !== 'Audio' ||
+        !track.Id ||
+        !track.Name ||
+        !track.ServerId ||
+        !track.RunTimeTicks
+    ) {
+        return null;
+    }
+    return {
+        id: track.Id,
+        name: track.Name,
+        serverId: track.ServerId,
+        artists: normaliseArtistStubs(track.ArtistItems || []),
+        albumArtists: normaliseArtistStubs(track.AlbumArtists || []),
+        trackNumber: track.IndexNumber || undefined,
+        discNumber: track.ParentIndexNumber || undefined,
+        duration: Math.floor(track.RunTimeTicks / 10_000_000),
+        albumArtId: track.AlbumPrimaryImageTag || undefined,
+        year: track.ProductionYear || undefined,
+        album: {
+            id: albumIdFromBaseItem(track),
+            name: track.Album || UNKNOWN_ALBUM_NAME,
+            type: 'album',
+        },
+        type: 'track',
+    };
+}
+
+export class JellyfinLibrary implements MediaServerLibrary {
+    private loaded = false;
+    private _loadState: LibraryLoadState;
+
+    private artists: Array<Artist>;
+    private albums: Array<Album>;
+    private tracks: Array<Track>;
+
+    private artistByIdLookup: ItemLookup<Artist>;
+    private albumByIdLookup: ItemLookup<Album>;
+    private trackByIdLookup: ItemLookup<Track>;
+
+    private albumByFeaturedArtistLookup: Map<string, Array<Album>>;
+    private albumByAlbumArtistLookup: Map<string, Array<Album>>;
+
+    private trackByAlbumArtistLookup: Map<string, Array<Track>>;
+    private trackByArtistLookup: Map<string, Array<Track>>;
+    private trackByAlbumLookup: Map<string, Array<Track>>;
+
+    constructor(
+        private readonly configuration: Configuration,
+        private readonly userId: string
+    ) {
+        this._loadState = reactive(new LibraryLoadState());
+        this.artists = [];
+        this.albums = [];
+        this.tracks = [];
+
+        this.artistByIdLookup = new Map();
+        this.albumByIdLookup = new Map();
+        this.trackByIdLookup = new Map();
+
+        this.albumByFeaturedArtistLookup = new Map();
+        this.albumByAlbumArtistLookup = new Map();
+
+        this.trackByAlbumArtistLookup = new Map();
+        this.trackByAlbumLookup = new Map();
+        this.trackByArtistLookup = new Map();
+    }
+
+    loadState(): LibraryLoadState {
+        return this._loadState;
+    }
+
+    async getTracks(): Promise<Array<Track>> {
+        return this.tracks;
+    }
+    async getArtists(): Promise<Array<Artist>> {
+        return this.artists;
+    }
+
+    async getAlbumArtists(): Promise<Array<Artist>> {
+        const albumArtists = [];
+        for (const albumArtistId of this.albumByAlbumArtistLookup.keys()) {
+            const artist = this.artistByIdLookup.get(albumArtistId);
+            if (artist) {
+                albumArtists.push(artist);
+            }
+        }
+        albumArtists.sort(sortArtists);
+        return albumArtists;
+    }
+
+    async getAlbums(): Promise<Array<Album>> {
+        return this.albums;
+    }
+
+    async getAlbumsOfArtist(
+        artistId: string,
+        includeFeatured: boolean
+    ): Promise<Array<Album>> {
+        const ownAlbums = this.albumByAlbumArtistLookup.get(artistId) || [];
+
+        ownAlbums.sort(sortAlbums);
+
+        if (!includeFeatured) {
+            return [...ownAlbums];
+        } else {
+            const featuredAlbums =
+                this.albumByFeaturedArtistLookup.get(artistId) || [];
+            featuredAlbums.sort(sortAlbums);
+            return [...ownAlbums, ...featuredAlbums];
+        }
+    }
+
+    async getTracksOfArtist(
+        artistId: string,
+        includeFeatured: boolean
+    ): Promise<Array<Track>> {
+        const ownTracks = this.trackByAlbumArtistLookup.get(artistId) || [];
+
+        ownTracks.sort(sortTracks);
+
+        if (!includeFeatured) {
+            return [...ownTracks];
+        } else {
+            const featuredTracks = this.trackByArtistLookup.get(artistId) || [];
+            featuredTracks.sort(sortTracks);
+            return [...ownTracks, ...featuredTracks];
+        }
+    }
+
+    async getTracksOfAlbum(albumId: string): Promise<Array<Track>> {
+        const tracks = this.trackByAlbumLookup.get(albumId) || [];
+        tracks.sort(sortTracks);
+        return tracks;
+    }
+
+    async getTrackById(trackId: string): Promise<Track | null> {
+        return this.trackByIdLookup.get(trackId) || null;
+    }
+
+    async populate(): Promise<void> {
+        const artistLoading = this.loadArtists();
+        const albumLoading = this.loadAlbums();
+        const trackLoading = this.loadTracks();
+
+        return Promise.all([artistLoading, albumLoading, trackLoading]).then(
+            ([_artists, _albums, tracks]) => {
+                this.buildSyntheticArtists(tracks);
+                this.buildSyntheticArtists(this.albums);
+                this.buildSyntheticAlbums(tracks);
+                this.artists.sort(sortArtists);
+                this._loadState.stage = LibraryLoadStage.Loaded;
+            }
+        );
+    }
+
+    private storeArtist(jfArtist: BaseItemDto) {
+        const artist = normaliseArtist(jfArtist);
+        if (artist) {
+            this.artistByIdLookup.set(artist.id, artist);
+            this.artists.push(artist);
+        } else {
+            console.error('Failed to load artist from', jfArtist);
+        }
+    }
+
+    private storeAlbum(jfAlbum: BaseItemDto) {
+        const album = normaliseAlbum(jfAlbum);
+        if (album) {
+            this.createAlbumLookups(album);
+            this.albumByIdLookup.set(album.id, album);
+            this.albums.push(album);
+        } else {
+            console.error('failed to load album from', jfAlbum);
+        }
+    }
+
+    private storeTrack(jfTrack: BaseItemDto) {
+        const track = normaliseTrack(jfTrack);
+        if (!track) {
+            console.error('Failed to load track from', jfTrack);
+            return;
+        }
+        this.tracks.push(track);
+        this.trackByIdLookup.set(track.id, track);
+        const trackLookup = this.trackByAlbumLookup.get(track.album.id);
+        if (trackLookup) {
+            trackLookup.push(track);
+        } else {
+            this.trackByAlbumLookup.set(track.album.id, [track]);
+        }
+        this.createTrackLookups(track);
+        return track;
+    }
+
+    private async loadArtists(): Promise<Array<Artist>> {
+        let startIndex = 0;
+        let items = [];
+        do {
+            const firstResult = await new ArtistsApi(
+                this.configuration
+            ).getArtists({
+                limit: 500,
+                startIndex: startIndex,
+                userId: this.userId,
+            });
+            if (
+                firstResult.status === 200 &&
+                firstResult.data.TotalRecordCount &&
+                firstResult.data.Items
+            ) {
+                this._loadState.artistTotal = firstResult.data.TotalRecordCount;
+                items = firstResult.data.Items;
+                startIndex = this._loadState.artistLoaded += items.length;
+                for (const item of items) {
+                    this.storeArtist(item);
+                }
+            } else {
+                this._loadState.stage = LibraryLoadStage.Failed;
+                break;
+            }
+        } while (
+            items.length > 0 &&
+            this._loadState.artistLoaded < this._loadState.artistTotal
+        );
+        return this.artists;
+    }
+
+    private async loadAlbums(): Promise<Array<Album>> {
+        let startIndex = 0;
+        let items = [];
+        do {
+            const itemsApi = new ItemsApi(this.configuration);
+            const result = await itemsApi.getItems({
+                uId: this.userId,
+                limit: 500,
+                recursive: true,
+                includeItemTypes: 'MusicAlbum',
+                startIndex: startIndex,
+                sortBy: 'Name',
+                sortOrder: 'Ascending',
+            });
+            if (
+                result.status === 200 &&
+                result.data.TotalRecordCount &&
+                result.data.Items
+            ) {
+                this._loadState.albumTotal = result.data.TotalRecordCount;
+                items = result.data.Items;
+                startIndex = this._loadState.albumLoaded += items.length;
+                for (const item of items) {
+                    this.storeAlbum(item);
+                }
+            } else {
+                this._loadState.stage = LibraryLoadStage.Failed;
+                break;
+            }
+        } while (
+            items.length > 0 &&
+            this._loadState.albumLoaded < this._loadState.albumTotal
+        );
+        return this.albums;
+    }
+
+    async loadTracks(): Promise<Array<Track>> {
+        let startIndex = 0;
+        let items = [];
+        do {
+            const itemsApi = new ItemsApi(this.configuration);
+            const result = await itemsApi.getItems({
+                uId: this.userId,
+                limit: 500,
+                recursive: true,
+                includeItemTypes: 'Audio',
+                startIndex: startIndex,
+                sortBy: 'Name',
+                sortOrder: 'Ascending',
+            });
+            if (
+                result.status === 200 &&
+                result.data.TotalRecordCount &&
+                result.data.Items
+            ) {
+                this._loadState.trackTotal = result.data.TotalRecordCount;
+                items = result.data.Items;
+                startIndex = this._loadState.trackLoaded += items.length;
+                for (const item of items) {
+                    this.storeTrack(item);
+                }
+            } else {
+                this._loadState.stage = LibraryLoadStage.Failed;
+                break;
+            }
+        } while (
+            items.length > 0 &&
+            this._loadState.trackLoaded < this._loadState.trackTotal
+        );
+        return this.tracks;
+    }
+
+    private artistFromTrack(stub: ItemStub, serverId: string): Artist {
+        return {
+            id: stub.id,
+            name: stub.name,
+            albums: [],
+            type: 'artist',
+            synthetic: true,
+            serverId: serverId,
+        };
+    }
+
+    private albumFromTrack(albumId: string, track: Track): Album {
+        return {
+            id: albumId,
+            name: track.album.name || UNKNOWN_ALBUM_NAME,
+            serverId: track.serverId,
+            albumArtists: [...track.albumArtists],
+            artists: [...track.artists],
+            albumArtId: track.albumArtId,
+            year: track.year,
+            tracks: [],
+            type: 'album',
+            synthetic: true,
+        };
+    }
+
+    private buildSyntheticArtists(
+        items: Array<Item & HasArtists>
+    ): Array<Artist> {
+        const newSyntheticArtists = new Map<string, Artist>();
+        for (const item of items) {
+            for (const artistStub of [...item.artists, ...item.albumArtists]) {
+                const artistId = artistStub.id;
+                if (!this.artistByIdLookup.get(artistId)) {
+                    const artist = this.artistFromTrack(
+                        artistStub,
+                        item.serverId
+                    );
+                    this.artistByIdLookup.set(artistId, artist);
+                    this.artists.push(artist);
+                    newSyntheticArtists.set(artist.id, artist);
+                }
+            }
+        }
+        return Object.values(newSyntheticArtists);
+    }
+
+    private buildSyntheticAlbums(tracks: Array<Track>): Array<Album> {
+        const syntheticAlbums = new Map<string, Album>();
+        for (const track of tracks) {
+            const albumId = track.album.id;
+            if (!this.albumByIdLookup.get(albumId)) {
+                const albumId = track.album.id;
+                if (!syntheticAlbums.get(albumId)) {
+                    const album = this.albumFromTrack(albumId, track);
+                    this.albumByIdLookup.set(albumId, album);
+                    syntheticAlbums.set(album.id, album);
+                }
+            }
+        }
+        for (const album of syntheticAlbums.values()) {
+            this.albums.push(album);
+            this.createAlbumLookups(album);
+        }
+        return Object.values(syntheticAlbums);
+    }
+
+    private createAlbumLookups(album: Album): void {
+        const albumArtistIds = [];
+        for (const albumArtist of album.albumArtists) {
+            albumArtistIds.push(albumArtist.id);
+            const lookup = this.albumByAlbumArtistLookup.get(albumArtist.id);
+            if (lookup) {
+                lookup.push(album);
+            } else {
+                this.albumByAlbumArtistLookup.set(albumArtist.id, [album]);
+            }
+        }
+        for (const artist of album.artists) {
+            if (!albumArtistIds.includes(artist.id)) {
+                const lookup = this.albumByFeaturedArtistLookup.get(artist.id);
+                if (lookup) {
+                    lookup.push(album);
+                } else {
+                    this.albumByFeaturedArtistLookup.set(artist.id, [album]);
+                }
+            }
+        }
+    }
+
+    private createTrackLookups(track: Track): void {
+        for (const albumArtist of track.albumArtists) {
+            const lookup = this.trackByAlbumArtistLookup.get(albumArtist.id);
+            if (lookup) {
+                lookup.push(track);
+            } else {
+                this.trackByAlbumArtistLookup.set(albumArtist.id, [track]);
+            }
+        }
+        for (const artist of track.artists) {
+            const lookup = this.trackByArtistLookup.get(artist.id);
+            if (lookup) {
+                lookup.push(track);
+            } else {
+                this.trackByArtistLookup.set(artist.id, [track]);
+            }
+        }
+    }
+}

@@ -7,7 +7,12 @@
         "strict": true,
         "moduleResolution": "node",
         "resolveJsonModule": true,
-        "typeRoots": ["types", "node_modules/@types"]
+        "typeRoots": ["types", "node_modules/@types"],
+        "baseUrl": ".",
+        "paths": {
+            "axios": ["preserve-ui/node_modules/axios"],
+            "jellyfin-axios-client": ["preserve-ui/generated/jellyfin-axios-client"],
+        }
     },
     "exclude": ["node_modules", "contrib", "preserve-electron"]
 }

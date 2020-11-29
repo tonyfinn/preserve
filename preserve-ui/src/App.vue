@@ -76,6 +76,7 @@ import {
 import { QueueManager } from './queues/play-queue';
 import SettingsDialog from './SettingsDialog.vue';
 import { Settings, SETTINGS_STORAGE_KEY } from './common/settings';
+import { queryServerDefinition, getCachedServers } from './api/jellyfin-server';
 
 interface LoadingItem {
     name: string;
@@ -150,10 +151,12 @@ export default defineComponent({
         },
     },
     created() {
+        console.log('Known Servers', getCachedServers());
         if (this.servers.length > 0) {
             connectionManager
                 .connectToServers(this.servers)
                 .then((conResult) => {
+                    queryServerDefinition('https://jellyfin.loopinti.me');
                     if (conResult.State === 'SignedIn') {
                         return conResult as LoggedInConnectionResult;
                     }

@@ -1,7 +1,7 @@
 import { LibraryGroupOption } from '../library';
 import { PlayColumn } from '../queues/columns';
 
-export const SETTINGS_STORAGE_KEY = 'preserve_settings';
+export const STORAGE_KEY_SETTINGS = 'preserve_settings';
 
 export class Settings {
     libraryGrouping: LibraryGroupOption;
@@ -25,6 +25,6 @@ export class Settings {
     }
 
     save(): void {
-        window.localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(this));
+        window.localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(this));
     }
 }

@@ -1,0 +1,120 @@
+import { Configuration, SystemApi, UserApi } from 'jellyfin-axios-client';
+import { MediaServerAuth } from '../interface';
+import { JellyfinServer } from './server';
+import { ServerDefinition } from './types';
+import { buildAuthHeader } from './utils';
+
+export enum ConnectErrorEnum {
+    NoAccessToken,
+    NoUserId,
+    FailedAuth,
+    NetworkError,
+    IncompatibleServer,
+    UnexpectedResponse,
+}
+
+export class ConnectError extends Error {
+    constructor(message: string, readonly reason: ConnectErrorEnum) {
+        super(message);
+        Object.setPrototypeOf(this, new.target.prototype);
+        this.name = ConnectError.name;
+    }
+}
+
+export class JellyfinServerAuth
+    implements MediaServerAuth<ServerDefinition, JellyfinServer> {
+    async reconnect(definition: ServerDefinition): Promise<JellyfinServer> {
+        if (!definition.accessToken) {
+            return Promise.reject(
+                new ConnectError(
+                    'No saved access token, must log in again',
+                    ConnectErrorEnum.NoAccessToken
+                )
+            );
+        }
+        if (!definition.userId) {
+            return Promise.reject(
+                new ConnectError(
+                    'No saved user ID, must log in again',
+                    ConnectErrorEnum.NoAccessToken
+                )
+            );
+        }
+
+        const authHeader = buildAuthHeader(definition.accessToken);
+
+        const testApi = new SystemApi(
+            new Configuration({
+                basePath: definition.address,
+                apiKey: authHeader,
+            })
+        );
+
+        try {
+            const sysInfo = await testApi.getSystemInfo();
+            if (sysInfo.status === 401) {
+                return Promise.reject(
+                    new ConnectError(
+                        'Authorization rejected - please login again',
+                        ConnectErrorEnum.FailedAuth
+                    )
+                );
+            } else {
+                return new JellyfinServer({
+                    id: sysInfo.data.Id || definition.address,
+                    name: sysInfo.data.ServerName || 'Unnamed Server',
+                    address: definition.address,
+                    userId: definition.userId,
+                    accessToken: definition.accessToken,
+                });
+            }
+        } catch (e) {
+            const message = e instanceof Error ? e.message : JSON.stringify(e);
+            return Promise.reject(
+                new ConnectError(
+                    `Could not connect to server: ${message}`,
+                    ConnectErrorEnum.NetworkError
+                )
+            );
+        }
+    }
+
+    async login(
+        address: string,
+        username: string,
+        password: string
+    ): Promise<JellyfinServer> {
+        const userApi = new UserApi(new Configuration({ basePath: address }));
+        const authResponse = await userApi.authenticateUserByName({
+            authenticateUserByName: {
+                Username: username,
+                Pw: password,
+            },
+        });
+
+        if (authResponse.status === 200) {
+            const authResult = authResponse.data;
+            const serverDefinition: ServerDefinition = {
+                id: authResult.ServerId || address,
+                accessToken: authResult.AccessToken || undefined,
+                userId: authResult.User?.Id,
+                address,
+            };
+            return this.reconnect(serverDefinition);
+        } else if (authResponse.status === 401) {
+            return Promise.reject(
+                new ConnectError(
+                    `Invalid Authorization`,
+                    ConnectErrorEnum.FailedAuth
+                )
+            );
+        } else {
+            return Promise.reject(
+                new ConnectError(
+                    `Unexpected response code: ${authResponse.status}`,
+                    ConnectErrorEnum.UnexpectedResponse
+                )
+            );
+        }
+    }
+}

@@ -12,6 +12,13 @@ module.exports = {
     devtool: devMode ? 'inline-source-map' : 'source-map',
     resolve: {
         extensions: ['.ts', '.js', '.vue'],
+        alias: {
+            'jellyfin-axios-client': path.resolve(
+                __dirname,
+                'generated',
+                'jellyfin-axios-client'
+            ),
+        },
     },
     entry: {
         main: './src/index.ts',

@@ -27,7 +27,7 @@ export interface HasArtists {
 export interface Album extends Item {
     name: string;
     synthetic: boolean;
-    year: number;
+    year?: number;
     artists: Array<ItemStub>;
     albumArtists: Array<ItemStub>;
     tracks: Array<Track>;
@@ -40,11 +40,11 @@ export interface Track extends Item {
     artists: Array<ItemStub>;
     albumArtists: Array<ItemStub>;
     album: ItemStub;
-    year: number;
+    year?: number;
     albumArtId?: string;
-    trackNumber: number;
-    duration: number;
-    discNumber: number;
+    trackNumber?: number;
+    duration?: number;
+    discNumber?: number;
     type: 'track';
 }
 
