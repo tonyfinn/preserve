@@ -19,8 +19,8 @@ export function sortTracks(a: Track, b: Track): number {
 }
 
 export function sortAlbums(a: Album, b: Album): number {
-    const aYear = a.year;
-    const bYear = b.year;
+    const aYear = a.year || 0;
+    const bYear = b.year || 0;
 
     if (aYear - bYear != 0) {
         return aYear - bYear;

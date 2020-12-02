@@ -1,8 +1,9 @@
 import { Configuration, SystemApi, UserApi } from 'jellyfin-axios-client';
+import { UNKNOWN_SERVER_NAME } from 'preserve-ui/src/common/constants';
 import { MediaServerAuth } from '../interface';
 import { JellyfinServer } from './server';
-import { ServerDefinition } from './types';
-import { buildAuthHeader } from './utils';
+import { JellyfinServerDefinition } from './types';
+import { buildAuthHeader, queryServerDefinition } from './utils';
 
 export enum ConnectErrorEnum {
     NoAccessToken,
@@ -22,8 +23,10 @@ export class ConnectError extends Error {
 }
 
 export class JellyfinServerAuth
-    implements MediaServerAuth<ServerDefinition, JellyfinServer> {
-    async reconnect(definition: ServerDefinition): Promise<JellyfinServer> {
+    implements MediaServerAuth<JellyfinServerDefinition, JellyfinServer> {
+    async reconnect(
+        definition: JellyfinServerDefinition
+    ): Promise<JellyfinServer> {
         if (!definition.accessToken) {
             return Promise.reject(
                 new ConnectError(
@@ -60,9 +63,13 @@ export class JellyfinServerAuth
                     )
                 );
             } else {
+                const id = sysInfo.data.Id || definition.address;
                 return new JellyfinServer({
-                    id: sysInfo.data.Id || definition.address,
-                    name: sysInfo.data.ServerName || 'Unnamed Server',
+                    id,
+                    ty: 'jellyfin',
+                    name:
+                        sysInfo.data.ServerName ||
+                        `${UNKNOWN_SERVER_NAME} - ${id}`,
                     address: definition.address,
                     userId: definition.userId,
                     accessToken: definition.accessToken,
@@ -85,6 +92,7 @@ export class JellyfinServerAuth
         password: string
     ): Promise<JellyfinServer> {
         const userApi = new UserApi(new Configuration({ basePath: address }));
+        const serverInfo = await queryServerDefinition(address);
         const authResponse = await userApi.authenticateUserByName({
             authenticateUserByName: {
                 Username: username,
@@ -94,8 +102,10 @@ export class JellyfinServerAuth
 
         if (authResponse.status === 200) {
             const authResult = authResponse.data;
-            const serverDefinition: ServerDefinition = {
+            const serverDefinition: JellyfinServerDefinition = {
                 id: authResult.ServerId || address,
+                ty: 'jellyfin',
+                name: serverInfo.name,
                 accessToken: authResult.AccessToken || undefined,
                 userId: authResult.User?.Id,
                 address,

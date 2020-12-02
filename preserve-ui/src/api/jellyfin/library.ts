@@ -8,7 +8,7 @@ import {
 import {
     UNKNOWN_ALBUM_NAME,
     UNKNOWN_ARTIST_NAME,
-} from 'preserve-ui/src/common/constants';
+} from '../../common/constants';
 import {
     Track,
     Artist,
@@ -16,19 +16,21 @@ import {
     sortArtists,
     sortTracks,
     sortAlbums,
-} from 'preserve-ui/src/library';
+} from '../../library';
 import {
     HasArtists,
     Item,
     ItemLookup,
     ItemStub,
-} from 'preserve-ui/src/library/types';
+    LibraryItem,
+} from '../../library/types';
 import { reactive } from 'vue';
 import {
     LibraryLoadStage,
     LibraryLoadState,
     MediaServerLibrary,
 } from '../interface';
+import { getOrGenerateClientId } from 'preserve-ui/src/common/client';
 
 function artistIdFromStub(stub: NameGuidPair): string {
     if (stub.Id) {
@@ -141,7 +143,7 @@ function normaliseTrack(track: BaseItemDto): Track | null {
     };
 }
 
-export class JellyfinLibrary implements MediaServerLibrary {
+export class JellyfinLibrary extends MediaServerLibrary {
     private loaded = false;
     private _loadState: LibraryLoadState;
 
@@ -162,8 +164,10 @@ export class JellyfinLibrary implements MediaServerLibrary {
 
     constructor(
         private readonly configuration: Configuration,
-        private readonly userId: string
+        private readonly userId: string,
+        private readonly accessToken: string
     ) {
+        super();
         this._loadState = reactive(new LibraryLoadState());
         this.artists = [];
         this.albums = [];
@@ -269,6 +273,61 @@ export class JellyfinLibrary implements MediaServerLibrary {
         );
     }
 
+    async search(searchText: string): Promise<LibraryItem[]> {
+        const searchRegex = new RegExp(searchText, 'i');
+        const artistResults = [];
+        const albumResults = [];
+        const trackResults = [];
+        for (const artist of this.artists) {
+            if (searchRegex.test(artist.name)) {
+                artistResults.push(artist);
+                if (artistResults.length > 10) {
+                    break;
+                }
+            }
+        }
+        for (const album of this.albums) {
+            if (searchRegex.test(album.name)) {
+                albumResults.push(album);
+                if (albumResults.length > 10) {
+                    break;
+                }
+            }
+        }
+        for (const track of this.tracks) {
+            if (searchRegex.test(track.name)) {
+                trackResults.push(track);
+                if (trackResults.length > 10) {
+                    break;
+                }
+            }
+        }
+        return [...trackResults, ...albumResults, ...artistResults];
+    }
+
+    getPlaybackUrl(track: Track): string {
+        const basePath = this.configuration.basePath;
+
+        const baseUrl = `${basePath}/Audio/${track.id}/universal`;
+
+        const queryParams = new URLSearchParams({
+            userId: this.userId,
+            deviceId: getOrGenerateClientId(),
+            api_key: this.accessToken,
+            playSessionId: new Date().getTime().toString(),
+            maxStreamingBitrate: '140000000',
+            container: 'opus,mp3|mp3,aac,m4a,m4b|aac,flac,webma,webm,wav,ogg',
+            transcodingContainer: 'ts',
+            transcodingProtocol: 'hls',
+            audioCodec: 'aac',
+            startTimeTicks: '0',
+            enableRedirection: 'true',
+            enableRemoteMedia: 'false',
+        });
+
+        return `${baseUrl}?${queryParams}`;
+    }
+
     private storeArtist(jfArtist: BaseItemDto) {
         const artist = normaliseArtist(jfArtist);
         if (artist) {
@@ -346,7 +405,7 @@ export class JellyfinLibrary implements MediaServerLibrary {
         let items = [];
         do {
             const itemsApi = new ItemsApi(this.configuration);
-            const result = await itemsApi.getItems({
+            const result = await itemsApi.getItems2({
                 uId: this.userId,
                 limit: 500,
                 recursive: true,
@@ -382,7 +441,7 @@ export class JellyfinLibrary implements MediaServerLibrary {
         let items = [];
         do {
             const itemsApi = new ItemsApi(this.configuration);
-            const result = await itemsApi.getItems({
+            const result = await itemsApi.getItems2({
                 uId: this.userId,
                 limit: 500,
                 recursive: true,

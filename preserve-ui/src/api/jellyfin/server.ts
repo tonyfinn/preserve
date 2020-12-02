@@ -1,7 +1,7 @@
-import { Configuration } from 'jellyfin-axios-client';
+import { Configuration, SessionApi, UserApi } from 'jellyfin-axios-client';
 import { MediaServerLibrary } from '../interface';
 import { JellyfinLibrary } from './library';
-import { ServerDefinition } from './types';
+import { JellyfinServerDefinition } from './types';
 import { buildAuthHeader } from './utils';
 
 export class JellyfinServer {
@@ -13,7 +13,7 @@ export class JellyfinServer {
 
     _library: JellyfinLibrary;
 
-    constructor(def: Required<ServerDefinition>) {
+    constructor(def: Required<JellyfinServerDefinition>) {
         this.id = def.id;
         this.address = def.address;
         this.name = name;
@@ -22,8 +22,13 @@ export class JellyfinServer {
 
         this._library = new JellyfinLibrary(
             this.apiConfiguration(),
-            def.userId
+            def.userId,
+            this.accessToken
         );
+    }
+
+    serverId(): string {
+        return this.id;
     }
 
     apiConfiguration(): Configuration {
@@ -32,6 +37,27 @@ export class JellyfinServer {
             basePath: this.address,
             apiKey: authHeader,
         });
+    }
+
+    async username(): Promise<string> {
+        const userInfo = await new UserApi(this.apiConfiguration()).getUserById(
+            {
+                userId: this.userId,
+            }
+        );
+        if (userInfo?.data?.Name) {
+            return userInfo.data.Name;
+        } else {
+            throw new Error('No username returned from server');
+        }
+    }
+
+    async serverName(): Promise<string> {
+        return this.name;
+    }
+
+    async logout(): Promise<void> {
+        await new SessionApi(this.apiConfiguration()).reportSessionEnded();
     }
 
     library(): MediaServerLibrary {

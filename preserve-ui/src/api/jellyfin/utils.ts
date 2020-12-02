@@ -2,36 +2,40 @@ import { Configuration, SystemApi } from 'jellyfin-axios-client';
 import {
     getClientName,
     getOrGenerateClientId,
-} from 'preserve-ui/src/common/client';
-import { STORAGE_KEY_LEGACY_SERVERS } from 'preserve-ui/src/common/constants';
+} from '../../../src/common/client';
+import {
+    STORAGE_KEY_LEGACY_SERVERS,
+    UNKNOWN_SERVER_NAME,
+} from '../../../src/common/constants';
 import {
     isRemoteServer,
     LegacySavedServer,
     LegacyServerInfo,
-    ServerDefinition,
+    JellyfinServerDefinition,
 } from './types';
-
-const STORAGE_KEY_SERVERS = 'preserve_servers';
 
 export async function queryServerDefinition(
     url: string
-): Promise<ServerDefinition> {
+): Promise<JellyfinServerDefinition> {
     const api = new SystemApi(new Configuration(), url);
     const sysInfo = await api.getPublicSystemInfo();
 
-    if (!sysInfo.data.Id) {
+    const serverId = sysInfo.data.Id;
+
+    if (!serverId) {
         throw new Error('Server missing ID - cannot connect');
     }
 
     return {
-        id: sysInfo.data.Id,
-        name: sysInfo.data.ServerName || undefined,
+        id: serverId,
+        ty: 'jellyfin',
+        name: sysInfo.data.ServerName || `${UNKNOWN_SERVER_NAME} - ${serverId}`,
         address: url,
     };
 }
 
-export function getCachedServers(): Array<ServerDefinition> {
-    const servers = [];
+export function getOldJellyfinServers(): Array<JellyfinServerDefinition> {
+    const servers: Array<JellyfinServerDefinition> = [];
 
     const oldServerJson = window.localStorage.getItem(
         STORAGE_KEY_LEGACY_SERVERS
@@ -45,24 +49,15 @@ export function getCachedServers(): Array<ServerDefinition> {
             if (isRemoteServer(si)) {
                 servers.push({
                     id: si.Id,
+                    ty: 'jellyfin',
                     address: si.RemoteAddress || 'unknown',
-                    name: si.Name,
+                    name: si.Name || `${UNKNOWN_SERVER_NAME} - ${si.Id}`,
                     accessToken: si.AccessToken || undefined,
                     userId: si.UserId || undefined,
                 });
             }
         }
     }
-
-    const newServerJson = window.localStorage.getItem(STORAGE_KEY_SERVERS);
-
-    if (newServerJson) {
-        const newServers = JSON.parse(newServerJson) as Array<ServerDefinition>;
-        for (const serverDef of newServers) {
-            servers.push(serverDef);
-        }
-    }
-
     return servers;
 }
 

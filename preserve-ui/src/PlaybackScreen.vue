@@ -2,14 +2,14 @@
     <div id="playback-screen">
         <music-library
             draggable="true"
-            :library="library"
+            :libraryManager="libraryManager"
             :settings="settings"
             @activate-item="activateItem"
             @update-selection="updateSelection"
             @dragstart="libraryDragStart"
         ></music-library>
         <play-queues
-            :library="library"
+            :libraryManager="libraryManager"
             :queueManager="queueManager"
             :player="player"
             :settings="settings"
@@ -25,7 +25,7 @@
 import { ITEM_STUB_MIME_TYPE } from './common/constants';
 import MusicLibrary from './library/MusicLibrary.vue';
 import { AudioPlayer } from './player';
-import { Library, LibraryItem } from './library';
+import { LibraryItem, LibraryManager } from './library';
 import { Settings } from './common/settings';
 import PlaybackFooter from './PlaybackFooter.vue';
 import { PlayQueues, QueueManager } from './queues';
@@ -39,8 +39,8 @@ export default defineComponent({
         PlayQueues,
     },
     props: {
-        library: {
-            type: Library,
+        libraryManager: {
+            type: LibraryManager,
             required: true,
         },
         queueManager: {
@@ -53,7 +53,7 @@ export default defineComponent({
         },
     },
     data() {
-        const player = AudioPlayer.getOrCreateInstance(this.library);
+        const player = AudioPlayer.getOrCreateInstance(this.libraryManager);
         player.setQueue(this.queueManager.getActiveQueue());
         return {
             player,
@@ -62,7 +62,7 @@ export default defineComponent({
     },
     methods: {
         async activateItem(evt: TreeActivateEvent<LibraryItem>) {
-            const tracksToAdd = await this.library.getChildTracks(
+            const tracksToAdd = await this.libraryManager.getChildTracks(
                 evt.item.data
             );
             const newIndex = this.queueManager.activeQueue.size();

@@ -19,7 +19,7 @@
             </div>
             <div class="user-menu">
                 <p v-if="!loggedIn">Not Logged in</p>
-                <p v-if="loggedIn">{{ userName }} ({{ serverName }})</p>
+                <p v-if="loggedIn">{{ username }} ({{ serverName }})</p>
                 <i
                     v-if="loggedIn"
                     class="fi-widget settings-icon"
@@ -39,8 +39,9 @@
         </header>
         <playback-screen
             v-if="appLoaded && loggedIn"
-            :library="library"
+            :libraries="libraries"
             :queueManager="queueManager"
+            :libraryManager="libraryManager"
             :settings="settings"
             class="screen-root"
         ></playback-screen>
@@ -64,19 +65,31 @@
 <script lang="ts">
 import PlaybackScreen from './PlaybackScreen.vue';
 import LoginScreen from './auth/LoginScreen.vue';
-import { connectionManager } from './common/connections';
-import { Library } from './library';
-import { NotificationType, NotificationService } from './common/notifications';
+import { ServerManager } from './common/servers';
+import { NotificationService } from './common/notifications';
 import NotificationToast from './common/NotificationToast.vue';
 import { defineComponent } from 'vue';
-import {
-    LoggedInConnectionResult,
-    SuccessfulConnectionResult,
-} from 'jellyfin-apiclient';
 import { QueueManager } from './queues/play-queue';
 import SettingsDialog from './SettingsDialog.vue';
-import { Settings, SETTINGS_STORAGE_KEY } from './common/settings';
-import { queryServerDefinition, getCachedServers } from './api/jellyfin-server';
+import { Settings, STORAGE_KEY_SETTINGS } from './common/settings';
+import { LibraryManager } from './library';
+import {
+    MediaServer,
+    MediaServerLibrary,
+    LibraryLoadState,
+    LibraryLoadStage,
+} from './api';
+
+function sumLibraryField<K extends keyof LibraryLoadState>(
+    libs: MediaServerLibrary[],
+    fieldName: K
+): number {
+    let n = 0;
+    for (const lib of libs) {
+        n += lib.loadState()[fieldName];
+    }
+    return n;
+}
 
 interface LoadingItem {
     name: string;
@@ -93,13 +106,14 @@ export default defineComponent({
     },
     data() {
         const settingsString = window.localStorage.getItem(
-            SETTINGS_STORAGE_KEY
+            STORAGE_KEY_SETTINGS
         );
         const savedSettings: Partial<Settings> = settingsString
             ? JSON.parse(settingsString)
             : {};
         const settings = new Settings(savedSettings);
-        const library = Library.createInstance();
+        const serverManager = new ServerManager();
+        const libraryManager = new LibraryManager(serverManager);
         return {
             settings,
             /* eslint-disable -- eslint does not understand these values from DefinePlugin */
@@ -108,69 +122,58 @@ export default defineComponent({
             appSha: APP_SHA,
             /* eslint-enable */
             loggedIn: false,
-            library,
-            servers: connectionManager.getSavedServers() || [],
+            reconnectComplete: false,
+            libraries: [] as Array<MediaServerLibrary>,
+            serverManager,
+            libraryManager,
             queueManager: null as QueueManager | null,
             releaseVersionVisible: true,
             settingsOpen: false,
-            userName: '',
+            username: '',
             serverName: '',
         };
     },
     provide() {
         return {
-            library: this.library,
+            libraryManager: this.libraryManager,
             settings: this.settings,
         };
     },
     computed: {
         appLoaded(): boolean {
+            const librariesLoaded = this.libraries
+                .map((l) => l.loadState().stage === LibraryLoadStage.Loaded)
+                .reduce((first, second) => first && second, true);
             return (
-                this.servers.length === 0 ||
-                (this.library.loadingState.done && this.queueManager !== null)
+                this.reconnectComplete &&
+                ((this.loggedIn && librariesLoaded) || !this.loggedIn)
             );
         },
         loadingItems(): Array<LoadingItem> {
             return [
                 {
                     name: 'Artists',
-                    total: this.library.loadingState.artistTotal,
-                    loadedCount: this.library.loadingState.artistLoaded,
+                    total: sumLibraryField(this.libraries, 'artistTotal'),
+                    loadedCount: sumLibraryField(
+                        this.libraries,
+                        'artistLoaded'
+                    ),
                 },
                 {
                     name: 'Albums',
-                    total: this.library.loadingState.albumTotal,
-                    loadedCount: this.library.loadingState.albumLoaded,
+                    total: sumLibraryField(this.libraries, 'albumTotal'),
+                    loadedCount: sumLibraryField(this.libraries, 'albumLoaded'),
                 },
                 {
                     name: 'Tracks',
-                    total: this.library.loadingState.trackTotal,
-                    loadedCount: this.library.loadingState.trackLoaded,
+                    total: sumLibraryField(this.libraries, 'trackTotal'),
+                    loadedCount: sumLibraryField(this.libraries, 'trackLoaded'),
                 },
             ];
         },
     },
     created() {
-        console.log('Known Servers', getCachedServers());
-        if (this.servers.length > 0) {
-            connectionManager
-                .connectToServers(this.servers)
-                .then((conResult) => {
-                    queryServerDefinition('https://jellyfin.loopinti.me');
-                    if (conResult.State === 'SignedIn') {
-                        return conResult as LoggedInConnectionResult;
-                    }
-                    console.log(conResult);
-                    return Promise.reject('Not signed in previously');
-                })
-                .then(this.setupServer.bind(this))
-                .catch((err) => {
-                    console.log(err);
-                    NotificationService.notifyError(err);
-                    this.loggedIn = false;
-                    this.servers = [];
-                });
-        }
+        this.setupServers();
         this.$watch(
             'settings',
             (newSettings: Settings) => {
@@ -181,27 +184,54 @@ export default defineComponent({
     },
     methods: {
         logout() {
-            connectionManager.logout().then(() => {
-                this.loggedIn = false;
-            });
+            const logoutPromises = this.serverManager
+                .activeServers()
+                .map((s) => this.serverManager.logout(s));
+            Promise.all(logoutPromises).then(() => (this.loggedIn = false));
         },
-        async setupServer(conResult: SuccessfulConnectionResult) {
-            const server = conResult.Servers[0];
-            this.loggedIn = server.AccessToken !== null;
-            if (this.loggedIn) {
-                this.serverName = server.Name || '';
-                this.servers = connectionManager.getSavedServers();
-                this.userName = (
-                    await conResult.ApiClient.getCurrentUser()
-                ).Name;
-                await this.library.populate(conResult.ApiClient);
-                this.queueManager = await QueueManager.create(this.library);
-                NotificationService.notify(
-                    `Logged in to ${server.Name}`,
-                    NotificationType.Success,
-                    3
-                );
+        async setupServers() {
+            if (this.serverManager.knownServers().length > 0) {
+                this.serverManager
+                    .reconnect()
+                    .then(() => {
+                        const activeServers = this.serverManager.activeServers();
+                        console.log('New servers: ', activeServers);
+                        if (activeServers.length > 0) {
+                            this.loggedIn = true;
+                            this.loadLibraries(activeServers);
+                            activeServers[0]
+                                .username()
+                                .then((username) => (this.username = username));
+                            activeServers[0]
+                                .serverName()
+                                .then(
+                                    (serverName) =>
+                                        (this.serverName = serverName)
+                                );
+                        } else {
+                            this.loggedIn = false;
+                            this.reconnectComplete = true;
+                        }
+                    })
+                    .catch((err) => {
+                        console.log(err);
+                        NotificationService.notifyError(err);
+                        this.loggedIn = false;
+                        this.reconnectComplete = true;
+                    });
             }
+        },
+        async loadLibraries(servers: MediaServer[]) {
+            const libraryLoads = [] as Array<Promise<void>>;
+            for (const server of servers) {
+                const library = server.library();
+                this.libraries.push(library);
+                libraryLoads.push(library.populate());
+            }
+            await Promise.all(libraryLoads);
+            this.queueManager = await QueueManager.create(this.libraryManager);
+            this.reconnectComplete = true;
+            console.log('New libraries: ', this.libraries);
         },
     },
 });

@@ -1,4 +1,4 @@
-import { Library, Track, artistNames } from './library';
+import { Track, artistNames, LibraryManager } from './library';
 import EventEmitter from './common/events';
 import { PlayQueue, QueueChangeEvent } from './queues/play-queue';
 
@@ -71,7 +71,7 @@ export class AudioPlayer {
     element: HTMLAudioElement;
     hls: Hls | null;
     useHls: boolean;
-    library: Library;
+    libraryManager: LibraryManager;
     playQueue: PlayQueue;
     playing: boolean;
     muted: boolean;
@@ -84,9 +84,9 @@ export class AudioPlayer {
     volume: number;
     static instance: AudioPlayer;
 
-    constructor(library: Library) {
+    constructor(libraryManager: LibraryManager) {
         this.element = document.createElement('audio');
-        this.library = library;
+        this.libraryManager = libraryManager;
         this.playQueue = new PlayQueue('Default');
         this.playQueueUpdateHandler = this.listenToQueueUpdates(this.playQueue);
         this.hls = null;
@@ -138,11 +138,11 @@ export class AudioPlayer {
         }
     }
 
-    static getOrCreateInstance(library: Library): AudioPlayer {
+    static getOrCreateInstance(libraryManager: LibraryManager): AudioPlayer {
         if (AudioPlayer.instance) {
             return AudioPlayer.instance;
         } else {
-            const player = new AudioPlayer(library);
+            const player = new AudioPlayer(libraryManager);
             AudioPlayer.instance = player;
             return player;
         }
@@ -207,7 +207,7 @@ export class AudioPlayer {
         if (this.hls) {
             this.hls.destroy();
         }
-        const playbackUrl = this.library.getPlaybackUrl(track);
+        const playbackUrl = this.libraryManager.getPlaybackUrl(track);
         this.hls = new Hls({
             manifestLoadingTimeOut: 20000,
             xhrSetup: function (xhr) {
@@ -225,7 +225,7 @@ export class AudioPlayer {
     }
 
     _playNative(track: Track, index: number): void {
-        this.element.src = this.library.getPlaybackUrl(track);
+        this.element.src = this.libraryManager.getPlaybackUrl(track);
         this.element.load();
         this.element
             .play()

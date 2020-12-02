@@ -1,5 +1,9 @@
 import EventEmitter from './events';
 
+export const NOTIFICATION_TIME_SHORT = 3;
+export const NOTIFICATION_TIME_DEFAULT = 10;
+export const NOTIFICATION_TIME_FOREVER = -1;
+
 export enum NotificationType {
     Default,
     Success,
@@ -31,7 +35,7 @@ export class NotificationService {
     addNotification(
         message: string,
         type = NotificationType.Default,
-        timeout = 10
+        timeout = NOTIFICATION_TIME_DEFAULT
     ): number {
         const id = this.nextId++;
         const notification: Notification = {
@@ -101,7 +105,7 @@ export class NotificationService {
         return NotificationService.getInstance().addNotification(
             message,
             NotificationType.Error,
-            0
+            NOTIFICATION_TIME_FOREVER
         );
     }
 

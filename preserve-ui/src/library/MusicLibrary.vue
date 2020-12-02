@@ -36,7 +36,6 @@
 
 <script lang="ts">
 import { Album, Artist, LibraryItem, Track } from './types';
-import Library from './library';
 import { GROUP_OPTIONS } from './options';
 import { Settings } from '../common/settings';
 import { PsvTree, TreeItem } from '../common/tree';
@@ -45,6 +44,7 @@ import { defineComponent } from 'vue';
 import { buildTreeNode, buildTreeLeaf } from '../common/tree/tree-item';
 import { debounced } from '../common/utils';
 import { LibraryGroupOption } from './options';
+import { LibraryManager } from './manager';
 
 type LibraryTree = Array<LibraryItem>;
 
@@ -87,8 +87,8 @@ export default defineComponent({
         };
     },
     props: {
-        library: {
-            type: Library,
+        libraryManager: {
+            type: LibraryManager,
             required: true,
         },
         settings: {
@@ -126,11 +126,11 @@ export default defineComponent({
                     const includeFeatured =
                         this.settings.libraryGrouping ===
                         LibraryGroupOption.Artist_Album;
-                    const albums = await this.library.getAlbumsOfArtist(
+                    const albums = await this.libraryManager.getAlbumsOfArtist(
                         item.id,
                         includeFeatured
                     );
-                    return albums.map((album) => albumTreeNode(album));
+                    return albums.map(albumTreeNode);
                 } else if (
                     this.settings.libraryGrouping ===
                         LibraryGroupOption.Artist ||
@@ -140,16 +140,18 @@ export default defineComponent({
                     const includeFeatured =
                         this.settings.libraryGrouping ===
                         LibraryGroupOption.AlbumArtist;
-                    const tracks = await this.library.getTracksOfArtist(
+                    const tracks = await this.libraryManager.getTracksOfArtist(
                         item.id,
                         includeFeatured
                     );
-                    return tracks.map((track) => trackTreeNode(track));
+                    return tracks.map(trackTreeNode);
                 }
             } else if (item.type === 'album') {
                 const parent = parents[0]?.data;
 
-                let tracks = await this.library.getAlbumTracks(item.id);
+                let tracks = await this.libraryManager.getTracksOfAlbum(
+                    item.id
+                );
                 if (parent && parent.type === 'artist') {
                     const artist = parent;
                     let isOwnAlbum = false;
@@ -170,7 +172,7 @@ export default defineComponent({
                     }
                 }
 
-                return tracks.map((t) => trackTreeNode(t));
+                return tracks.map(trackTreeNode);
             }
             return [];
         },
@@ -181,7 +183,7 @@ export default defineComponent({
                 await this.populateLibraryTree();
                 this.isSearching = false;
             } else {
-                libraryItems = await this.library.search(searchText);
+                libraryItems = await this.libraryManager.search(searchText);
                 this.treeItems = libraryItems.map(libraryTreeNode);
                 this.isSearching = true;
             }
@@ -194,28 +196,23 @@ export default defineComponent({
             );
         },
         async populateLibraryTree() {
-            const library = Library.getInstance();
-            if (!library) {
-                return;
-            }
-
             switch (this.settings.libraryGrouping) {
                 case LibraryGroupOption.Artist_Album:
                 case LibraryGroupOption.Artist: {
-                    const artists = await library.getArtists();
+                    const artists = await this.libraryManager.getArtists();
                     this.libraryTree = artists;
                     this.treeItems = artists.map((a) => artistTreeNode(a));
                     break;
                 }
                 case LibraryGroupOption.AlbumArtist:
                 case LibraryGroupOption.AlbumArtist_Album: {
-                    const albumArtists = await library.getAlbumArtists();
+                    const albumArtists = await this.libraryManager.getAlbumArtists();
                     this.libraryTree = albumArtists;
                     this.treeItems = albumArtists.map((a) => artistTreeNode(a));
                     break;
                 }
                 case LibraryGroupOption.Album: {
-                    const albums = await library.getAlbums();
+                    const albums = await this.libraryManager.getAlbums();
                     this.libraryTree = albums;
                     this.treeItems = albums.map((album) =>
                         albumTreeNode(album)

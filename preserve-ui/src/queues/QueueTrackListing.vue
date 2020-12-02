@@ -108,7 +108,7 @@
 <script lang="ts">
 import { defineComponent, nextTick } from 'vue';
 import { AudioPlayer, PlaybackEventType } from '../player';
-import { Library, Track, ItemStub } from '../library';
+import { Track, ItemStub, LibraryManager } from '../library';
 import { QueueManager, PlayQueueItem, PlayQueue } from '.';
 import { ITEM_STUB_MIME_TYPE } from '../common/constants';
 import { RowItem, Column, ColumnPicker } from '../common/table';
@@ -136,8 +136,8 @@ export default defineComponent({
             type: AudioPlayer,
             required: true,
         },
-        library: {
-            type: Library,
+        libraryManager: {
+            type: LibraryManager,
             required: true,
         },
         queueManager: {
@@ -366,7 +366,9 @@ export default defineComponent({
                 evt.preventDefault();
                 const itemStubs = JSON.parse(transferData) as Array<ItemStub>;
                 const tracksByItem = await Promise.all(
-                    itemStubs.map((item) => this.library.getChildTracks(item))
+                    itemStubs.map((item) =>
+                        this.libraryManager.getChildTracks(item)
+                    )
                 );
                 let tracks: Array<Track> = [];
                 for (const itemTrackList of tracksByItem) {
@@ -392,7 +394,9 @@ export default defineComponent({
                 evt.preventDefault();
                 const itemStubs = JSON.parse(transferData) as Array<ItemStub>;
                 const tracksByItem = await Promise.all(
-                    itemStubs.map((item) => this.library.getChildTracks(item))
+                    itemStubs.map((item) =>
+                        this.libraryManager.getChildTracks(item)
+                    )
                 );
                 let tracks: Array<Track> = [];
                 for (const itemTrackList of tracksByItem) {

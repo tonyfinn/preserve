@@ -1,4 +1,4 @@
-import { Track, Library } from '../library';
+import { LibraryManager, Track } from '../library';
 import EventEmitter from '../common/events';
 import { RepeatMode } from '../player';
 import { reactive } from 'vue';
@@ -224,7 +224,7 @@ export class QueueManager {
         }
     }
 
-    static async create(library: Library): Promise<QueueManager> {
+    static async create(libraryManager: LibraryManager): Promise<QueueManager> {
         const queues = [];
         let lastActive = -1;
         const storedString = window.localStorage.getItem('playQueues');
@@ -236,7 +236,7 @@ export class QueueManager {
                     storedQueue.name,
                     storedQueue.trackIds,
                     storedQueue.id,
-                    library
+                    libraryManager
                 );
                 queues.push(queue);
             }
@@ -339,13 +339,13 @@ export class QueueManager {
         name: string,
         trackIds: Array<string>,
         id: number | undefined,
-        library: Library
+        libraryManager: LibraryManager
     ): Promise<PlayQueue> {
         if (!id) {
             id = QueueManager.nextQueueId++;
         }
         const queue = new PlayQueue(name, id);
-        const tracks = await library.getTracksByIds(trackIds);
+        const tracks = await libraryManager.getTracksByIds(trackIds);
         queue.extend(tracks);
         return queue;
     }

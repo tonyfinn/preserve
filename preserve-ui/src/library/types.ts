@@ -43,7 +43,7 @@ export interface Track extends Item {
     year?: number;
     albumArtId?: string;
     trackNumber?: number;
-    duration?: number;
+    duration: number;
     discNumber?: number;
     type: 'track';
 }

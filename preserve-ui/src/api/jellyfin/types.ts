@@ -1,3 +1,5 @@
+import { BaseServerDefinition } from '../interface';
+
 export enum ConnectionMode {
     Local = 0,
     Remote = 1,
@@ -36,10 +38,11 @@ export function isRemoteServer(
     return (serverInfo as RemoteServerInfo).RemoteAddress !== undefined;
 }
 
-export interface ServerDefinition {
+export interface JellyfinServerDefinition extends BaseServerDefinition {
     id: string;
+    ty: 'jellyfin';
     address: string;
-    name?: string;
+    name: string;
     accessToken?: string;
     userId?: string;
 }

@@ -5,7 +5,7 @@
             :player="player"
         ></QueuePicker>
         <QueueTrackListing
-            :library="library"
+            :libraryManager="libraryManager"
             :player="player"
             :queueManager="queueManager"
             :settings="settings"
@@ -15,12 +15,12 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import { Library } from '../library';
 import { AudioPlayer } from '../player';
 import { QueueManager } from './play-queue';
 import { Settings } from '../common/settings';
 import QueueTrackListing from './QueueTrackListing.vue';
 import QueuePicker from './QueuePicker.vue';
+import { LibraryManager } from '../library';
 
 export default defineComponent({
     components: { QueuePicker, QueueTrackListing },
@@ -29,8 +29,8 @@ export default defineComponent({
             type: AudioPlayer,
             required: true,
         },
-        library: {
-            type: Library,
+        libraryManager: {
+            type: LibraryManager,
             required: true,
         },
         queueManager: {

@@ -18,6 +18,7 @@ module.exports = {
                 'generated',
                 'jellyfin-axios-client'
             ),
+            'preserve-ui': path.resolve(__dirname),
         },
     },
     entry: {
