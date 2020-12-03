@@ -91,7 +91,10 @@ export class JellyfinServerAuth
         username: string,
         password: string
     ): Promise<JellyfinServer> {
-        const userApi = new UserApi(new Configuration({ basePath: address }));
+        const authHeader = buildAuthHeader();
+        const userApi = new UserApi(
+            new Configuration({ basePath: address, apiKey: authHeader })
+        );
         const serverInfo = await queryServerDefinition(address);
         const authResponse = await userApi.authenticateUserByName({
             authenticateUserByName: {

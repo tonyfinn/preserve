@@ -1,7 +1,12 @@
 import { BaseServerDefinition, MediaServer } from '../api/interface';
-import { getOldJellyfinServers, JellyfinServerAuth } from '../api/jellyfin';
-import { JellyfinServerDefinition } from '../api/jellyfin/types';
-import { STORAGE_KEY_SERVERS } from './constants';
+import {
+    getOldJellyfinServers,
+    JellyfinServerAuth,
+    JellyfinServerDefinition,
+    JELLYFIN_SERVER_TYPE,
+    ServerType,
+} from '../api';
+import { STORAGE_KEY_LEGACY_SERVERS, STORAGE_KEY_SERVERS } from './constants';
 import {
     NotificationService,
     NotificationType,
@@ -14,7 +19,7 @@ export type ServerDefinition = JellyfinServerDefinition | BaseServerDefinition;
 export function isJellyfinServer(
     s: ServerDefinition
 ): s is JellyfinServerDefinition {
-    return s.ty === 'jellyfin';
+    return s.ty === JELLYFIN_SERVER_TYPE;
 }
 
 export class ServerManager {
@@ -25,11 +30,6 @@ export class ServerManager {
         this._activeServers = [];
         this._knownServers = [];
 
-        const legacyJellyfinServers = getOldJellyfinServers();
-        for (const serverDef of legacyJellyfinServers) {
-            this._knownServers.push(serverDef);
-        }
-
         const savedServers = this.getSavedServers();
         for (const serverDef of savedServers) {
             this._knownServers.push(serverDef);
@@ -37,6 +37,17 @@ export class ServerManager {
     }
 
     private getSavedServers(): Array<ServerDefinition> {
+        if (
+            window.localStorage.getItem(STORAGE_KEY_LEGACY_SERVERS) &&
+            !window.localStorage.getItem(STORAGE_KEY_SERVERS)
+        ) {
+            const legacyServers = getOldJellyfinServers();
+            window.localStorage.setItem(
+                STORAGE_KEY_SERVERS,
+                JSON.stringify(legacyServers)
+            );
+            return legacyServers;
+        }
         const savedServersJson = window.localStorage.getItem(
             STORAGE_KEY_SERVERS
         );
@@ -52,6 +63,31 @@ export class ServerManager {
 
     activeServers(): Array<MediaServer> {
         return this._activeServers;
+    }
+
+    async connect(
+        type: ServerType,
+        address: string,
+        username: string,
+        password: string
+    ): Promise<MediaServer> {
+        if (type === JELLYFIN_SERVER_TYPE) {
+            const jellyfinAuth = new JellyfinServerAuth();
+            const server = await jellyfinAuth.login(
+                address,
+                username,
+                password
+            );
+            this._activeServers.push(server);
+            this._knownServers.push(server.definition());
+            window.localStorage.setItem(
+                STORAGE_KEY_SERVERS,
+                JSON.stringify(this._knownServers)
+            );
+            return server;
+        } else {
+            throw new Error(`Unknown server type '${type}'`);
+        }
     }
 
     async reconnect(): Promise<void> {

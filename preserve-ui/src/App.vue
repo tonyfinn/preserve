@@ -48,9 +48,10 @@
         <login-screen
             v-if="appLoaded && !loggedIn"
             class="screen-root"
-            @login-complete="setupServer($event.loginResult)"
+            :serverManager="serverManager"
+            @login-complete="setupServers"
         ></login-screen>
-        <div id="loading-spinner" v-if="!appLoaded">
+        <div id="loading-spinner" v-if="!appLoaded && loggedIn">
             <h1>Loading</h1>
             <p v-for="loadingItem in loadingItems" :key="loadingItem.name">
                 {{ loadingItem.name }}: {{ loadingItem.loadedCount }} /
@@ -173,7 +174,7 @@ export default defineComponent({
         },
     },
     created() {
-        this.setupServers();
+        this.tryReconnect();
         this.$watch(
             'settings',
             (newSettings: Settings) => {
@@ -189,36 +190,36 @@ export default defineComponent({
                 .map((s) => this.serverManager.logout(s));
             Promise.all(logoutPromises).then(() => (this.loggedIn = false));
         },
-        async setupServers() {
+        async tryReconnect(): Promise<void> {
             if (this.serverManager.knownServers().length > 0) {
-                this.serverManager
-                    .reconnect()
-                    .then(() => {
-                        const activeServers = this.serverManager.activeServers();
-                        console.log('New servers: ', activeServers);
-                        if (activeServers.length > 0) {
-                            this.loggedIn = true;
-                            this.loadLibraries(activeServers);
-                            activeServers[0]
-                                .username()
-                                .then((username) => (this.username = username));
-                            activeServers[0]
-                                .serverName()
-                                .then(
-                                    (serverName) =>
-                                        (this.serverName = serverName)
-                                );
-                        } else {
-                            this.loggedIn = false;
-                            this.reconnectComplete = true;
-                        }
-                    })
-                    .catch((err) => {
-                        console.log(err);
-                        NotificationService.notifyError(err);
-                        this.loggedIn = false;
-                        this.reconnectComplete = true;
-                    });
+                try {
+                    await this.serverManager.reconnect();
+                    await this.setupServers();
+                } catch (err) {
+                    console.log(err);
+                    NotificationService.notifyError(err);
+                    this.loggedIn = false;
+                    this.reconnectComplete = true;
+                }
+            } else {
+                this.reconnectComplete = true;
+            }
+        },
+        async setupServers() {
+            this.reconnectComplete = false;
+            const activeServers = this.serverManager.activeServers();
+            console.log('New servers: ', activeServers);
+            if (activeServers.length > 0) {
+                this.loggedIn = true;
+                this.loadLibraries(activeServers);
+                activeServers[0]
+                    .username()
+                    .then((username) => (this.username = username));
+                activeServers[0]
+                    .serverName()
+                    .then((serverName) => (this.serverName = serverName));
+            } else {
+                this.loggedIn = false;
             }
         },
         async loadLibraries(servers: MediaServer[]) {

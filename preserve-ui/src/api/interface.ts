@@ -35,9 +35,13 @@ export interface MediaServer {
     serverId(): string;
     serverName(): Promise<string>;
     logout(): Promise<void>;
+    definition(): BaseServerDefinition;
 }
 
-export interface MediaServerAuth<Definition, ServerType extends MediaServer> {
+export interface MediaServerAuth<
+    Definition extends BaseServerDefinition,
+    ServerType extends MediaServer
+> {
     reconnect(server: Definition): Promise<ServerType>;
     login(
         address: string,

@@ -61,8 +61,12 @@ export function getOldJellyfinServers(): Array<JellyfinServerDefinition> {
     return servers;
 }
 
-export function buildAuthHeader(accessToken: string): string {
+export function buildAuthHeader(accessToken?: string): string {
     const deviceId = getOrGenerateClientId();
     const deviceName = getClientName();
-    return `MediaBrowser Client="${APP_NAME}", Device="${deviceName}", DeviceId="${deviceId}", Version="${APP_VERSION}", Token="${accessToken}"`;
+    let tokenString = '';
+    if (accessToken) {
+        tokenString = `, Token="${accessToken}`;
+    }
+    return `MediaBrowser Client="${APP_NAME}", Device="${deviceName}", DeviceId="${deviceId}", Version="${APP_VERSION}" ${tokenString}"`;
 }

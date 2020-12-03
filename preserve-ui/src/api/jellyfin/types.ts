@@ -1,4 +1,5 @@
 import { BaseServerDefinition } from '../interface';
+export const JELLYFIN_SERVER_TYPE = 'jellyfin';
 
 export enum ConnectionMode {
     Local = 0,
@@ -40,7 +41,7 @@ export function isRemoteServer(
 
 export interface JellyfinServerDefinition extends BaseServerDefinition {
     id: string;
-    ty: 'jellyfin';
+    ty: typeof JELLYFIN_SERVER_TYPE;
     address: string;
     name: string;
     accessToken?: string;

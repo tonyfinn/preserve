@@ -5,8 +5,8 @@
         <form @submit.prevent="login">
             <label for="server-name">Jellyfin Server Address</label>
             <input
-                id="server-name"
-                v-model="serverName"
+                id="server-address"
+                v-model="serverAddress"
                 type="text"
                 placeholder="https://example.com"
             />
@@ -20,79 +20,48 @@
 </template>
 
 <script lang="ts">
-import { connectionManager } from '../common/connections';
 import { NotificationService, NotificationType } from '../common/notifications';
 import { defineComponent } from 'vue';
-import {
-    ServerConnectionResult,
-    LoggedInConnectionResult,
-    LoggedOutConnectionResult,
-    SuccessfulConnectionResult,
-} from 'jellyfin-apiclient';
-
-function isSignedInState(
-    result: ServerConnectionResult
-): result is LoggedInConnectionResult | LoggedOutConnectionResult {
-    return result.State == 'SignedIn' || result.State === 'ServerSignIn';
-}
-
-interface LoginEvent {
-    loginResult: SuccessfulConnectionResult;
-}
+import { ServerManager } from '../common/servers';
+import { JELLYFIN_SERVER_TYPE } from '../api';
 
 export default defineComponent({
     emits: ['login-complete'],
+    props: {
+        serverManager: {
+            required: true,
+            type: ServerManager,
+        },
+    },
     data: function () {
         return {
             username: '',
             password: '',
-            serverName: '',
-            message: '',
+            serverAddress: '',
             loginSuccess: false,
         };
     },
     methods: {
         async login(): Promise<void> {
-            const result = await connectionManager.connectToServer({
-                RemoteAddress: this.serverName,
-            });
-
-            if (result.State === 'ServerUpdateNeeded') {
-                this.message = 'The server is too old for use with Preserve';
-                return;
-            } else if (result.State === 'Unavailable') {
-                this.message = 'Could not connect to server';
-                return;
-            } else if (isSignedInState(result)) {
-                if (result.ApiClient) {
-                    const apiClient = result.ApiClient;
-
-                    try {
-                        await apiClient.authenticateUserByName(
-                            this.username,
-                            this.password
-                        );
-                        this.loginSuccess = true;
-                        NotificationService.notify(
-                            'Successfully logged in',
-                            NotificationType.Success
-                        );
-                        this.$emit('login-complete', {
-                            loginResult: result,
-                        });
-                    } catch (e) {
-                        console.error(e);
-                        NotificationService.notify(
-                            'Failed to authenticate. Username or password incorrect',
-                            NotificationType.Error
-                        );
-                        return;
-                    }
-                }
-            } else {
-                const state = result.State;
-                this.message = `Server in unknown state ${state}`;
-                return;
+            try {
+                const server = await this.serverManager.connect(
+                    JELLYFIN_SERVER_TYPE,
+                    this.serverAddress,
+                    this.username,
+                    this.password
+                );
+                this.loginSuccess = true;
+                NotificationService.notify(
+                    'Successfully logged in',
+                    NotificationType.Success
+                );
+                this.$emit('login-complete', server.serverId());
+            } catch (e) {
+                console.error(e);
+                NotificationService.notify(
+                    'Failed to authenticate. Username or password incorrect',
+                    NotificationType.Error
+                );
             }
         },
     },
@@ -106,18 +75,6 @@ export default defineComponent({
 #login-form {
     width: 30em;
     margin: 1em auto;
-}
-
-#login-form .message {
-    color: $colors-text-dark;
-    padding: $dims-padding-dense;
-    margin: 0.5em 0;
-    border-radius: $dims-border-radius;
-    background-color: $colors-success;
-
-    &.error {
-        background-color: $colors-error;
-    }
 }
 
 #login-form {
