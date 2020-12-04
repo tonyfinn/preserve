@@ -2,6 +2,9 @@ import { getChildTracks, MediaServerLibrary } from '../api';
 import { ServerManager } from '../common/servers';
 import { Album, Artist, ItemStub, LibraryItem, Track } from './types';
 
+import silenceOgg from '../../static/silence.ogg';
+import { isMock } from '../common/utils';
+
 export class LibraryManager {
     constructor(private readonly serverManager: ServerManager) {}
 
@@ -52,6 +55,9 @@ export class LibraryManager {
     }
 
     getPlaybackUrl(track: Track): string {
+        if (isMock()) {
+            return silenceOgg;
+        }
         return this.activeLibrary().getPlaybackUrl(track);
     }
 

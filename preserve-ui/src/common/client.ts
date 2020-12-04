@@ -1,6 +1,8 @@
 import Bowser from 'bowser';
 import { v4 as uuidv4 } from 'uuid';
-const STORAGE_KEY_CLIENT_ID = 'preserve_client_id';
+import { STORAGE_KEY_PREFIX } from './constants';
+
+const STORAGE_KEY_CLIENT_ID = `${STORAGE_KEY_PREFIX}_client_id`;
 
 export function getClientName(): string {
     const browserDetails = Bowser.getParser(

@@ -19,7 +19,13 @@
             </div>
             <div class="user-menu">
                 <p v-if="!loggedIn">Not Logged in</p>
-                <p v-if="loggedIn">{{ username }} ({{ serverName }})</p>
+                <p v-if="loggedIn">
+                    <span data-testid="loggedin-username">{{ username }}</span>
+                    (<span data-testid="loggedin-server-name">{{
+                        serverName
+                    }}</span
+                    >)
+                </p>
                 <i
                     v-if="loggedIn"
                     class="fi-widget settings-icon"
@@ -211,15 +217,17 @@ export default defineComponent({
             console.log('New servers: ', activeServers);
             if (activeServers.length > 0) {
                 this.loggedIn = true;
-                this.loadLibraries(activeServers);
                 activeServers[0]
                     .username()
                     .then((username) => (this.username = username));
                 activeServers[0]
                     .serverName()
                     .then((serverName) => (this.serverName = serverName));
+                await this.loadLibraries(activeServers);
+                this.reconnectComplete = true;
             } else {
                 this.loggedIn = false;
+                this.reconnectComplete = true;
             }
         },
         async loadLibraries(servers: MediaServer[]) {
@@ -231,7 +239,6 @@ export default defineComponent({
             }
             await Promise.all(libraryLoads);
             this.queueManager = await QueueManager.create(this.libraryManager);
-            this.reconnectComplete = true;
             console.log('New libraries: ', this.libraries);
         },
     },

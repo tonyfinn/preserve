@@ -23,6 +23,7 @@ module.exports = {
     },
     entry: {
         main: './src/index.ts',
+        // mock: './src/mock/index.ts',
     },
     output: {
         filename: devMode ? '[name].js' : '[name].[hash].js',
@@ -35,7 +36,7 @@ module.exports = {
                 loader: 'vue-loader',
             },
             {
-                test: /\.(png|gif|svg)$/,
+                test: /\.(png|gif|svg|ogg)$/,
                 loader: 'file-loader',
             },
             {

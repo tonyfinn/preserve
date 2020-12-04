@@ -15,5 +15,5 @@
             "jellyfin-axios-client": ["preserve-ui/generated/jellyfin-axios-client"],
         }
     },
-    "exclude": ["node_modules", "contrib", "preserve-electron"]
+    "exclude": ["node_modules", "contrib", "preserve-electron", "preserve-ui/tests/functional"]
 }

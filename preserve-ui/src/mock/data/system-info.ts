@@ -1,0 +1,27 @@
+import { TEST_SERVER_ID, TEST_SERVER_NAME } from './shared';
+
+export default {
+    OperatingSystemDisplayName: 'Linux',
+    HasPendingRestart: false,
+    IsShuttingDown: false,
+    SupportsLibraryMonitor: true,
+    WebSocketPortNumber: 8096,
+    CompletedInstallations: [],
+    CanSelfRestart: false,
+    CanLaunchWebBrowser: false,
+    ProgramDataPath: '/var/lib/jellyfin',
+    WebPath: '/usr/lib/jellyfin/jellyfin-web',
+    ItemsByNamePath: '/var/lib/jellyfin/metadata',
+    CachePath: '/var/cache/jellyfin',
+    LogPath: '/var/lib/jellyfin/log',
+    InternalMetadataPath: '/var/lib/jellyfin/metadata',
+    TranscodingTempPath: '/var/lib/jellyfin/transcodes',
+    HasUpdateAvailable: false,
+    EncoderLocation: 'System',
+    SystemArchitecture: 'X64',
+    LocalAddress: 'http://192.168.1.1:8096',
+    ServerName: TEST_SERVER_NAME,
+    Version: '10.6.4',
+    OperatingSystem: 'Linux',
+    Id: TEST_SERVER_ID,
+};

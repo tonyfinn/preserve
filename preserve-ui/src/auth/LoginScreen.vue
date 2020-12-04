@@ -1,22 +1,37 @@
 <template>
-    <div id="login-form">
-        <h2>Login</h2>
-
-        <form @submit.prevent="login">
-            <label for="server-name">Jellyfin Server Address</label>
-            <input
-                id="server-address"
-                v-model="serverAddress"
-                type="text"
-                placeholder="https://example.com"
-            />
-            <label for="username">Username</label>
-            <input type="text" v-model="username" placeholder="Username" />
-            <label for="username">Password</label>
-            <input type="password" v-model="password" placeholder="Password" />
-            <input type="submit" value="Login" />
-        </form>
-    </div>
+    <form
+        id="login-form"
+        data-testid="login-form"
+        @submit.prevent="login"
+        aria-labelledby="login-form-header"
+    >
+        <h2 id="login-form-header">Login</h2>
+        <label for="server-address-input">Jellyfin Server Address</label>
+        <input
+            id="server-address-input"
+            data-testid="login-server-address-input"
+            v-model="serverAddress"
+            type="text"
+            placeholder="https://example.com"
+        />
+        <label for="username-input">Username</label>
+        <input
+            id="username-input"
+            type="text"
+            data-testid="login-username-input"
+            v-model="username"
+            placeholder="Username"
+        />
+        <label for="password-input">Password</label>
+        <input
+            id="password-input"
+            type="password"
+            data-testid="login-password-input"
+            v-model="password"
+            placeholder="Password"
+        />
+        <input type="submit" value="Login" />
+    </form>
 </template>
 
 <script lang="ts">

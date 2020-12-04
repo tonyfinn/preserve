@@ -1,13 +1,25 @@
 <template>
-    <section class="notification-wrapper" aria-label="Notifications">
+    <section
+        data-testid="notification-tray"
+        class="notification-wrapper"
+        aria-label="Notifications"
+    >
         <div class="notification-grid">
             <div
+                data-testid="notification"
                 v-for="notification in notifications"
                 :key="notification.id"
                 :class="notification.nClass"
             >
-                <p>{{ notification.message }}</p>
-                <a href="#" @click="removeNotification(notification.id)">X</a>
+                <p data-testid="notification-message">
+                    {{ notification.message }}
+                </p>
+                <a
+                    data-testid="notification-close-button"
+                    href="#"
+                    @click="removeNotification(notification.id)"
+                    >X</a
+                >
             </div>
         </div>
     </section>

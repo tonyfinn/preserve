@@ -1,7 +1,8 @@
 import { LibraryGroupOption } from '../library';
 import { PlayColumn } from '../queues/columns';
+import { STORAGE_KEY_PREFIX } from './constants';
 
-export const STORAGE_KEY_SETTINGS = 'preserve_settings';
+export const STORAGE_KEY_SETTINGS = `${STORAGE_KEY_PREFIX}_settings`;
 
 export class Settings {
     libraryGrouping: LibraryGroupOption;

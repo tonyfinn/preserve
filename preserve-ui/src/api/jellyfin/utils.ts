@@ -68,5 +68,5 @@ export function buildAuthHeader(accessToken?: string): string {
     if (accessToken) {
         tokenString = `, Token="${accessToken}`;
     }
-    return `MediaBrowser Client="${APP_NAME}", Device="${deviceName}", DeviceId="${deviceId}", Version="${APP_VERSION}" ${tokenString}"`;
+    return `MediaBrowser Client="${APP_NAME}", Device="${deviceName}", DeviceId="${deviceId}", Version="${APP_VERSION}"${tokenString}"`;
 }

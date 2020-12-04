@@ -41,7 +41,7 @@ export default defineComponent({
     },
     methods: {
         valueToPercent(value: number): number {
-            return ((value - this.min) / this.max) * 100;
+            return Math.min(100, ((value - this.min) / this.max) * 100);
         },
         percentToValue(percent: number): number {
             return this.min + ((this.max - this.min) * percent) / 100;
@@ -53,6 +53,7 @@ export default defineComponent({
                 Math.min(100, this.percentValue + increase)
             );
             const newValue = this.percentToValue(newPercent);
+
             this.$emit('update:modelValue', newValue);
         },
         handleMouse(evt: MouseEvent) {
