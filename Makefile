@@ -36,7 +36,7 @@ clean:
 	rm -rf ${srcdir}/target/
 
 check: preserve-ui/node_modules
-	cd ${UI_SRC_DIR} && ${NPM} run lint
+	cd ${UI_SRC_DIR} && ${NPM} run lint && ${NPM} run test:functional
 
 devserver: preserve-ui/node_modules
 	cd ${UI_SRC_DIR} && ${NPM} run start
