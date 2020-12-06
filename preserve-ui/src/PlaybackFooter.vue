@@ -17,21 +17,34 @@
                 aria-label="Track Information"
             >
                 <div class="track-information">
-                    <span class="track-title" :title="trackName">{{
-                        trackName
-                    }}</span>
-                    <span class="artist-title" :title="artistName">{{
-                        artistName
-                    }}</span>
-                    <span class="album-title" :title="albumName">{{
-                        albumName
-                    }}</span>
+                    <span
+                        data-testid="nowplaying-track"
+                        class="track-title"
+                        :title="trackName"
+                        >{{ trackName }}</span
+                    >
+                    <span
+                        data-testid="nowplaying-artist"
+                        class="artist-title"
+                        :title="artistName"
+                        >{{ artistName }}</span
+                    >
+                    <span
+                        data-testid="nowplaying-album"
+                        class="album-title"
+                        :title="albumName"
+                        >{{ albumName }}</span
+                    >
                 </div>
                 <div class="playback-information">
-                    <span class="current-time">{{
-                        formatTime(currentTime)
+                    <span
+                        data-testid="nowplaying-current-time"
+                        class="current-time"
+                        >{{ formatTime(currentTime) }}</span
+                    >
+                    <span data-testid="nowplaying-duration" class="duration">{{
+                        formatTime(duration)
                     }}</span>
-                    <span class="duration">{{ formatTime(duration) }}</span>
                 </div>
             </section>
             <section

@@ -1,6 +1,7 @@
 <template>
     <section
         id="music-library"
+        data-testid="music-library-tree"
         aria-label="Music Library"
         :class="{
             searching: this.isSearching,
@@ -22,7 +23,11 @@
             @update-selection="updateSelection"
         ></psv-tree>
         <p v-if="!loaded">Loading...</p>
-        <select class="sort-mode" v-model="libraryGrouping">
+        <select
+            data-testid="music-library-sort"
+            class="sort-mode"
+            v-model="libraryGrouping"
+        >
             <option
                 v-for="groupOption in groupOptions"
                 :key="groupOption.value"

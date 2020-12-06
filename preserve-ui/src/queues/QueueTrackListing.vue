@@ -1,5 +1,6 @@
 <template>
     <div
+        data-testid="play-queue-track-listing"
         :class="{
             'playlist__queue-wrapper': true,
             'playlist__queue-wrapper--dragover': dragOver !== 0,
