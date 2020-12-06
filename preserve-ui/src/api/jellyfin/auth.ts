@@ -11,6 +11,7 @@ export enum ConnectErrorEnum {
     FailedAuth,
     NetworkError,
     IncompatibleServer,
+    InternalError,
     UnexpectedResponse,
 }
 
@@ -55,34 +56,50 @@ export class JellyfinServerAuth
 
         try {
             const sysInfo = await testApi.getSystemInfo();
-            if (sysInfo.status === 401) {
+            const id = sysInfo.data.Id || definition.address;
+            return new JellyfinServer({
+                id,
+                ty: 'jellyfin',
+                name:
+                    sysInfo.data.ServerName || `${UNKNOWN_SERVER_NAME} - ${id}`,
+                address: definition.address,
+                userId: definition.userId,
+                accessToken: definition.accessToken,
+            });
+        } catch (e) {
+            if (e.response && e.response.status === 401) {
+                if (e.response.status === 401) {
+                    return Promise.reject(
+                        new ConnectError(
+                            'Authorization rejected - please login again',
+                            ConnectErrorEnum.FailedAuth
+                        )
+                    );
+                } else {
+                    return Promise.reject(
+                        new ConnectError(
+                            `Could not connect to server, unexpected response ${e.response.status}`,
+                            ConnectErrorEnum.UnexpectedResponse
+                        )
+                    );
+                }
+            } else if (e.request) {
                 return Promise.reject(
                     new ConnectError(
-                        'Authorization rejected - please login again',
-                        ConnectErrorEnum.FailedAuth
+                        'Could not connect to server: No response from server',
+                        ConnectErrorEnum.NetworkError
                     )
                 );
             } else {
-                const id = sysInfo.data.Id || definition.address;
-                return new JellyfinServer({
-                    id,
-                    ty: 'jellyfin',
-                    name:
-                        sysInfo.data.ServerName ||
-                        `${UNKNOWN_SERVER_NAME} - ${id}`,
-                    address: definition.address,
-                    userId: definition.userId,
-                    accessToken: definition.accessToken,
-                });
+                const message =
+                    e instanceof Error ? e.message : JSON.stringify(e);
+                return Promise.reject(
+                    new ConnectError(
+                        `Could not connect to server: ${message}`,
+                        ConnectErrorEnum.InternalError
+                    )
+                );
             }
-        } catch (e) {
-            const message = e instanceof Error ? e.message : JSON.stringify(e);
-            return Promise.reject(
-                new ConnectError(
-                    `Could not connect to server: ${message}`,
-                    ConnectErrorEnum.NetworkError
-                )
-            );
         }
     }
 

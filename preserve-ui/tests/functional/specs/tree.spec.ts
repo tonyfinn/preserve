@@ -1,4 +1,4 @@
-import App from '../pages/app';
+import { App } from '../pages/app';
 import { Library } from '../pages/library';
 import { NowPlaying } from '../pages/now-playing';
 import { PlayQueue } from '../pages/play-queue';

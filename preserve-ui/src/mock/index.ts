@@ -25,6 +25,12 @@ const requireAuthHeader = {
     },
 };
 
+const missingHeader = {
+    asymmetricMatch(headers: Params): boolean {
+        return !requireAuthHeader.asymmetricMatch(headers);
+    },
+};
+
 function matchSome(checkParams: Params) {
     console.log('Building matcher for ', checkParams);
     return {
@@ -105,6 +111,12 @@ function registerMockHandlers(data: any) {
         undefined,
         requireAuthHeader
     ).reply(200, data.systemInfoResponse);
+
+    mock.onGet(
+        `${TEST_SERVER_URL}/System/Info`,
+        undefined,
+        missingHeader
+    ).reply(401);
 
     mock.onGet(
         `${TEST_SERVER_URL}/Users/${TEST_USER_ID}`,

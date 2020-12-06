@@ -12,14 +12,14 @@ export class Notification {
     }
 }
 
-export default {
-    tray(): Cypress.Chainable<JQuery<HTMLElement>> {
+export class Notifications {
+    static tray(): Cypress.Chainable<JQuery<HTMLElement>> {
         return cy.findByTestId('notification-tray');
-    },
-    all(): Notification[] {
+    }
+    static all(): Notification[] {
         const notifications = [];
         const elements = this.tray().findAllByTestId('notification');
         elements.each((el) => notifications.push(new Notification(el)));
         return notifications;
-    },
-};
+    }
+}
