@@ -64,8 +64,17 @@ export class PlayQueue {
         return cy.findByLabelText('Play Queues');
     }
 
-    static newQueue(): Cypress.Chainable<JQuery<HTMLElement>> {
+    static newQueue(name?: string): Cypress.Chainable<JQuery<HTMLElement>> {
         cy.findByTitle('New Play Queue').click();
+        if (name) {
+            this.queueList()
+                .findAllByRole('tab')
+                .last()
+                .dblclick()
+                .findByRole('textbox')
+                .clear()
+                .type(`${name}{enter}`);
+        }
         return this.queueList().findAllByRole('tab').last();
     }
 }

@@ -212,10 +212,7 @@ describe('Play Queue', function () {
                 shiftKey: true,
             });
 
-            PlayQueue.newQueue()
-                .dblclick()
-                .findByRole('textbox')
-                .type('Newly Added{enter}');
+            PlayQueue.newQueue('Newly Added');
             PlayQueue.queueList().should('contain', 'Newly Added');
             PlayQueue.tracks().should('have.length', 0);
         });
@@ -227,11 +224,7 @@ describe('Play Queue', function () {
                 shiftKey: true,
             });
 
-            PlayQueue.newQueue()
-                .dblclick()
-                .findByRole('textbox')
-                .clear()
-                .type('Newly Added{enter}');
+            PlayQueue.newQueue('Newly Added');
             PlayQueue.queueList().contains('Default').click();
             PlayQueue.tracks().should('have.length.above', 0);
         });
@@ -243,11 +236,7 @@ describe('Play Queue', function () {
                 shiftKey: true,
             });
 
-            PlayQueue.newQueue()
-                .dblclick()
-                .findByRole('textbox')
-                .clear()
-                .type('Newly Added{enter}');
+            PlayQueue.newQueue('Newly Added');
             Library.search().clear().type('inno');
             Library.tree().contains('Innocence Theme').dblclick({
                 shiftKey: true,
@@ -264,6 +253,108 @@ describe('Play Queue', function () {
 
             PlayQueue.queueList().contains('Default').click();
             PlayQueue.tracks().should('have.length.above', 1);
+        });
+
+        it('should support arrow key to switch queues', () => {
+            App.visitLoaded();
+
+            PlayQueue.newQueue('First New Queue');
+            PlayQueue.newQueue('Second New Queue');
+            PlayQueue.newQueue('Third New Queue');
+            PlayQueue.newQueue('Fourth New Queue');
+
+            PlayQueue.queueList()
+                .contains('Second New Queue')
+                .click()
+                .type('{rightarrow}{rightarrow}{leftarrow}');
+
+            cy.focused().should('contain', 'Third New Queue');
+        });
+
+        it('should support home to switch to first queue', () => {
+            App.visitLoaded();
+
+            PlayQueue.newQueue('First New Queue');
+            PlayQueue.newQueue('Second New Queue');
+            PlayQueue.newQueue('Third New Queue');
+            PlayQueue.newQueue('Fourth New Queue');
+
+            PlayQueue.queueList()
+                .contains('Second New Queue')
+                .click()
+                .type('{home}');
+
+            cy.focused().should('contain', 'Default');
+        });
+
+        it('should support end to switch to first queue', () => {
+            App.visitLoaded();
+
+            PlayQueue.newQueue('First New Queue');
+            PlayQueue.newQueue('Second New Queue');
+            PlayQueue.newQueue('Third New Queue');
+            PlayQueue.newQueue('Fourth New Queue');
+
+            PlayQueue.queueList()
+                .contains('Second New Queue')
+                .click()
+                .type('{end}');
+
+            cy.focused().should('contain', 'Fourth New Queue');
+        });
+
+        it('should support F2 key to rename queues', () => {
+            App.visitLoaded();
+
+            PlayQueue.newQueue('First New Queue');
+            PlayQueue.newQueue('Second New Queue');
+            PlayQueue.newQueue('Third New Queue');
+            PlayQueue.newQueue('Fourth New Queue');
+
+            PlayQueue.queueList()
+                .contains('Second New Queue')
+                .click()
+                .trigger('keydown', { key: 'F2', code: 'F2', which: 113 });
+
+            cy.focused().type('Renamed{enter}');
+            PlayQueue.queueList().should('contain', 'Renamed');
+            PlayQueue.queueList().find('input').should('not.exist');
+            PlayQueue.queueList().should('not.contain', 'Second');
+        });
+
+        it('should abort rename on escape', () => {
+            App.visitLoaded();
+
+            PlayQueue.newQueue('First New Queue');
+            PlayQueue.newQueue('Second New Queue');
+            PlayQueue.newQueue('Third New Queue');
+            PlayQueue.newQueue('Fourth New Queue');
+
+            PlayQueue.queueList()
+                .contains('Second New Queue')
+                .click()
+                .trigger('keydown', { key: 'F2', code: 'F2', which: 113 });
+
+            cy.focused().type('Renamed{esc}');
+            PlayQueue.queueList().should('not.contain', 'Renamed');
+            PlayQueue.queueList().find('input').should('not.exist');
+            PlayQueue.queueList().should('contain', 'Second New Queue');
+        });
+
+        it('should support delete key to remove queues', () => {
+            App.visitLoaded();
+
+            PlayQueue.newQueue('First New Queue');
+            PlayQueue.newQueue('Second New Queue');
+            PlayQueue.newQueue('Third New Queue');
+            PlayQueue.newQueue('Fourth New Queue');
+
+            PlayQueue.queueList()
+                .contains('Second New Queue')
+                .click()
+                .type('{del}');
+            PlayQueue.queueList().should('not.contain', 'Second');
+            cy.focused().should('contain', 'Default');
         });
     });
 });

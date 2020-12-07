@@ -5,7 +5,9 @@
                 role="tab"
                 v-for="playQueue in playQueues"
                 aria-controls="active-play-queue-panel"
+                :id="'playQueue-' + playQueue.id"
                 :key="playQueue.id"
+                :aria-labelledby="'playQueue-' + activeQueue.id + '-name'"
                 :aria-selected="isActiveQueue(playQueue)"
                 :class="{
                     'playlist-picker__playlist': true,
@@ -19,23 +21,38 @@
                 @click="showQueue(playQueue)"
                 @keydown.enter.stop="showQueue(playQueue)"
                 @keydown.f2.stop="rename(playQueue)"
+                @keydown.delete.stop="deleteQueue(playQueue)"
+                @keydown.left.stop="activatePreviousQueue()"
+                @keydown.right.stop="activateNextQueue()"
+                @keydown.home.stop="activateQueue(0)"
+                @keydown.end.stop="activateQueue(playQueues.length - 1)"
                 @dblclick="rename(playQueue)"
-                tabindex="0"
+                :tabindex="isActiveQueue(playQueue) ? 0 : -1"
             >
-                <span v-if="!isRenaming(playQueue)">
+                <span
+                    v-if="!isRenaming(playQueue)"
+                    :id="'playQueue-' + playQueue.id + '-name'"
+                >
                     {{ playQueue.name }}
                 </span>
                 <input
+                    :id="'playQueue-' + playQueue.id + '-name'"
                     type="text"
                     v-model="newName"
                     v-if="isRenaming(playQueue)"
                     @keydown.enter.stop="applyRename"
                     @keydown.escape.stop="cancelRename"
+                    @keydown.delete.stop
+                    @keydown.left.stop
+                    @keydown.right.stop
+                    @keydown.home.stop
+                    @keydown.end.stop
                 />
                 <button
                     type="button"
-                    title="Rename Play Queue"
-                    tabindex="0"
+                    title="Rename"
+                    aria-label="Rename"
+                    tabindex="-1"
                     @click.stop="rename(playQueue)"
                     @keydown.enter.stop="rename(playQueue)"
                 >
@@ -43,9 +60,10 @@
                 </button>
                 <button
                     type="button"
-                    tabindex="0"
+                    tabindex="-1"
                     v-if="playQueues.length > 1"
-                    title="Delete Play Queue"
+                    title="Delete"
+                    aria-label="Delete"
                     @click.stop="deleteQueue(playQueue)"
                     @keydown.enter.stop="deleteQueue(playQueue)"
                 >
@@ -65,7 +83,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { defineComponent, nextTick } from 'vue';
 import { QueueManager, PlayQueue } from './play-queue';
 import { AudioPlayer } from '../player';
 
@@ -108,6 +126,14 @@ export default defineComponent({
         rename(queue: PlayQueue) {
             this.renamingQueue = queue;
             this.newName = queue.name;
+            nextTick(() => {
+                const input = document.getElementById(
+                    `playQueue-${queue.id}-name`
+                ) as HTMLInputElement;
+                input.focus();
+                input.selectionStart = 0;
+                input.selectionEnd = input.value.length - 1;
+            });
         },
         applyRename() {
             if (this.renamingQueue) {
@@ -139,17 +165,44 @@ export default defineComponent({
                 )
             ) {
                 const activeQueueId = this.activeQueue.id;
-                if (this.player.getQueue().id === queue.id) {
-                    this.player.stop();
-                    this.player.setQueue(this.activeQueue);
-                }
                 this.queueManager.deleteQueue(queue);
                 this.playQueues = this.queueManager.getQueues();
+                if (this.player.getQueue().id === queue.id) {
+                    this.player.stop();
+                    this.player.setQueue(this.playQueues[0]);
+                }
                 if (queue.id === activeQueueId) {
-                    const newActiveQueue = this.playQueues[0];
-                    this.queueManager.setActiveQueue(newActiveQueue);
+                    this.activateQueue(0);
                 }
             }
+        },
+        activateQueue(index: number) {
+            this.showQueue(this.playQueues[index]);
+            this.$el
+                .querySelector(`[role=tab]:nth-child(${index + 1}`)
+                .focus({ preventScroll: true });
+        },
+        activatePreviousQueue() {
+            if (this.playQueues.length <= 1) {
+                return;
+            }
+            const nextQueueIndex =
+                this.playQueues.indexOf(this.activeQueue) - 1;
+            const focusedIndex =
+                nextQueueIndex < 0
+                    ? this.playQueues.length - 1
+                    : nextQueueIndex;
+            this.activateQueue(focusedIndex);
+        },
+        activateNextQueue() {
+            if (this.playQueues.length <= 1) {
+                return;
+            }
+            const nextQueueIndex =
+                this.playQueues.indexOf(this.activeQueue) + 1;
+            const focusedIndex =
+                nextQueueIndex > this.playQueues.length ? 0 : nextQueueIndex;
+            this.activateQueue(focusedIndex);
         },
     },
 });

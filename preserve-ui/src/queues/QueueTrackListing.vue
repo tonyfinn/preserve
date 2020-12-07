@@ -8,6 +8,7 @@
         }"
         id="active-play-queue-panel"
         role="tabpanel"
+        :aria-labelledby="'playQueue-' + activeQueue.id + '-name'"
         @dragenter="listDragEnter"
         @dragleave="listDragLeave"
         @dragover.prevent
