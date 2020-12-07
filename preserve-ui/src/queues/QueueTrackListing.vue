@@ -1,18 +1,20 @@
 <template>
     <div
-        data-testid="play-queue-track-listing"
         :class="{
             'playlist__queue-wrapper': true,
             'playlist__queue-wrapper--dragover': dragOver !== 0,
             'playlist__queue-wrapper--dragover-self':
                 dragOver !== 0 && childDragOver === 0,
         }"
+        id="active-play-queue-panel"
+        role="tabpanel"
         @dragenter="listDragEnter"
         @dragleave="listDragLeave"
         @dragover.prevent
         @drop.stop.prevent="listDrop"
     >
         <div
+            data-testid="play-queue-column-picker"
             :class="{
                 'playlist__column-picker': true,
                 'playlist__column-picker--picking': pickingColumns,
@@ -24,6 +26,7 @@
                 title="Customise Columns"
                 @click="pickingColumns = true"
             ></i>
+            <h3 v-if="pickingColumns">Visible Columns</h3>
             <column-picker
                 v-if="pickingColumns"
                 v-model="columns"
@@ -34,7 +37,7 @@
         </div>
         <table
             role="grid"
-            aria-label="Play Queue"
+            aria-label="Active Play Queue"
             aria-multiselectable="true"
             class="playlist__queue"
             @keydown.up.exact.stop.prevent="focusPrevious"
@@ -58,6 +61,7 @@
             <tbody>
                 <tr
                     v-for="(queueItem, index) in queueItems"
+                    :data-testid="testIdFor(queueItem)"
                     :key="queueItem.id"
                     :class="{
                         'playlist__track--selected': queueItem.selected,
@@ -200,6 +204,11 @@ export default defineComponent({
         },
     },
     methods: {
+        testIdFor(item: RowItem<PlayQueueItem>): string | undefined {
+            if (this.nowPlayingIndex === this.queueItems.indexOf(item)) {
+                return 'play-queue-active-track';
+            }
+        },
         isPlaying(queue: PlayQueue) {
             return queue.id === this.player.getQueue().id;
         },

@@ -1,9 +1,12 @@
 <template>
     <div class="playlist-picker">
-        <ul>
+        <ul role="tablist" aria-label="Play Queues">
             <li
+                role="tab"
                 v-for="playQueue in playQueues"
+                aria-controls="active-play-queue-panel"
                 :key="playQueue.id"
+                :aria-selected="isActiveQueue(playQueue)"
                 :class="{
                     'playlist-picker__playlist': true,
                     'playlist-picker__playlist--active': isActiveQueue(
@@ -50,7 +53,12 @@
                 </button>
             </li>
         </ul>
-        <button type="button" @click="newQueue">
+        <button
+            type="button"
+            @click="newQueue"
+            aria-label="New Play Queue"
+            title="New Play Queue"
+        >
             <i class="fi-plus"></i>
         </button>
     </div>
@@ -106,6 +114,7 @@ export default defineComponent({
                 this.renamingQueue.name = this.newName;
             }
             this.renamingQueue = null;
+            this.queueManager.saveQueues();
         },
         cancelRename() {
             this.renamingQueue = null;

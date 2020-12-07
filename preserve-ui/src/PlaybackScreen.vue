@@ -72,6 +72,7 @@ export default defineComponent({
                 this.player.setQueue(this.queueManager.activeQueue);
                 this.player.play(newIndex);
             }
+            this.queueManager.saveQueues();
         },
         libraryDragStart(evt: DragEvent) {
             if (this.selectedItems.length > 0) {
