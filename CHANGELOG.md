@@ -7,6 +7,7 @@
   * Home/End for first/last tab
   * Delete to remove tab
   * F2 to rename tab
+* Play Queue tabs now scroll tabs rather than break layout
 
 ## Tech changes
 

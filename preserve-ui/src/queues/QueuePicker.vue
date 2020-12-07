@@ -1,5 +1,11 @@
 <template>
-    <div class="playlist-picker">
+    <div
+        class="playlist-picker"
+        :class="{
+            overflowing: overflowAmount > 0,
+        }"
+        @wheel.prevent.stop="handleWheel"
+    >
         <ul role="tablist" aria-label="Play Queues">
             <li
                 role="tab"
@@ -70,15 +76,54 @@
                     <i class="fi-x-circle"></i>
                 </button>
             </li>
+            <li
+                class="playlist-picker__playlist embedded-list-button"
+                v-if="overflowAmount <= 0"
+            >
+                <button
+                    type="button"
+                    @click="newQueue"
+                    aria-label="New Play Queue"
+                    title="New Play Queue"
+                >
+                    <i class="fi-plus"></i>
+                </button>
+            </li>
         </ul>
-        <button
-            type="button"
-            @click="newQueue"
-            aria-label="New Play Queue"
-            title="New Play Queue"
+        <div
+            class="floating-controls floating-controls-left"
+            v-if="overflowAmount > 0"
         >
-            <i class="fi-plus"></i>
-        </button>
+            <button
+                type="button"
+                @click="showPreviousTab"
+                aria-label="Show Previous Tab"
+                title="Show Previous Tab"
+            >
+                <i class="fi-arrow-left"></i>
+            </button>
+        </div>
+        <div
+            class="floating-controls floating-controls-right"
+            v-if="overflowAmount > 0"
+        >
+            <button
+                type="button"
+                @click="showNextTab"
+                aria-label="Show Next Tab"
+                title="Show Next Tab"
+            >
+                <i class="fi-arrow-right"></i>
+            </button>
+            <button
+                type="button"
+                @click="newQueue"
+                aria-label="New Play Queue"
+                title="New Play Queue"
+            >
+                <i class="fi-plus"></i>
+            </button>
+        </div>
     </div>
 </template>
 
@@ -106,6 +151,13 @@ export default defineComponent({
             this.playingQueue = evt.newQueue;
         });
     },
+    mounted() {
+        this.determineOverflow();
+        window.addEventListener('resize', this.determineOverflow);
+    },
+    unmounted() {
+        window.removeEventListener('resize', this.determineOverflow);
+    },
     data() {
         const playingQueue = this.player.getQueue();
         return {
@@ -115,13 +167,34 @@ export default defineComponent({
             renamingQueue: null as PlayQueue | null,
             actionsShownQueue: null as PlayQueue | null,
             newName: '',
+            overflowAmount: 0,
         };
     },
+    watch: {
+        playQueues() {
+            this.determineOverflow();
+        },
+    },
     methods: {
+        determineOverflow() {
+            nextTick(() => {
+                const list = this.$el.querySelector('ul[role="tablist"]');
+                const ownWidth = list.getBoundingClientRect().width;
+                const childrenWidth = [...list.querySelectorAll('li')]
+                    .map((el) => el.getBoundingClientRect().width)
+                    .reduce((x, y) => x + y);
+                this.overflowAmount = childrenWidth - ownWidth;
+            });
+        },
         newQueue() {
             const newQueue = this.queueManager.newQueue();
             this.playQueues = this.queueManager.getQueues();
             this.queueManager.setActiveQueue(newQueue);
+            nextTick(() => {
+                this.$el
+                    .querySelector('.playlist-picker__playlist--active')
+                    .focus();
+            });
         },
         rename(queue: PlayQueue) {
             this.renamingQueue = queue;
@@ -156,6 +229,7 @@ export default defineComponent({
         },
         showQueue(queue: PlayQueue) {
             this.queueManager.setActiveQueue(queue);
+            this.showTabForQueue(queue);
         },
         deleteQueue(queue: PlayQueue) {
             if (
@@ -204,6 +278,84 @@ export default defineComponent({
                 nextQueueIndex > this.playQueues.length ? 0 : nextQueueIndex;
             this.activateQueue(focusedIndex);
         },
+        showTabForQueue(playQueue: PlayQueue) {
+            if (this.overflowAmount <= 0) {
+                return;
+            }
+            const tabEl = document.getElementById(`playQueue-${playQueue.id}`);
+            if (!tabEl) {
+                console.error(
+                    "Tried to focus tab that doesn't exist for ",
+                    playQueue
+                );
+                return;
+            }
+            const tabLeft = tabEl.offsetLeft;
+            const tabRight = tabEl.offsetLeft + tabEl?.offsetWidth;
+
+            const list = this.$el.querySelector('ul[role="tablist"]');
+            const listWidth = list.offsetWidth;
+
+            if (tabRight - list.scrollLeft > listWidth - 50) {
+                list.scrollTo(tabRight - listWidth, 0);
+            } else if (tabLeft < list.scrollLeft - 25) {
+                list.scrollTo(tabLeft - 25, 0);
+            }
+        },
+        showNextTab() {
+            const list = this.$el.querySelector('ul[role="tablist"]');
+            const tabs = [...list.querySelectorAll('[role="tab"]')];
+
+            let lastTab = tabs[0];
+            for (const tab of tabs) {
+                if (
+                    tab.offsetLeft + tab.offsetWidth <=
+                    list.scrollLeft + list.offsetWidth
+                ) {
+                    lastTab = tab;
+                } else {
+                    break;
+                }
+            }
+            const index = Math.min(
+                tabs.indexOf(lastTab) + 1,
+                this.playQueues.length - 1
+            );
+            console.log('showing tab', index);
+            this.showTabForQueue(this.playQueues[index]);
+        },
+        showPreviousTab() {
+            const list = this.$el.querySelector('ul[role="tablist"]');
+            const tabs = [...list.querySelectorAll('[role="tab"]')];
+
+            let lastTab = tabs[0];
+            for (const tab of tabs) {
+                if (tab.offsetLeft < list.scrollLeft) {
+                    lastTab = tab;
+                } else {
+                    break;
+                }
+            }
+            const index = Math.max(tabs.indexOf(lastTab), 0);
+            this.showTabForQueue(this.playQueues[index]);
+        },
+        handleWheel(evt: WheelEvent) {
+            if (this.overflowAmount < 0) {
+                return;
+            }
+            const increase = evt.deltaY * 5;
+            const list = this.$el.querySelector('ul[role="tablist"]');
+            list.scrollTo(
+                Math.max(
+                    0,
+                    Math.min(
+                        this.overflowAmount + 50,
+                        list.scrollLeft + increase
+                    )
+                ),
+                0
+            );
+        },
     },
 });
 </script>
@@ -214,24 +366,26 @@ export default defineComponent({
 
 .playlist-picker {
     background-color: $colors-primary;
-    height: 2em;
+    height: 1.8em;
     position: sticky;
     top: 0;
-
-    display: grid;
-    grid-auto-flow: column;
-    justify-content: start;
-    align-items: stretch;
-
-    ul {
-        display: contents;
+    &.overflowing {
+        padding-left: 25px;
+        padding-right: 50px;
     }
 
-    li,
-    & > button {
-        background-color: $colors-background;
+    ul {
+        display: flex;
+        justify-content: flex-start;
+        align-items: stretch;
+        overflow-x: hidden;
+        height: 100%;
+    }
+
+    li {
+        background-color: $colors-background-alt;
         padding: $dims-padding-dense $dims-padding;
-        border: 2px solid $colors-highlight;
+        border-left: 2px solid $colors-highlight;
         display: grid;
         grid-auto-flow: column;
         grid-gap: $dims-padding;
@@ -240,11 +394,18 @@ export default defineComponent({
         vertical-align: bottom;
         align-items: start;
         cursor: pointer;
+        flex-shrink: 0;
+    }
+
+    li span {
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
     }
 
     &__playlist {
         &--active {
-            border-bottom-color: $colors-background !important;
+            background-color: $colors-background !important;
         }
         &--playing {
             font-weight: bold;
@@ -257,6 +418,33 @@ export default defineComponent({
             background: transparent;
             color: $colors-text;
             cursor: pointer;
+        }
+    }
+
+    .floating-controls {
+        position: absolute;
+        top: 0;
+        z-index: 1;
+        height: 100%;
+        display: grid;
+        grid-auto-flow: column;
+
+        &.floating-controls-right {
+            border-left: 2px solid $colors-highlight;
+            right: 0;
+        }
+
+        &.floating-controls-left {
+            border-right: 2px solid $colors-highlight;
+            left: 0;
+        }
+
+        & > button {
+            height: 100%;
+            border-radius: 0;
+            border-width: 0 2px;
+            background-color: $colors-background;
+            padding: $dims-padding-dense $dims-padding;
         }
     }
 }
