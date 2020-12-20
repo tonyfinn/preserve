@@ -14,28 +14,6 @@
         @dragover.prevent
         @drop.stop.prevent="listDrop"
     >
-        <div
-            data-testid="play-queue-column-picker"
-            :class="{
-                'playlist__column-picker': true,
-                'playlist__column-picker--picking': pickingColumns,
-            }"
-        >
-            <i
-                class="fi-list-bullet"
-                v-if="!pickingColumns"
-                title="Customise Columns"
-                @click="pickingColumns = true"
-            ></i>
-            <h3 v-if="pickingColumns">Visible Columns</h3>
-            <column-picker
-                v-if="pickingColumns"
-                v-model="columns"
-            ></column-picker>
-            <button v-if="pickingColumns" @click="pickingColumns = false">
-                Done
-            </button>
-        </div>
         <table
             role="grid"
             aria-label="Active Play Queue"
@@ -101,6 +79,28 @@
                 </tr>
             </tbody>
         </table>
+        <div
+            data-testid="play-queue-column-picker"
+            :class="{
+                'playlist__column-picker': true,
+                'playlist__column-picker--picking': pickingColumns,
+            }"
+        >
+            <i
+                class="fi-list-bullet"
+                v-if="!pickingColumns"
+                title="Customise Columns"
+                @click="pickingColumns = true"
+            ></i>
+            <h3 v-if="pickingColumns">Visible Columns</h3>
+            <column-picker
+                v-if="pickingColumns"
+                v-model="columns"
+            ></column-picker>
+            <button v-if="pickingColumns" @click="pickingColumns = false">
+                Done
+            </button>
+        </div>
         <div class="playlist__drag-info">
             <ul>
                 <li v-for="item in draggingItems" :key="item.id">

@@ -24,6 +24,7 @@
                         playQueue
                     ),
                 }"
+                :tabindex="isActiveQueue(playQueue) ? 0 : -1"
                 @click="showQueue(playQueue)"
                 @keydown.enter.stop="showQueue(playQueue)"
                 @keydown.f2.stop="rename(playQueue)"
@@ -33,7 +34,6 @@
                 @keydown.home.stop="activateQueue(0)"
                 @keydown.end.stop="activateQueue(playQueues.length - 1)"
                 @dblclick="rename(playQueue)"
-                :tabindex="isActiveQueue(playQueue) ? 0 : -1"
             >
                 <span
                     v-if="!isRenaming(playQueue)"
@@ -42,10 +42,10 @@
                     {{ playQueue.name }}
                 </span>
                 <input
-                    :id="'playQueue-' + playQueue.id + '-name'"
                     type="text"
                     v-model="newName"
                     v-if="isRenaming(playQueue)"
+                    :id="'playQueue-' + playQueue.id + '-name'"
                     @keydown.enter.stop="applyRename"
                     @keydown.escape.stop="cancelRename"
                     @keydown.delete.stop
