@@ -194,7 +194,7 @@ describe('Play Queue', function () {
             PlayQueue.columnPicker().checkedColumns().should('have.length', 4);
             PlayQueue.columnPicker().root().findByText('Done').click();
 
-            cy.reload;
+            cy.reload();
 
             PlayQueue.headers().should('have.length', 4);
             PlayQueue.headers().should('contain', 'Title');
@@ -316,6 +316,7 @@ describe('Play Queue', function () {
                 .click()
                 .trigger('keydown', { key: 'F2', code: 'F2', which: 113 });
 
+            cy.focused().should('have.value', 'Second New Queue');
             cy.focused().type('Renamed{enter}');
             PlayQueue.queueList().should('contain', 'Renamed');
             PlayQueue.queueList().find('input').should('not.exist');
@@ -335,6 +336,7 @@ describe('Play Queue', function () {
                 .click()
                 .trigger('keydown', { key: 'F2', code: 'F2', which: 113 });
 
+            cy.focused().should('have.value', 'Second New Queue');
             cy.focused().type('Renamed{esc}');
             PlayQueue.queueList().should('not.contain', 'Renamed');
             PlayQueue.queueList().find('input').should('not.exist');

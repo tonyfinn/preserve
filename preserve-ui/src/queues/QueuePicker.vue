@@ -205,7 +205,7 @@ export default defineComponent({
                 ) as HTMLInputElement;
                 input.focus();
                 input.selectionStart = 0;
-                input.selectionEnd = input.value.length - 1;
+                input.selectionEnd = input.value.length;
             });
         },
         applyRename() {
