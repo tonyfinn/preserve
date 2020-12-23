@@ -3,5 +3,9 @@
     "fixturesFolder": false,
     "supportFile": "tests/functional/commands.ts",
     "pluginsFile": false,
-    "integrationFolder": "tests/functional/specs"
+    "integrationFolder": "tests/functional/specs",
+    "reporter": "junit",
+    "reporterOptions": {
+        "mochaFile": "cypress/results.xml"
+    }
 }
