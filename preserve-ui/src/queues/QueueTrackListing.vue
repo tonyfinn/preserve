@@ -505,7 +505,7 @@ export default defineComponent({
     background-color: $colors-background;
     text-align: left;
     position: sticky;
-    top: 2em;
+    top: 1.8em;
 
     &::after {
         content: '';
