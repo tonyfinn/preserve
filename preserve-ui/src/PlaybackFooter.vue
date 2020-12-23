@@ -51,16 +51,34 @@
                 class="playback-controls button-group"
                 aria-label="Playback Controls"
             >
-                <button title="Previous Track" aria-label="Previous Track" @click="previousTrack">
+                <button
+                    title="Previous Track"
+                    aria-label="Previous Track"
+                    @click="previousTrack"
+                >
                     <i class="fi-previous" title="Previous Track"></i>
                 </button>
-                <button title="Play" aria-label="Play" v-if="!playing" @click="togglePlay">
+                <button
+                    title="Play"
+                    aria-label="Play"
+                    v-if="!playing"
+                    @click="togglePlay"
+                >
                     <i class="fi-play" title="Play"></i>
                 </button>
-                <button title="Pause" aria-label="Pause" v-if="playing" @click="togglePlay">
+                <button
+                    title="Pause"
+                    aria-label="Pause"
+                    v-if="playing"
+                    @click="togglePlay"
+                >
                     <i class="fi-pause" title="Pause"></i>
                 </button>
-                <button title="Next Track" aria-label="Next Track" @click="nextTrack">
+                <button
+                    title="Next Track"
+                    aria-label="Next Track"
+                    @click="nextTrack"
+                >
                     <i class="fi-next" title="Next Track"></i>
                 </button>
             </section>
@@ -83,7 +101,13 @@
                         title="Repeat"
                         data-testid="repeat-button"
                         role="checkbox"
-                        :aria-checked="isRepeatOne() ? 'mixed' : (isRepeat() ? 'true' : 'false')"
+                        :aria-checked="
+                            isRepeatOne()
+                                ? 'mixed'
+                                : isRepeat()
+                                ? 'true'
+                                : 'false'
+                        "
                         :aria-label="repeatModeLabel"
                         :class="{ active: isRepeat() }"
                         @click="toggleRepeat"
@@ -98,10 +122,9 @@
                 </section>
                 <section class="volume-controls" aria-label="Volume Control">
                     <div class="sr-volume sr-only">
-                        <button
-                            @click="toggleMute"
-                            :aria-pressed="muted"
-                            >Mute</button>
+                        <button @click="toggleMute" :aria-pressed="muted">
+                            Mute
+                        </button>
                         <label for="player-volume">Volume:</label>
                         <input
                             type="number"
@@ -131,7 +154,12 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import { AudioPlayer, PlaybackEventType, RepeatMode, ShuffleMode } from './player';
+import {
+    AudioPlayer,
+    PlaybackEventType,
+    RepeatMode,
+    ShuffleMode,
+} from './player';
 import { artistNames } from './library';
 import SliderBar from './common/SliderBar.vue';
 import { formatTime } from './common/utils';
@@ -226,17 +254,17 @@ export default defineComponent({
             return UNKNOWN_ALBUM_NAME;
         },
         repeatModeLabel(): string {
-            switch(this.repeatMode) {
-                case RepeatMode.Off: 
+            switch (this.repeatMode) {
+                case RepeatMode.Off:
                     return 'Repeat: Off';
-                case RepeatMode.Repeat: 
+                case RepeatMode.Repeat:
                     return 'Repeat: All';
-                case RepeatMode.RepeatOne: 
+                case RepeatMode.RepeatOne:
                     return 'Repeat: One';
                 default:
-                    return 'Repeat'
+                    return 'Repeat';
             }
-        }
+        },
     },
     methods: {
         togglePlay() {

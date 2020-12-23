@@ -370,7 +370,10 @@ export class AudioPlayer {
     }
 
     toggleShuffle(): ShuffleMode {
-        this.shuffleMode = this.shuffleMode === ShuffleMode.Off ? ShuffleMode.Shuffle : ShuffleMode.Off;
+        this.shuffleMode =
+            this.shuffleMode === ShuffleMode.Off
+                ? ShuffleMode.Shuffle
+                : ShuffleMode.Off;
         this._shuffle();
         if (this.shuffleMode === ShuffleMode.Shuffle) {
             this.playQueue.index = 0;

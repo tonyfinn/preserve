@@ -9,7 +9,7 @@ describe('Player', () => {
         Library.search().type('winter cav');
         Library.tree().contains('Endgame').dblclick();
         let initialTime = 'Missing current time';
-        NowPlaying.currentTime().then(timeElement => {
+        NowPlaying.currentTime().then((timeElement) => {
             initialTime = timeElement.text();
         });
         cy.wait(2000);
@@ -26,7 +26,7 @@ describe('Player', () => {
         cy.wait(2000);
         NowPlaying.pauseButton().click();
         NowPlaying.playButton().should('exist');
-        NowPlaying.currentTime().then(timeElement => {
+        NowPlaying.currentTime().then((timeElement) => {
             initialTime = timeElement.text();
         });
         cy.wait(2000);
@@ -65,7 +65,7 @@ describe('Player', () => {
         NowPlaying.duration().should('contain', '05:46');
 
         NowPlaying.prevButton().click();
-        
+
         NowPlaying.trackTitle().should('contain', 'Visitors From Dreams');
         NowPlaying.album().should('contain', 'Darwinia Soundtrack');
         NowPlaying.artist().should('contain', 'Dma-Sc');
@@ -103,13 +103,13 @@ describe('Player', () => {
 
         NowPlaying.repeatButton().click();
         NowPlaying.nextButton().click();
-        
+
         NowPlaying.trackTitle().should('contain', 'Visitors From Dreams');
         NowPlaying.album().should('contain', 'Darwinia Soundtrack');
         NowPlaying.artist().should('contain', 'Dma-Sc');
         NowPlaying.duration().should('contain', '05:30');
     });
-    
+
     it('should cycle repeat modes and remember on reload', () => {
         App.visitLoaded();
         NowPlaying.repeatButton().click();
@@ -121,7 +121,7 @@ describe('Player', () => {
         NowPlaying.repeatButton().click();
         NowPlaying.repeatButton().should('have.attr', 'aria-checked', 'false');
     });
-    
+
     it('should toggle shuffle and remember on reload', () => {
         App.visitLoaded();
         NowPlaying.shuffleButton().click();

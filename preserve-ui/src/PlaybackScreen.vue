@@ -14,8 +14,10 @@
             :player="player"
             :settings="settings"
         ></play-queues>
-        <playback-footer :player="player"
-            :settings="settings"></playback-footer>
+        <playback-footer
+            :player="player"
+            :settings="settings"
+        ></playback-footer>
         <div class="drag-counter">
             {{ selectedItems.length }} items selected
         </div>
