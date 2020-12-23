@@ -60,6 +60,11 @@ export enum RepeatMode {
     RepeatOne,
 }
 
+export enum ShuffleMode {
+    Off,
+    Shuffle,
+}
+
 export type PlaybackEvent =
     | PlayEvent
     | PauseEvent
@@ -76,7 +81,7 @@ export class AudioPlayer {
     playing: boolean;
     muted: boolean;
     repeatMode: RepeatMode;
-    shuffle: boolean;
+    shuffleMode: ShuffleMode;
     shuffleOrder: Array<number>;
     playbackEvent: EventEmitter<PlaybackEvent>;
     onQueueChange: EventEmitter<QueueChangeEvent>;
@@ -93,7 +98,7 @@ export class AudioPlayer {
         this.useHls = false;
         this.playing = false;
         this.repeatMode = RepeatMode.Off;
-        this.shuffle = false;
+        this.shuffleMode = ShuffleMode.Off;
         this.shuffleOrder = [];
         this.volume = 1;
         this.muted = false;
@@ -254,7 +259,7 @@ export class AudioPlayer {
             repeatMode: this.repeatMode,
         });
         if (prevTrack) {
-            if (this.shuffle) {
+            if (this.shuffleMode === ShuffleMode.Shuffle) {
                 const shuffledTrackIndex = this.shuffleOrder[
                     this.playQueue.index
                 ];
@@ -280,7 +285,7 @@ export class AudioPlayer {
             songEnded: songEnded,
         });
         if (nextTrack) {
-            if (this.shuffle) {
+            if (this.shuffleMode === ShuffleMode.Shuffle) {
                 const shuffledTrackIndex = this.shuffleOrder[
                     this.playQueue.index
                 ];
@@ -364,18 +369,20 @@ export class AudioPlayer {
         this.shuffleOrder = shuffleOrder;
     }
 
-    toggleShuffle(): boolean {
-        this.shuffle = !this.shuffle;
+    toggleShuffle(): ShuffleMode {
+        this.shuffleMode = this.shuffleMode === ShuffleMode.Off ? ShuffleMode.Shuffle : ShuffleMode.Off;
         this._shuffle();
-        if (this.shuffle) {
+        if (this.shuffleMode === ShuffleMode.Shuffle) {
             this.playQueue.index = 0;
             const firstShuffledIndex = this.shuffleOrder[0];
-            const shuffledTrack = this.playQueue.getTrack(
-                firstShuffledIndex
-            ) as Track;
-            this.playTrack(shuffledTrack, firstShuffledIndex);
+            if (this.playQueue.size() > 0) {
+                const shuffledTrack = this.playQueue.getTrack(
+                    firstShuffledIndex
+                ) as Track;
+                this.playTrack(shuffledTrack, firstShuffledIndex);
+            }
         }
-        return this.shuffle;
+        return this.shuffleMode;
     }
 
     nextRepeatMode(): RepeatMode {
@@ -392,6 +399,17 @@ export class AudioPlayer {
     setVolume(volume: number): void {
         this.muted = false;
         this.element.volume = this.volume = volume;
+    }
+
+    setRepeatMode(repeatMode: RepeatMode): void {
+        this.repeatMode = repeatMode;
+    }
+
+    setShuffleMode(shuffleMode: ShuffleMode): void {
+        this.shuffleMode = shuffleMode;
+        if (shuffleMode === ShuffleMode.Shuffle) {
+            this._shuffle();
+        }
     }
 
     toggleMute(): boolean {

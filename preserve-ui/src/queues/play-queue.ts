@@ -114,7 +114,7 @@ export class PlayQueue {
     }
 
     getTrack(index: number): Track | null {
-        return this.queueItems[index].track || null;
+        return this.queueItems[index]?.track || null;
     }
 
     _makeTrackItems(tracks: Array<Track>): Array<PlayQueueItem> {

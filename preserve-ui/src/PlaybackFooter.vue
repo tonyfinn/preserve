@@ -51,16 +51,16 @@
                 class="playback-controls button-group"
                 aria-label="Playback Controls"
             >
-                <button title="Previous Track" @click="previousTrack">
+                <button title="Previous Track" aria-label="Previous Track" @click="previousTrack">
                     <i class="fi-previous" title="Previous Track"></i>
                 </button>
-                <button title="Play" v-if="!playing" @click="togglePlay">
+                <button title="Play" aria-label="Play" v-if="!playing" @click="togglePlay">
                     <i class="fi-play" title="Play"></i>
                 </button>
-                <button title="Pause" v-if="playing" @click="togglePlay">
+                <button title="Pause" aria-label="Pause" v-if="playing" @click="togglePlay">
                     <i class="fi-pause" title="Pause"></i>
                 </button>
-                <button title="Next Track" @click="nextTrack">
+                <button title="Next Track" aria-label="Next Track" @click="nextTrack">
                     <i class="fi-next" title="Next Track"></i>
                 </button>
             </section>
@@ -71,13 +71,20 @@
                 >
                     <button
                         title="Shuffle"
-                        :class="{ active: shuffle }"
+                        aria-label="Shuffle"
+                        role="switch"
+                        :aria-checked="isShuffling()"
+                        :class="{ active: isShuffling() }"
                         @click="toggleShuffle"
                     >
                         <i class="fi-shuffle" title="Shuffle"></i>
                     </button>
                     <button
                         title="Repeat"
+                        data-testid="repeat-button"
+                        role="checkbox"
+                        :aria-checked="isRepeatOne() ? 'mixed' : (isRepeat() ? 'true' : 'false')"
+                        :aria-label="repeatModeLabel"
                         :class="{ active: isRepeat() }"
                         @click="toggleRepeat"
                     >
@@ -91,6 +98,10 @@
                 </section>
                 <section class="volume-controls" aria-label="Volume Control">
                     <div class="sr-volume sr-only">
+                        <button
+                            @click="toggleMute"
+                            :aria-pressed="muted"
+                            >Mute</button>
                         <label for="player-volume">Volume:</label>
                         <input
                             type="number"
@@ -120,7 +131,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import { AudioPlayer, PlaybackEventType, RepeatMode } from './player';
+import { AudioPlayer, PlaybackEventType, RepeatMode, ShuffleMode } from './player';
 import { artistNames } from './library';
 import SliderBar from './common/SliderBar.vue';
 import { formatTime } from './common/utils';
@@ -129,6 +140,7 @@ import {
     UNKNOWN_ALBUM_NAME,
     UNKNOWN_TRACK_NAME,
 } from './common/constants';
+import { Settings } from './common/settings';
 
 export default defineComponent({
     components: { SliderBar },
@@ -137,25 +149,30 @@ export default defineComponent({
             type: AudioPlayer,
             required: true,
         },
+        settings: {
+            type: Settings,
+            required: true,
+        },
     },
     data() {
         return {
             activeTrack: this.player.activeTrack(),
             playing: this.player.playing,
             repeatMode: this.player.repeatMode,
-            shuffle: false,
+            shuffleMode: this.player.shuffleMode,
             muted: false,
             scrubbing: false,
             duration: this.player.activeTrack()?.duration || 0,
             currentTime: 0,
             scrubberTime: 0,
-            volume: 100,
+            volume: this.player.volume * 100,
         };
     },
     watch: {
         volume(newValue) {
             const bounded = Math.min(100, Math.max(newValue, 0));
             this.player.setVolume(bounded / 100);
+            this.settings.set('volume', bounded / 100);
             this.muted = this.player.muted;
         },
     },
@@ -208,19 +225,36 @@ export default defineComponent({
             }
             return UNKNOWN_ALBUM_NAME;
         },
+        repeatModeLabel(): string {
+            switch(this.repeatMode) {
+                case RepeatMode.Off: 
+                    return 'Repeat: Off';
+                case RepeatMode.Repeat: 
+                    return 'Repeat: All';
+                case RepeatMode.RepeatOne: 
+                    return 'Repeat: One';
+                default:
+                    return 'Repeat'
+            }
+        }
     },
     methods: {
         togglePlay() {
             this.player.togglePlay();
         },
         toggleShuffle() {
-            this.shuffle = this.player.toggleShuffle();
+            this.shuffleMode = this.player.toggleShuffle();
+            this.settings.set('shuffleMode', this.shuffleMode);
         },
         toggleRepeat() {
             this.repeatMode = this.player.nextRepeatMode();
+            this.settings.set('repeatMode', this.repeatMode);
         },
         toggleMute() {
             this.muted = this.player.toggleMute();
+        },
+        isShuffling() {
+            return this.shuffleMode === ShuffleMode.Shuffle;
         },
         isRepeat() {
             return this.repeatMode !== RepeatMode.Off;

@@ -14,7 +14,8 @@
             :player="player"
             :settings="settings"
         ></play-queues>
-        <playback-footer :player="player"></playback-footer>
+        <playback-footer :player="player"
+            :settings="settings"></playback-footer>
         <div class="drag-counter">
             {{ selectedItems.length }} items selected
         </div>
@@ -55,6 +56,9 @@ export default defineComponent({
     data() {
         const player = AudioPlayer.getOrCreateInstance(this.libraryManager);
         player.setQueue(this.queueManager.getActiveQueue());
+        player.setVolume(this.settings.volume);
+        player.setRepeatMode(this.settings.repeatMode);
+        player.setShuffleMode(this.settings.shuffleMode);
         return {
             player,
             selectedItems: [] as Array<LibraryItem>,

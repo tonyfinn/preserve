@@ -2,12 +2,13 @@
 
 ## New Features
 
-* Play Queue picker now has ARIA-compliant keyboard controls. 
+* Play Queue picker now has ARIA-compliant keyboard controls.
   * Left/Right for next/previous tabs
   * Home/End for first/last tab
   * Delete to remove tab
   * F2 to rename tab
 * Play Queue tabs now scroll tabs rather than break layout
+* Volume and Shuffle/Repeat mode is now remembered
 
 ## Tech changes
 
