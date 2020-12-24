@@ -6,6 +6,6 @@
     "integrationFolder": "tests/functional/specs",
     "reporter": "junit",
     "reporterOptions": {
-        "mochaFile": "cypress/results.xml"
+        "mochaFile": "cypress/results-[hash].xml"
     }
 }
