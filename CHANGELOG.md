@@ -9,6 +9,7 @@
   * F2 to rename tab
 * Play Queue tabs now scroll tabs rather than break layout
 * Volume and Shuffle/Repeat mode is now remembered
+* Playback is reported to the jellyfin server
 
 ## Tech changes
 

@@ -4,6 +4,7 @@ import { PlayQueue, QueueChangeEvent } from './queues/play-queue';
 
 import Hls from 'hls.js';
 import { NotificationService, NotificationType } from './common/notifications';
+import { PlaybackState } from './api/interface';
 
 export enum PlaybackEventType {
     Play,
@@ -13,31 +14,32 @@ export enum PlaybackEventType {
     End,
 }
 
-interface PlayBackEventBase {
-    type: PlaybackEventType;
-}
-
 interface PlayEvent {
     type: PlaybackEventType.Play;
+    state: PlaybackState;
     track: Track;
     queueIndex: number;
 }
 
 interface PauseEvent {
     type: PlaybackEventType.Pause;
+    state: PlaybackState;
 }
 
 interface ResumeEvent {
     type: PlaybackEventType.Resume;
+    state: PlaybackState;
 }
 
 interface TimeEvent {
     type: PlaybackEventType.Time;
+    state: PlaybackState;
     time: number;
 }
 
 interface EndEvent {
     type: PlaybackEventType.End;
+    state: PlaybackState;
 }
 
 declare global {
@@ -73,55 +75,83 @@ export type PlaybackEvent =
     | TimeEvent;
 
 export class AudioPlayer {
-    element: HTMLAudioElement;
-    hls: Hls | null;
     useHls: boolean;
-    libraryManager: LibraryManager;
     playQueue: PlayQueue;
     playing: boolean;
     muted: boolean;
     repeatMode: RepeatMode;
     shuffleMode: ShuffleMode;
-    shuffleOrder: Array<number>;
-    playbackEvent: EventEmitter<PlaybackEvent>;
-    onQueueChange: EventEmitter<QueueChangeEvent>;
-    playQueueUpdateHandler: number;
     volume: number;
+
+    public playbackEvent: EventEmitter<PlaybackEvent> = new EventEmitter();
+    public onQueueChange: EventEmitter<QueueChangeEvent> = new EventEmitter();
+
+    private shuffleOrder: Array<number> = [];
+    private hls: Hls | null = null;
+    private playbackStartDate: Date = new Date();
+    private lastProgressReportTime: Date = new Date();
+
+    private playQueueUpdateHandler: number;
+    private element: HTMLAudioElement;
     static instance: AudioPlayer;
 
-    constructor(libraryManager: LibraryManager) {
+    constructor(private readonly libraryManager: LibraryManager) {
         this.element = document.createElement('audio');
-        this.libraryManager = libraryManager;
         this.playQueue = new PlayQueue('Default');
         this.playQueueUpdateHandler = this.listenToQueueUpdates(this.playQueue);
-        this.hls = null;
         this.useHls = false;
         this.playing = false;
         this.repeatMode = RepeatMode.Off;
         this.shuffleMode = ShuffleMode.Off;
-        this.shuffleOrder = [];
         this.volume = 1;
         this.muted = false;
-        this.playbackEvent = new EventEmitter();
-        this.onQueueChange = new EventEmitter();
         this.element.addEventListener('ended', () => {
+            const activeTrack = this.activeTrack();
+            if (activeTrack) {
+                this.libraryManager.reportPlaybackFinished(
+                    activeTrack,
+                    this.playbackState()
+                );
+            }
             this._handleTrackEnd();
         });
         this.element.addEventListener('timeupdate', () => {
             this.playbackEvent.trigger({
                 type: PlaybackEventType.Time,
                 time: this.element.currentTime,
+                state: this.playbackState(),
             });
+            const now = new Date();
+            const activeTrack = this.activeTrack();
+            if (
+                now.getTime() - this.lastProgressReportTime.getTime() > 10000 &&
+                activeTrack
+            ) {
+                this.libraryManager.reportPlaybackProgress(
+                    activeTrack,
+                    this.playbackState()
+                );
+                this.lastProgressReportTime = now;
+            }
         });
         this.element.addEventListener('play', () => {
             this.playbackEvent.trigger({
                 type: PlaybackEventType.Resume,
+                state: this.playbackState(),
             });
         });
         this.element.addEventListener('pause', () => {
             this.playbackEvent.trigger({
                 type: PlaybackEventType.Pause,
+                state: this.playbackState(),
             });
+            const activeTrack = this.activeTrack();
+            if (activeTrack) {
+                this.libraryManager.reportPaused(
+                    activeTrack,
+                    this.playbackState()
+                );
+            }
         });
         this.element.addEventListener('error', () => {
             console.error('Playback error: ', this.element.error);
@@ -129,7 +159,7 @@ export class AudioPlayer {
 
         if (navigator.mediaSession) {
             navigator.mediaSession.setActionHandler('play', () => {
-                this._play();
+                this._resume();
             });
             navigator.mediaSession.setActionHandler('pause', () => {
                 this._pause();
@@ -159,6 +189,20 @@ export class AudioPlayer {
 
     activeTrack(): Track | null {
         return this.playQueue.activeTrack();
+    }
+
+    playbackState(): PlaybackState {
+        return {
+            trackId: this.activeTrack()?.id || null,
+            trackServerId: this.activeTrack()?.serverId || null,
+            repeatMode: this.repeatMode,
+            shuffleMode: this.shuffleMode,
+            volume: this.volume,
+            muted: this.muted,
+            paused: !this.playing,
+            startTime: this.playbackStartDate,
+            progressMs: this.element.currentTime * 1000,
+        };
     }
 
     getQueue(): PlayQueue {
@@ -203,6 +247,7 @@ export class AudioPlayer {
         document.title = `${track.name} - ${artist} | Preserve`;
         this.playbackEvent.trigger({
             type: PlaybackEventType.Play,
+            state: this.playbackState(),
             track,
             queueIndex: index,
         });
@@ -212,7 +257,10 @@ export class AudioPlayer {
         if (this.hls) {
             this.hls.destroy();
         }
-        const playbackUrl = this.libraryManager.getPlaybackUrl(track);
+        const playbackUrl = this.libraryManager.getPlaybackUrl(
+            track,
+            new Date().getTime().toString()
+        );
         this.hls = new Hls({
             manifestLoadingTimeOut: 20000,
             xhrSetup: function (xhr) {
@@ -230,12 +278,21 @@ export class AudioPlayer {
     }
 
     _playNative(track: Track, index: number): void {
-        this.element.src = this.libraryManager.getPlaybackUrl(track);
+        const startDate = new Date();
+        this.element.src = this.libraryManager.getPlaybackUrl(
+            track,
+            startDate.getTime().toString()
+        );
         this.element.load();
         this.element
             .play()
             .then(() => {
+                this.playbackStartDate = startDate;
                 this._startPlayback(track, index);
+                this.libraryManager.reportPlaybackStart(
+                    track,
+                    this.playbackState()
+                );
             })
             .catch((e) => {
                 NotificationService.notify(
@@ -275,6 +332,7 @@ export class AudioPlayer {
             document.title = 'Preserve';
             this.playbackEvent.trigger({
                 type: PlaybackEventType.End,
+                state: this.playbackState(),
             });
         }
     }
@@ -302,6 +360,7 @@ export class AudioPlayer {
             document.title = 'Preserve';
             this.playbackEvent.trigger({
                 type: PlaybackEventType.End,
+                state: this.playbackState(),
             });
         }
     }
@@ -310,33 +369,44 @@ export class AudioPlayer {
         this.nextTrack(true);
     }
 
-    _play(): void {
-        if (this.activeTrack()) {
-            this.element.play();
+    async _resume(): Promise<void> {
+        const activeTrack = this.activeTrack();
+        if (activeTrack) {
+            await this.element.play();
             this.playing = true;
+            this.libraryManager.reportResumed(
+                activeTrack,
+                this.playbackState()
+            );
             if (navigator.mediaSession) {
                 navigator.mediaSession.playbackState = 'playing';
             }
             this.playbackEvent.trigger({
                 type: PlaybackEventType.Resume,
+                state: this.playbackState(),
             });
         }
     }
 
     _pause(): void {
+        const activeTrack = this.activeTrack();
         this.element.pause();
         this.playing = false;
+        if (activeTrack) {
+            this.libraryManager.reportPaused(activeTrack, this.playbackState());
+        }
         if (navigator.mediaSession) {
             navigator.mediaSession.playbackState = 'paused';
         }
         this.playbackEvent.trigger({
             type: PlaybackEventType.Pause,
+            state: this.playbackState(),
         });
     }
 
     togglePlay(): void {
         if (this.element.paused) {
-            this._play();
+            this._resume();
         } else {
             this._pause();
         }
@@ -349,7 +419,15 @@ export class AudioPlayer {
             document.title = 'Preserve';
             this.playbackEvent.trigger({
                 type: PlaybackEventType.End,
+                state: this.playbackState(),
             });
+            const activeTrack = this.activeTrack();
+            if (activeTrack) {
+                this.libraryManager.reportPlaybackFinished(
+                    activeTrack,
+                    this.playbackState()
+                );
+            }
         }
     }
 
@@ -402,16 +480,37 @@ export class AudioPlayer {
     setVolume(volume: number): void {
         this.muted = false;
         this.element.volume = this.volume = volume;
+        const activeTrack = this.activeTrack();
+        if (activeTrack) {
+            this.libraryManager.reportVolumeChange(
+                activeTrack,
+                this.playbackState()
+            );
+        }
     }
 
     setRepeatMode(repeatMode: RepeatMode): void {
         this.repeatMode = repeatMode;
+        const activeTrack = this.activeTrack();
+        if (activeTrack) {
+            this.libraryManager.reportRepeatChanged(
+                activeTrack,
+                this.playbackState()
+            );
+        }
     }
 
     setShuffleMode(shuffleMode: ShuffleMode): void {
         this.shuffleMode = shuffleMode;
         if (shuffleMode === ShuffleMode.Shuffle) {
             this._shuffle();
+        }
+        const activeTrack = this.activeTrack();
+        if (activeTrack) {
+            this.libraryManager.reportShuffleChanged(
+                activeTrack,
+                this.playbackState()
+            );
         }
     }
 
@@ -421,6 +520,13 @@ export class AudioPlayer {
             this.element.volume = 0;
         } else {
             this.element.volume = this.volume;
+        }
+        const activeTrack = this.activeTrack();
+        if (activeTrack) {
+            this.libraryManager.reportMutedToggled(
+                activeTrack,
+                this.playbackState()
+            );
         }
         return this.muted;
     }

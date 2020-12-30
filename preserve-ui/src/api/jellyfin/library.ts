@@ -6,6 +6,7 @@ import {
     ItemsApi,
 } from 'jellyfin-axios-client';
 import {
+    JF_TICKS_PER_MS,
     UNKNOWN_ALBUM_NAME,
     UNKNOWN_ARTIST_NAME,
 } from '../../common/constants';
@@ -131,7 +132,7 @@ function normaliseTrack(track: BaseItemDto): Track | null {
         albumArtists: normaliseArtistStubs(track.AlbumArtists || []),
         trackNumber: track.IndexNumber || undefined,
         discNumber: track.ParentIndexNumber || undefined,
-        duration: Math.floor(track.RunTimeTicks / 10_000_000),
+        duration: Math.floor(track.RunTimeTicks / (JF_TICKS_PER_MS * 1000)),
         albumArtId: track.AlbumPrimaryImageTag || undefined,
         year: track.ProductionYear || undefined,
         album: {
@@ -305,7 +306,7 @@ export class JellyfinLibrary extends MediaServerLibrary {
         return [...trackResults, ...albumResults, ...artistResults];
     }
 
-    getPlaybackUrl(track: Track): string {
+    getPlaybackUrl(track: Track, requestId: string): string {
         const basePath = this.configuration.basePath;
 
         const baseUrl = `${basePath}/Audio/${track.id}/universal`;
@@ -314,7 +315,7 @@ export class JellyfinLibrary extends MediaServerLibrary {
             userId: this.userId,
             deviceId: getOrGenerateClientId(),
             api_key: this.accessToken,
-            playSessionId: new Date().getTime().toString(),
+            playSessionId: requestId,
             maxStreamingBitrate: '140000000',
             container: 'opus,mp3|mp3,aac,m4a,m4b|aac,flac,webma,webm,wav,ogg',
             transcodingContainer: 'ts',

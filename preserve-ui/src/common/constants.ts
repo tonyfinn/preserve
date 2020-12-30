@@ -9,3 +9,5 @@ export const UNKNOWN_SERVER_NAME = 'Unknown Server';
 export const STORAGE_KEY_PREFIX = isMock() ? 'preserve_mock' : 'preserve';
 export const STORAGE_KEY_LEGACY_SERVERS = `${STORAGE_KEY_PREFIX}_auth`;
 export const STORAGE_KEY_SERVERS = `${STORAGE_KEY_PREFIX}_servers`;
+
+export const JF_TICKS_PER_MS = 10000;

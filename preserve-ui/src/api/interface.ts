@@ -1,4 +1,5 @@
 import { Album, Artist, LibraryItem, Track } from '../library';
+import { RepeatMode, ShuffleMode } from '../player';
 
 export enum LibraryLoadStage {
     New,
@@ -31,6 +32,7 @@ export interface BaseServerDefinition {
 
 export interface MediaServer {
     library(): MediaServerLibrary;
+    reporter(): MediaServerReporter;
     username(): Promise<string>;
     serverId(): string;
     serverName(): Promise<string>;
@@ -45,7 +47,7 @@ export interface MediaServerAuth<
     reconnect(server: Definition): Promise<ServerType>;
     login(
         address: string,
-        usernae: string,
+        username: string,
         password: string
     ): Promise<ServerType>;
 }
@@ -72,7 +74,7 @@ export abstract class MediaServerLibrary {
 
     abstract search(searchText: string): Promise<LibraryItem[]>;
 
-    abstract getPlaybackUrl(track: Track): string;
+    abstract getPlaybackUrl(track: Track, requestId: string): string;
 
     async getTracksByIds(trackIds: string[]): Promise<Track[]> {
         const results = await Promise.all(
@@ -86,4 +88,29 @@ export abstract class MediaServerLibrary {
         }
         return foundTracks;
     }
+}
+
+export interface PlaybackState {
+    repeatMode: RepeatMode;
+    shuffleMode: ShuffleMode;
+    progressMs: number;
+    paused: boolean;
+    muted: boolean;
+    /// volume in range 0-1
+    volume: number;
+    startTime: Date;
+    trackId: string | null;
+    trackServerId: string | null;
+}
+
+export interface MediaServerReporter {
+    trackStarted(playback: PlaybackState): void;
+    trackProgress(playback: PlaybackState): void;
+    trackFinished(playback: PlaybackState): void;
+    shuffleModeChanged(playback: PlaybackState): void;
+    repeatModeChanged(playback: PlaybackState): void;
+    paused(playback: PlaybackState): void;
+    resumed(playback: PlaybackState): void;
+    volumeChanged(playback: PlaybackState): void;
+    mutedToggled(playback: PlaybackState): void;
 }

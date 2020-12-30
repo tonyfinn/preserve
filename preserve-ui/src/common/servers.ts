@@ -65,6 +65,14 @@ export class ServerManager {
         return this._activeServers;
     }
 
+    activeServerById(serverId: string): MediaServer | null {
+        const server = this._activeServers.find((s) => {
+            return s.serverId() === serverId;
+        });
+
+        return server || null;
+    }
+
     async connect(
         type: ServerType,
         address: string,

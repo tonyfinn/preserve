@@ -1,6 +1,11 @@
 import { Configuration, SessionApi, UserApi } from 'jellyfin-axios-client';
-import { MediaServer, MediaServerLibrary } from '../interface';
+import {
+    MediaServer,
+    MediaServerLibrary,
+    MediaServerReporter,
+} from '../interface';
 import { JellyfinLibrary } from './library';
+import { JellyfinReporter } from './reporter';
 import { JellyfinServerDefinition, JELLYFIN_SERVER_TYPE } from './types';
 import { buildAuthHeader } from './utils';
 
@@ -25,6 +30,10 @@ export class JellyfinServer implements MediaServer {
             def.userId,
             this.accessToken
         );
+    }
+
+    reporter(): MediaServerReporter {
+        return new JellyfinReporter(this.apiConfiguration());
     }
 
     serverId(): string {

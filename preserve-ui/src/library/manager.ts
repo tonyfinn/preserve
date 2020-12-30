@@ -4,6 +4,7 @@ import { Album, Artist, ItemStub, LibraryItem, Track } from './types';
 
 import silenceOgg from '../../static/silence.ogg';
 import { isMock } from '../common/utils';
+import { MediaServerReporter, PlaybackState } from '../api/interface';
 
 export class LibraryManager {
     constructor(private readonly serverManager: ServerManager) {}
@@ -54,11 +55,11 @@ export class LibraryManager {
         return this.activeLibrary().search(searchText);
     }
 
-    getPlaybackUrl(track: Track): string {
+    getPlaybackUrl(track: Track, requestId: string): string {
         if (isMock()) {
             return silenceOgg;
         }
-        return this.activeLibrary().getPlaybackUrl(track);
+        return this.activeLibrary().getPlaybackUrl(track, requestId);
     }
 
     getTracksByIds(trackIds: string[]): Promise<Track[]> {
@@ -67,5 +68,53 @@ export class LibraryManager {
 
     getChildTracks(item: ItemStub): Promise<Track[]> {
         return getChildTracks(item, this.activeLibrary());
+    }
+
+    lookupPlaybackReporter(track: Track): MediaServerReporter | null {
+        const server = this.serverManager.activeServerById(track.serverId);
+        if (!server) {
+            console.error(
+                'Could not report playback for track with unknown server',
+                track
+            );
+            return null;
+        }
+        return server.reporter();
+    }
+
+    reportPlaybackStart(track: Track, state: PlaybackState): void {
+        this.lookupPlaybackReporter(track)?.trackStarted(state);
+    }
+
+    reportPlaybackProgress(track: Track, state: PlaybackState): void {
+        this.lookupPlaybackReporter(track)?.trackProgress(state);
+    }
+
+    reportPlaybackFinished(track: Track, state: PlaybackState): void {
+        this.lookupPlaybackReporter(track)?.trackFinished(state);
+    }
+
+    reportRepeatChanged(track: Track, state: PlaybackState): void {
+        this.lookupPlaybackReporter(track)?.repeatModeChanged(state);
+    }
+
+    reportShuffleChanged(track: Track, state: PlaybackState): void {
+        this.lookupPlaybackReporter(track)?.shuffleModeChanged(state);
+    }
+
+    reportPaused(track: Track, state: PlaybackState): void {
+        this.lookupPlaybackReporter(track)?.paused(state);
+    }
+
+    reportResumed(track: Track, state: PlaybackState): void {
+        this.lookupPlaybackReporter(track)?.resumed(state);
+    }
+
+    reportMutedToggled(track: Track, state: PlaybackState): void {
+        this.lookupPlaybackReporter(track)?.mutedToggled(state);
+    }
+
+    reportVolumeChange(track: Track, state: PlaybackState): void {
+        this.lookupPlaybackReporter(track)?.volumeChanged(state);
     }
 }
