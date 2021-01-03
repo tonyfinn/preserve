@@ -2,7 +2,7 @@
 
 Clementine/foobar2000 inspired music player frontend for Jellyfin
 
-![Screenshot of version 0.3.0](screenshot-v0.3.0.png)
+![Screenshot of version 0.4.0](res/screenshot-v0.4.0.png)
 
 [Try it out here!][hosted]
 
