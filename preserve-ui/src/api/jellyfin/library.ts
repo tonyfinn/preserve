@@ -4,6 +4,7 @@ import {
     NameGuidPair,
     ArtistsApi,
     ItemsApi,
+    BaseItemDtoQueryResult,
 } from '@jellyfin/client-axios';
 import {
     JF_TICKS_PER_MS,
@@ -32,6 +33,7 @@ import {
     MediaServerLibrary,
 } from '../interface';
 import { getOrGenerateClientId } from 'preserve-ui/src/common/client';
+import { AxiosResponse } from 'axios';
 
 function artistIdFromStub(stub: NameGuidPair): string {
     if (stub.Id) {
@@ -144,7 +146,20 @@ function normaliseTrack(track: BaseItemDto): Track | null {
     };
 }
 
-export class JellyfinLibrary extends MediaServerLibrary {
+function normaliseLibraryItem(item: BaseItemDto): LibraryItem | null {
+    switch (item.Type) {
+        case 'Audio':
+            return normaliseTrack(item);
+        case 'MusicAlbum':
+            return normaliseAlbum(item);
+        case 'MusicArtist':
+            return normaliseArtist(item);
+        default:
+            return null;
+    }
+}
+
+export class JellyfinLibraryLocal extends MediaServerLibrary {
     private loaded = false;
     private _loadState: LibraryLoadState;
 
@@ -165,8 +180,7 @@ export class JellyfinLibrary extends MediaServerLibrary {
 
     constructor(
         private readonly configuration: Configuration,
-        private readonly userId: string,
-        private readonly accessToken: string
+        private readonly userId: string
     ) {
         super();
         this._loadState = reactive(new LibraryLoadState());
@@ -306,27 +320,8 @@ export class JellyfinLibrary extends MediaServerLibrary {
         return [...trackResults, ...albumResults, ...artistResults];
     }
 
-    getPlaybackUrl(track: Track, requestId: string): string {
-        const basePath = this.configuration.basePath;
-
-        const baseUrl = `${basePath}/Audio/${track.id}/universal`;
-
-        const queryParams = new URLSearchParams({
-            userId: this.userId,
-            deviceId: getOrGenerateClientId(),
-            api_key: this.accessToken,
-            playSessionId: requestId,
-            maxStreamingBitrate: '140000000',
-            container: 'opus,mp3|mp3,aac,m4a,m4b|aac,flac,webma,webm,wav,ogg',
-            transcodingContainer: 'ts',
-            transcodingProtocol: 'hls',
-            audioCodec: 'aac',
-            startTimeTicks: '0',
-            enableRedirection: 'true',
-            enableRemoteMedia: 'false',
-        });
-
-        return `${baseUrl}?${queryParams}`;
+    getPlaybackUrl(_track: Track, _requestId: string): string {
+        throw new Error('Method not implemented.');
     }
 
     private storeArtist(jfArtist: BaseItemDto) {
@@ -580,5 +575,331 @@ export class JellyfinLibrary extends MediaServerLibrary {
                 this.trackByArtistLookup.set(artist.id, [track]);
             }
         }
+    }
+}
+
+export class JellyfinLibraryRemote extends MediaServerLibrary {
+    constructor(
+        private readonly configuration: Configuration,
+        private readonly userId: string
+    ) {
+        super();
+    }
+
+    loadState(): LibraryLoadState {
+        throw new Error('Method not implemented.');
+    }
+    populate(): Promise<void> {
+        throw new Error('Method not implemented.');
+    }
+    getPlaybackUrl(_track: Track, _requestId: string): string {
+        throw new Error('Method not implemented.');
+    }
+
+    private convertJfResponse<T>(
+        jfItems: AxiosResponse<BaseItemDtoQueryResult>,
+        normaliser: (item: BaseItemDto) => T | null
+    ): T[] {
+        const itemData = jfItems.data.Items || [];
+
+        const items: T[] = [];
+        for (const artist of itemData) {
+            const parsed = normaliser(artist);
+            if (parsed) {
+                items.push(parsed);
+            }
+        }
+
+        return items;
+    }
+
+    async getArtists(): Promise<Artist[]> {
+        const jfArtists = await new ArtistsApi(this.configuration).getArtists({
+            limit: 100,
+            startIndex: 0,
+            userId: this.userId,
+        });
+
+        return this.convertJfResponse(jfArtists, normaliseArtist);
+    }
+
+    async getAlbumArtists(): Promise<Artist[]> {
+        const jfArtists = await new ArtistsApi(
+            this.configuration
+        ).getAlbumArtists({
+            limit: 100,
+            startIndex: 0,
+            userId: this.userId,
+        });
+
+        return this.convertJfResponse(jfArtists, normaliseArtist);
+    }
+
+    async getAlbums(): Promise<Album[]> {
+        const jfAlbums = await new ItemsApi(this.configuration).getItemsByUserId({
+            userId: this.userId,
+            limit: 100,
+            recursive: true,
+            includeItemTypes: ['MusicAlbum'],
+            startIndex: 0,
+            sortBy: 'Name',
+            sortOrder: 'Ascending',
+        });
+        return this.convertJfResponse(jfAlbums, normaliseAlbum);
+    }
+
+    async getTracks(): Promise<Track[]> {
+        const jfTracks = await new ItemsApi(this.configuration).getItemsByUserId({
+            userId: this.userId,
+            limit: 100,
+            recursive: true,
+            includeItemTypes: ['Audio'],
+            startIndex: 0,
+            sortBy: 'Name',
+            sortOrder: 'Ascending',
+        });
+        return this.convertJfResponse(jfTracks, normaliseTrack);
+    }
+
+    async getAlbumsOfArtist(
+        artistId: string,
+        includeFeatured: boolean
+    ): Promise<Album[]> {
+        const artistFilter = includeFeatured
+            ? {
+                  artistIds: [artistId],
+              }
+            : { albumArtistIds: [artistId] };
+        const jfAlbums = await new ItemsApi(this.configuration).getItemsByUserId({
+            userId: this.userId,
+            limit: 100,
+            recursive: true,
+            includeItemTypes: ['MusicAlbum'],
+            startIndex: 0,
+            sortBy: 'Name',
+            sortOrder: 'Ascending',
+            ...artistFilter,
+        });
+        return this.convertJfResponse(jfAlbums, normaliseAlbum);
+    }
+
+    async getTracksOfArtist(
+        artistId: string,
+        includeFeatured: boolean
+    ): Promise<Track[]> {
+        const artistFilter = includeFeatured
+            ? {
+                  artistIds: [artistId],
+              }
+            : { albumArtistIds: [artistId] };
+        const jfTracks = await new ItemsApi(this.configuration).getItemsByUserId({
+            userId: this.userId,
+            limit: 100,
+            recursive: true,
+            includeItemTypes: ['Audio'],
+            startIndex: 0,
+            sortBy: 'Name',
+            sortOrder: 'Ascending',
+            ...artistFilter,
+        });
+        return this.convertJfResponse(jfTracks, normaliseTrack);
+    }
+
+    async getTracksOfAlbum(albumId: string): Promise<Track[]> {
+        const jfTracks = await new ItemsApi(this.configuration).getItemsByUserId({
+            userId: this.userId,
+            limit: 100,
+            recursive: true,
+            includeItemTypes: ['Audio'],
+            startIndex: 0,
+            sortBy: 'Name',
+            sortOrder: 'Ascending',
+            albumIds: [albumId],
+        });
+        return this.convertJfResponse(jfTracks, normaliseTrack);
+    }
+
+    async getTrackById(trackId: string): Promise<Track | null> {
+        const jfTracks = await new ItemsApi(this.configuration).getItemsByUserId({
+            userId: this.userId,
+            limit: 100,
+            recursive: true,
+            includeItemTypes: ['Audio'],
+            startIndex: 0,
+            sortBy: 'Name',
+            sortOrder: 'Ascending',
+            ids: [trackId],
+        });
+        return this.convertJfResponse(jfTracks, normaliseTrack)[0] || null;
+    }
+
+    async getTracksById(trackIds: string[]): Promise<Track[]> {
+        const jfTracks = await new ItemsApi(this.configuration).getItemsByUserId({
+            userId: this.userId,
+            limit: 100,
+            recursive: true,
+            includeItemTypes: ['Audio'],
+            startIndex: 0,
+            sortBy: 'Name',
+            sortOrder: 'Ascending',
+            ids: trackIds,
+        });
+        return this.convertJfResponse(jfTracks, normaliseTrack);
+    }
+
+    async search(searchText: string): Promise<LibraryItem[]> {
+        const jfItems = await new ItemsApi(this.configuration).getItemsByUserId({
+            userId: this.userId,
+            limit: 100,
+            recursive: true,
+            includeItemTypes: ['Audio', 'MusicArtist', 'MusicAlbum'],
+            startIndex: 0,
+            sortBy: 'Name',
+            sortOrder: 'Ascending',
+            searchTerm: searchText,
+        });
+        return this.convertJfResponse(jfItems, normaliseLibraryItem);
+    }
+}
+
+class ProxyLoadState {
+    constructor(private readonly proxiedState: LibraryLoadState) {}
+
+    get artistTotal() {
+        return this.proxiedState.artistTotal;
+    }
+
+    get albumTotal() {
+        return this.proxiedState.albumTotal;
+    }
+
+    get trackTotal() {
+        return this.proxiedState.trackTotal;
+    }
+
+    get artistLoaded() {
+        return this.proxiedState.artistLoaded;
+    }
+
+    get albumLoaded() {
+        return this.proxiedState.albumLoaded;
+    }
+
+    get trackLoaded() {
+        return this.proxiedState.trackLoaded;
+    }
+
+    get stage() {
+        return this.proxiedState.stage === LibraryLoadStage.Loaded
+            ? LibraryLoadStage.Loaded
+            : LibraryLoadStage.Remote;
+    }
+}
+
+export class JellyfinLibrary extends MediaServerLibrary {
+    private remote: JellyfinLibraryRemote;
+    private local: JellyfinLibraryLocal;
+    private _loadState: LibraryLoadState;
+
+    constructor(
+        private readonly configuration: Configuration,
+        private readonly userId: string,
+        private readonly accessToken: string
+    ) {
+        super();
+        this.remote = new JellyfinLibraryRemote(configuration, userId);
+        this.local = new JellyfinLibraryLocal(configuration, userId);
+
+        this._loadState = (reactive(
+            new ProxyLoadState(this.local.loadState())
+        ) as unknown) as LibraryLoadState;
+        this.local.populate();
+    }
+
+    loadState(): LibraryLoadState {
+        return this._loadState;
+    }
+
+    populate(): Promise<void> {
+        return this.local.populate();
+    }
+
+    private isRemote(): boolean {
+        return this.loadState().stage === LibraryLoadStage.Remote;
+    }
+
+    private activeLibrary(): MediaServerLibrary {
+        return this.isRemote() ? this.remote : this.local;
+    }
+
+    getTracks(): Promise<Track[]> {
+        return this.activeLibrary().getTracks();
+    }
+
+    getArtists(): Promise<Artist[]> {
+        return this.activeLibrary().getArtists();
+    }
+
+    getAlbumArtists(): Promise<Artist[]> {
+        return this.activeLibrary().getAlbumArtists();
+    }
+
+    getAlbums(): Promise<Album[]> {
+        return this.activeLibrary().getAlbums();
+    }
+
+    getAlbumsOfArtist(
+        artistId: string,
+        includeFeatured: boolean
+    ): Promise<Album[]> {
+        return this.activeLibrary().getAlbumsOfArtist(
+            artistId,
+            includeFeatured
+        );
+    }
+
+    getTracksOfArtist(
+        artistId: string,
+        includeFeatured: boolean
+    ): Promise<Track[]> {
+        return this.activeLibrary().getTracksOfArtist(
+            artistId,
+            includeFeatured
+        );
+    }
+
+    getTracksOfAlbum(albumId: string): Promise<Track[]> {
+        return this.activeLibrary().getTracksOfAlbum(albumId);
+    }
+
+    getTrackById(trackId: string): Promise<Track | null> {
+        return this.activeLibrary().getTrackById(trackId);
+    }
+
+    search(searchText: string): Promise<LibraryItem[]> {
+        return this.activeLibrary().search(searchText);
+    }
+
+    getPlaybackUrl(track: Track, requestId: string): string {
+        const basePath = this.configuration.basePath;
+
+        const baseUrl = `${basePath}/Audio/${track.id}/universal`;
+
+        const queryParams = new URLSearchParams({
+            userId: this.userId,
+            deviceId: getOrGenerateClientId(),
+            api_key: this.accessToken,
+            playSessionId: requestId,
+            maxStreamingBitrate: '140000000',
+            container: 'opus,mp3|mp3,aac,m4a,m4b|aac,flac,webma,webm,wav,ogg',
+            transcodingContainer: 'ts',
+            transcodingProtocol: 'hls',
+            audioCodec: 'aac',
+            startTimeTicks: '0',
+            enableRedirection: 'true',
+            enableRemoteMedia: 'false',
+        });
+
+        return `${baseUrl}?${queryParams}`;
     }
 }

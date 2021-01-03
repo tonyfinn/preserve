@@ -21,6 +21,13 @@
                 </p>
             </div>
             <div class="user-menu">
+                <div class="loading-progress" v-if="!allLoaded">
+                    <i
+                        class="loading-spinner-icon fi-loop"
+                        aria-label="Loading"
+                    ></i>
+                    {{ loadedCount }} / {{ loadingTotal }}
+                </div>
                 <p v-if="!loggedIn">Not Logged in</p>
                 <p v-if="loggedIn">
                     <span
@@ -161,11 +168,38 @@ export default defineComponent({
     computed: {
         appLoaded(): boolean {
             const librariesLoaded = this.libraries
-                .map((l) => l.loadState().stage === LibraryLoadStage.Loaded)
+                .map((l) =>
+                    [LibraryLoadStage.Loaded, LibraryLoadStage.Remote].includes(
+                        l.loadState().stage
+                    )
+                )
                 .reduce((first, second) => first && second, true);
             return (
                 this.reconnectComplete &&
                 ((this.loggedIn && librariesLoaded) || !this.loggedIn)
+            );
+        },
+        allLoaded(): boolean {
+            for (const library of this.libraries) {
+                if (library.loadState().stage !== LibraryLoadStage.Loaded) {
+                    return false;
+                }
+            }
+            return true;
+        },
+        loadedCount(): number {
+            return (
+                sumLibraryField(this.libraries, 'artistLoaded') +
+                sumLibraryField(this.libraries, 'albumLoaded') +
+                sumLibraryField(this.libraries, 'trackLoaded')
+            );
+        },
+        loadingTotal(): number {
+            return Math.max(
+                0,
+                sumLibraryField(this.libraries, 'artistTotal') +
+                    sumLibraryField(this.libraries, 'albumTotal') +
+                    sumLibraryField(this.libraries, 'trackTotal')
             );
         },
         loadingItems(): Array<LoadingItem> {
@@ -247,7 +281,7 @@ export default defineComponent({
             for (const server of servers) {
                 const library = server.library();
                 this.libraries.push(library);
-                libraryLoads.push(library.populate());
+                // libraryLoads.push(library.populate());
             }
             await Promise.all(libraryLoads);
             this.queueManager = await QueueManager.create(this.libraryManager);
@@ -266,6 +300,23 @@ export default defineComponent({
     height: 100vh;
     width: 100vw;
     grid-template-rows: auto minmax(0, 1fr);
+}
+
+.loading-spinner-icon::before {
+    animation-duration: 1s;
+    animation-name: spin;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 #loading-spinner {
