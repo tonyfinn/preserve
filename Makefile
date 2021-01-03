@@ -39,10 +39,10 @@ clean:
 
 check: preserve-ui/node_modules
 	cd ${UI_SRC_DIR} && ${NPM} run lint
-	cd ${UI_SRC_DIR} && ${NPM} run serve &
+	cd ${UI_SRC_DIR} && node scripts/start-server.js &
 	@sleep 5
 	cd ${UI_SRC_DIR} && ${NPM} run test:functional:dist
-	@pkill -f "node ./scripts/serve-preserve-dist.js"
+	cd ${UI_SRC_DIR} && node scripts/stop-server.js
 
 devserver: preserve-ui/node_modules
 	cd ${UI_SRC_DIR} && ${NPM} run start

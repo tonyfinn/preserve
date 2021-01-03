@@ -65,7 +65,7 @@
         "test:functional:dist": "cypress run --config baseUrl=http://localhost:5678",
         "test:functional:local": "cypress run --config baseUrl=http://localhost:8081",
         "start": "webpack-dev-server --hot",
-        "serve": "PRESERVE_PATH=../dist node ./scripts/serve-preserve-dist.js"
+        "serve": "PRESERVE_PATH=../dist node ./scripts/start-server.js"
     },
     "author": "Tony Finn <dev@tonyfinn.com>",
     "license": "GPL-2.0-or-later"
