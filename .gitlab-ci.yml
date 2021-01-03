@@ -18,12 +18,13 @@ build-docker-ci-images:
     rules:
         - if: '$CI_COMMIT_BRANCH == "master"'
           changes:
-            - build/*
+            - build-containers/*
+          allow_failure: false
           when: always
         - if: '$CI_COMMIT_BRANCH == "master"'
           when: manual
+          allow_failure: true
     image: docker:19.03.12
-    stage: build
     services:
         - docker:19.03.12-dind
     script:
