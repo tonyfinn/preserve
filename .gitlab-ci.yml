@@ -28,7 +28,7 @@ build-docker-ci-images:
     services:
         - docker:19.03.12-dind
     script:
-        - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_PASSWORD
+        - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
         - docker build -t $CI_REGISTRY/tonyfinn/preserve/node:latest build-containers/node
         - docker build -t $CI_REGISTRY/tonyfinn/preserve/electronbuilder-linux:latest build-containers/electronbuilder-linux
         - docker build -t $CI_REGISTRY/tonyfinn/preserve/electronbuilder-wine:latest build-containers/electronbuilder-wine
