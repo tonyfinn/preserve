@@ -42,7 +42,7 @@ check: preserve-ui/node_modules
 	cd ${UI_SRC_DIR} && ${NPM} run serve &
 	@sleep 5
 	cd ${UI_SRC_DIR} && ${NPM} run test:functional:dist
-	@pkill -f "node ../contrib/webserver-config/express/index.js"
+	@pkill -f "node ./scripts/serve-preserve-dist.js"
 
 devserver: preserve-ui/node_modules
 	cd ${UI_SRC_DIR} && ${NPM} run start
