@@ -8,11 +8,35 @@ default:
             - node_modules
 
 stages:
+    - buildenv
     - check
     - package
     - release
 
+build-docker-ci-images:
+    stage: buildenv
+    rules:
+        - if: '$CI_COMMIT_BRANCH == "master"'
+          changes:
+            - build/*
+          when: always
+        - if: '$CI_COMMIT_BRANCH == "master"'
+          when: manual
+    image: docker:19.03.12
+    stage: build
+    services:
+        - docker:19.03.12-dind
+    script:
+        - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_PASSWORD
+        - docker build -t $CI_REGISTRY/tonyfinn/preserve/node:latest build-containers/node
+        - docker build -t $CI_REGISTRY/tonyfinn/preserve/electronbuilder-linux:latest build-containers/electronbuilder-linux
+        - docker build -t $CI_REGISTRY/tonyfinn/preserve/electronbuilder-wine:latest build-containers/electronbuilder-wine
+        - docker push $CI_REGISTRY/tonyfinn/preserve/node:latest
+        - docker push $CI_REGISTRY/tonyfinn/preserve/electronbuilder-linux:latest
+        - docker push $CI_REGISTRY/tonyfinn/preserve/electronbuilder-wine:latest
+
 check:
+    image: $CI_REGISTRY/tonyfinn/preserve/node:latest
     stage: check
     cache:
         policy: push
@@ -23,11 +47,10 @@ check:
         reports:
             junit: preserve-ui/cypress/results-*.xml
     script:
-        # jq is used by build scripts, rest used by cypress
-        - apt-get update && apt-get install -y jq libgtk2.0-0 libgtk-3-0 libgbm-dev libnotify-dev libgconf-2-4 libnss3 libxss1 libasound2 libxtst6 xauth xvfb
         - make clean dist check
 
 package-web:
+    image: $CI_REGISTRY/tonyfinn/preserve/node:latest
     stage: package
     rules:
         - if: $CI_COMMIT_TAG
@@ -39,11 +62,10 @@ package-web:
         paths:
             - target/*
     script:
-        - apt-get update && apt-get install -y jq
         - make package-web
 
 package-electron-linux:
-    image: electronuserland/builder:12
+    image: $CI_REGISTRY/tonyfinn/preserve/electronbuilder-linux:latest
     stage: package
     rules:
         - if: $CI_COMMIT_TAG
@@ -55,12 +77,11 @@ package-electron-linux:
         paths:
             - target/*
     script:
-        - apt-get update && apt-get install -y jq fakeroot dpkg
         - make package-electron-linux
 
 package-electron-windows:
     stage: package
-    image: electronuserland/builder:wine-mono
+    image: $CI_REGISTRY/tonyfinn/preserve/electronbuilder-wine:latest
     rules:
         - if: $CI_COMMIT_TAG
           when: on_success
