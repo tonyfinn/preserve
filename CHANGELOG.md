@@ -1,4 +1,10 @@
-# 0.4.1
+# 0.4.2
+
+## Tech changes
+
+* Docker images are now built ahead of time for faster builds and less dependency on external servers.
+
+# ~~0.4.1~~
 
 ## Bug fixes
 

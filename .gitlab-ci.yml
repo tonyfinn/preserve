@@ -93,12 +93,6 @@ package-electron-windows:
         paths:
             - target/*
     script:
-        # deps
-        - apt-get update && apt-get install -y jq
-        # Fix image's bundled 32bit wine folder
-        - rm -rf /root/.wine
-        - winecfg
-        # make package
         - make package-electron-windows
 
 docker:
