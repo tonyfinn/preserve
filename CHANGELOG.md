@@ -1,3 +1,9 @@
+# 0.4.1
+
+## Bug fixes
+
+* Sorting by album artist now works correctly again.
+
 # 0.4.0
 
 ## New Features

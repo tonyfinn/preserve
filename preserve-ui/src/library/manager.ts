@@ -20,7 +20,7 @@ export class LibraryManager {
         return this.activeLibrary().getArtists();
     }
     getAlbumArtists(): Promise<Artist[]> {
-        return this.activeLibrary().getArtists();
+        return this.activeLibrary().getAlbumArtists();
     }
     getAlbums(): Promise<Album[]> {
         return this.activeLibrary().getAlbums();

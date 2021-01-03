@@ -109,4 +109,12 @@ describe('Library Tree', () => {
         Library.sortOrder().select('Album');
         Library.tree().should('contain', 'Bastion Original Soundtrack');
     });
+
+    it('should only include featured artists when not sorting by album artist', () => {
+        App.visitLoaded();
+        Library.sortOrder().select('Artist > Album');
+        Library.tree().should('contain', 'Ludwig Van Beethoven');
+        Library.sortOrder().select('Album Artist > Album');
+        Library.tree().should('not.contain', 'Ludwig Van Beethoven');
+    });
 });
