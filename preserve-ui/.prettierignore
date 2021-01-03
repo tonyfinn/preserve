@@ -1,5 +1,4 @@
 src/vendor
-generated/
 node_modules
 package-lock.json
 jest.config.js

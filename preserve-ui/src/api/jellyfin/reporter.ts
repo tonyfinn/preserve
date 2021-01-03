@@ -1,6 +1,9 @@
-import { Configuration, PlaystateApi } from 'jellyfin-axios-client';
+import {
+    Configuration,
+    PlaystateApi,
+    RepeatMode as JfRepeatMode,
+} from '@jellyfin/client-axios';
 import { RepeatMode } from 'preserve-ui/src/player';
-import { RepeatMode as JfRepeatMode } from 'jellyfin-axios-client';
 import { MediaServerReporter, PlaybackState } from '../interface';
 import { JF_TICKS_PER_MS } from 'preserve-ui/src/common/constants';
 

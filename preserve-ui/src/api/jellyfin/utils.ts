@@ -1,4 +1,4 @@
-import { Configuration, SystemApi } from 'jellyfin-axios-client';
+import { Configuration, SystemApi } from '@jellyfin/client-axios';
 import {
     getClientName,
     getOrGenerateClientId,

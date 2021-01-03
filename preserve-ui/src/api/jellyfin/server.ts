@@ -1,4 +1,4 @@
-import { Configuration, SessionApi, UserApi } from 'jellyfin-axios-client';
+import { Configuration, SessionApi, UserApi } from '@jellyfin/client-axios';
 import {
     MediaServer,
     MediaServerLibrary,

@@ -33,6 +33,7 @@ clean:
 	rm -rf ${UI_SRC_DIR}/node_modules/
 	rm -rf ${UI_SRC_DIR}/cypress
 	rm -rf ${ELECTRON_SRC_DIR}/node_modules
+	rm -rf ${srcdir}/dist/
 	rm -rf ${srcdir}/build/
 	rm -rf ${srcdir}/target/
 
@@ -72,9 +73,6 @@ publish-docker: docker
 
 podman: dist
 	podman build -f ${srcdir}/contrib/docker/Dockerfile -t tonyfinn/preserve:${VERSION} ${srcdir}
-
-jellyfin-axios-client:
-	cd preserve-ui/generated/jellyfin-axios-client && ${MAKE}
 
 build/electron/index.html: dist
 	mkdir -p ${srcdir}/build/electron

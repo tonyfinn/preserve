@@ -4,7 +4,7 @@ import {
     NameGuidPair,
     ArtistsApi,
     ItemsApi,
-} from 'jellyfin-axios-client';
+} from '@jellyfin/client-axios';
 import {
     JF_TICKS_PER_MS,
     UNKNOWN_ALBUM_NAME,
@@ -406,11 +406,11 @@ export class JellyfinLibrary extends MediaServerLibrary {
         let items = [];
         do {
             const itemsApi = new ItemsApi(this.configuration);
-            const result = await itemsApi.getItems2({
-                uId: this.userId,
+            const result = await itemsApi.getItemsByUserId({
+                userId: this.userId,
                 limit: 500,
                 recursive: true,
-                includeItemTypes: 'MusicAlbum',
+                includeItemTypes: ['MusicAlbum'],
                 startIndex: startIndex,
                 sortBy: 'Name',
                 sortOrder: 'Ascending',
@@ -442,11 +442,11 @@ export class JellyfinLibrary extends MediaServerLibrary {
         let items = [];
         do {
             const itemsApi = new ItemsApi(this.configuration);
-            const result = await itemsApi.getItems2({
-                uId: this.userId,
+            const result = await itemsApi.getItemsByUserId({
+                userId: this.userId,
                 limit: 500,
                 recursive: true,
-                includeItemTypes: 'Audio',
+                includeItemTypes: ['Audio'],
                 startIndex: startIndex,
                 sortBy: 'Name',
                 sortOrder: 'Ascending',

@@ -13,11 +13,6 @@ module.exports = {
     resolve: {
         extensions: ['.ts', '.js', '.vue'],
         alias: {
-            'jellyfin-axios-client': path.resolve(
-                __dirname,
-                'generated',
-                'jellyfin-axios-client'
-            ),
             'preserve-ui': path.resolve(__dirname),
         },
     },

@@ -4,6 +4,7 @@
     "description": "Dense Media Player for Jellyfin",
     "main": "index.js",
     "dependencies": {
+        "@jellyfin/client-axios": "^10.7.0",
         "@types/hls.js": "^0.13.3",
         "axios": "^0.19.2",
         "axios-mock-adapter": "^1.19.0",

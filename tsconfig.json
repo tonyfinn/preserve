@@ -12,7 +12,6 @@
         "paths": {
             "axios": ["preserve-ui/node_modules/axios"],
             "preserve-ui": ["preserve-ui"],
-            "jellyfin-axios-client": ["preserve-ui/generated/jellyfin-axios-client"],
         }
     },
     "exclude": ["node_modules", "contrib", "preserve-electron", "preserve-ui/tests/functional"]

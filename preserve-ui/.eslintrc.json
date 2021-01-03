@@ -3,12 +3,7 @@
         "browser": true,
         "es2020": true
     },
-    "ignorePatterns": [
-        "dist/*.js",
-        "node_modules/*.js",
-        "generated/*.ts",
-        "jest.config.js"
-    ],
+    "ignorePatterns": ["dist/*.js", "node_modules/*.js", "jest.config.js"],
     "overrides": [
         {
             "files": ["webpack.config.js"],

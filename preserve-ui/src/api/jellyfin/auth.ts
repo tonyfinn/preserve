@@ -1,4 +1,4 @@
-import { Configuration, SystemApi, UserApi } from 'jellyfin-axios-client';
+import { Configuration, SystemApi, UserApi } from '@jellyfin/client-axios';
 import { UNKNOWN_SERVER_NAME } from 'preserve-ui/src/common/constants';
 import { MediaServerAuth } from '../interface';
 import { JellyfinServer } from './server';
