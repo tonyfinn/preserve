@@ -31,12 +31,17 @@ default: package
 clean:
 	cd ${UI_SRC_DIR} && ${NPM} run clean
 	rm -rf ${UI_SRC_DIR}/node_modules/
+	rm -rf ${UI_SRC_DIR}/cypress
 	rm -rf ${ELECTRON_SRC_DIR}/node_modules
 	rm -rf ${srcdir}/build/
 	rm -rf ${srcdir}/target/
 
 check: preserve-ui/node_modules
-	cd ${UI_SRC_DIR} && ${NPM} run lint && ${NPM} run test:functional
+	cd ${UI_SRC_DIR} && ${NPM} run lint
+	cd ${UI_SRC_DIR} && ${NPM} run serve &
+	@sleep 5
+	cd ${UI_SRC_DIR} && ${NPM} run test:functional:dist
+	@pkill -f "node ../contrib/webserver-config/express/index.js"
 
 devserver: preserve-ui/node_modules
 	cd ${UI_SRC_DIR} && ${NPM} run start
