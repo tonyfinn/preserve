@@ -21,9 +21,13 @@
             class="playlist__queue"
             @keydown.up.exact.stop.prevent="focusPrevious"
             @keydown.down.exact.stop.prevent="focusNext"
+            @keydown.left.exact.stop.prevent="focusPreviousColumn"
+            @keydown.right.exact.stop.prevent="focusNextColumn"
             @keydown.space.stop.prevent="toggleSelectFocused"
             @keydown.enter.stop.prevent="playFocusedItem"
             @keydown.delete.stop.prevent="removeSelectedItems"
+            @keydown.home.exact.stop.prevent="focusFirstColumn"
+            @keydown.end.exact.stop.prevent="focusLastColumn"
             @keydown.home.ctrl.stop.prevent="focusFirst"
             @keydown.end.ctrl.stop.prevent="focusLast"
         >
@@ -39,40 +43,47 @@
             </thead>
             <tbody>
                 <tr
-                    v-for="(queueItem, index) in queueItems"
+                    v-for="(queueItem, rowIndex) in queueItems"
                     :data-testid="testIdFor(queueItem)"
                     :key="queueItem.id"
                     :class="{
                         'playlist__track--selected': queueItem.selected,
                         'playlist__track--dragover': queueItem.dragCount !== 0,
                         'playlist__track--playing':
-                            index === nowPlayingIndex && isPlaying(activeQueue),
-                        'playlist__track--focused': index === focusIndex,
+                            rowIndex === nowPlayingIndex &&
+                            isPlaying(activeQueue),
+                        'playlist__track--focused': isRowFocused(rowIndex),
                     }"
                     :aria-selected="queueItem.selected"
-                    :tabindex="
-                        focusIndex === index || (focusIndex < 0 && index === 0)
-                            ? 0
-                            : -1
-                    "
-                    @focus.stop="focusItem(index)"
-                    @mousedown.stop.exact="selectItem(queueItem, index)"
+                    :aria-label="queueItem.data.title"
+                    @mousedown.stop.exact="selectItem(queueItem, rowIndex)"
                     @mousedown.ctrl.stop.exact="toggleSelectItem(queueItem)"
                     @mousedown.shift.stop.exact="
-                        extendSelectItem(queueItem, index)
+                        extendSelectItem(queueItem, rowIndex)
                     "
-                    @dblclick.prevent.stop="playTrack(index)"
+                    @dblclick.prevent.stop="playTrack(rowIndex)"
                     draggable="true"
                     @dragstart.stop="itemDragStart($event)"
                     @dragend.stop="dragEnd"
                     @dragenter="itemDragEnter(queueItem, $event)"
                     @dragleave="itemDragLeave(queueItem, $event)"
-                    @drop.stop.prevent="itemDrop(queueItem, index, $event)"
+                    @drop.stop.prevent="itemDrop(queueItem, rowIndex, $event)"
                     @dragover.prevent
                 >
                     <td
-                        v-for="column in visibleColumns"
+                        v-for="(column, columnIndex) in visibleColumns"
+                        :class="{
+                            'playlist__track__cell--focused': isCellFocused(
+                                rowIndex,
+                                columnIndex
+                            ),
+                        }"
+                        :aria-selected="queueItem.selected"
+                        :tabindex="
+                            isCellFocused(rowIndex, columnIndex) ? 0 : -1
+                        "
                         :key="column.def.field"
+                        @focus.stop="focusItem(rowIndex, columnIndex)"
                     >
                         {{ column.def.renderer(queueItem) }}
                     </td>
@@ -166,7 +177,8 @@ export default defineComponent({
             pickingColumns: false,
             selectedItems: [] as Array<RowItem<PlayQueueItem>>,
             draggingItems: [] as Array<RowItem<PlayQueueItem>>,
-            focusIndex: -1,
+            focusRowIndex: -1,
+            focusColumnIndex: 0,
             dragOver: 0,
             nowPlayingIndex: -1,
             childDragOver: 0,
@@ -213,6 +225,23 @@ export default defineComponent({
         isPlaying(queue: PlayQueue) {
             return queue.id === this.player.getQueue().id;
         },
+        isRowFocused(rowIndex: number) {
+            return (
+                (this.focusRowIndex < 0 && rowIndex === 0) ||
+                rowIndex === this.focusRowIndex
+            );
+        },
+        isColumnFocused(columnIndex: number) {
+            return (
+                (this.focusColumnIndex < 0 && columnIndex === 0) ||
+                columnIndex === this.focusColumnIndex
+            );
+        },
+        isCellFocused(rowIndex: number, columnIndex: number) {
+            return (
+                this.isRowFocused(rowIndex) && this.isColumnFocused(columnIndex)
+            );
+        },
         itemDragStart(evt: DragEvent) {
             if (this.selectedItems.length > 0) {
                 const textValues = this.selectedItems
@@ -255,11 +284,15 @@ export default defineComponent({
                 this.playTrack(nextIndex);
             }
         },
-        selectItem(item: RowItem<PlayQueueItem>, index: number) {
-            this.clearSelection();
+        selectItem(item: RowItem<PlayQueueItem>, rowIndex: number) {
+            for (const selectedItem of this.selectedItems) {
+                selectedItem.selected = false;
+            }
             item.selected = true;
             this.selectedItems = [item];
-            this.focusItem(index);
+            if (this.focusRowIndex !== rowIndex) {
+                this.focusItem(rowIndex);
+            }
         },
         toggleSelectItem(item: RowItem<PlayQueueItem>) {
             if (item.selected) {
@@ -278,7 +311,8 @@ export default defineComponent({
                 selectedItem.selected = false;
             }
             this.selectedItems = [];
-            this.focusIndex = -1;
+            this.focusRowIndex = -1;
+            this.focusColumnIndex = -1;
         },
         extendSelectItem(
             selectTargetItem: RowItem<PlayQueueItem>,
@@ -312,12 +346,19 @@ export default defineComponent({
             }
             this.player.play(index);
         },
-        focusItem(index: number) {
-            this.focusIndex = index;
+        focusItem(rowIndex: number, columnIndex?: number) {
+            this.focusRowIndex = rowIndex;
+            this.focusColumnIndex =
+                columnIndex !== undefined ? columnIndex : this.focusColumnIndex;
+            const focusedColumnIndex = Math.max(0, this.focusColumnIndex);
             this.$el
-                .querySelector(`tbody tr:nth-child(${index + 1})`)
+                .querySelector(
+                    `tbody tr:nth-child(${rowIndex + 1}) td:nth-child(${
+                        focusedColumnIndex + 1
+                    })`
+                )
                 .focus({ preventScroll: true });
-            this.ensureVisible(index);
+            this.ensureVisible(rowIndex);
         },
         focusFirst() {
             this.focusItem(0);
@@ -326,18 +367,35 @@ export default defineComponent({
             this.focusItem(this.queueItems.length - 1);
         },
         focusPrevious() {
-            const prevItem = Math.max(0, this.focusIndex - 1);
+            const prevItem = Math.max(0, this.focusRowIndex - 1);
             this.focusItem(prevItem);
         },
         focusNext() {
             const nextItem = Math.min(
                 this.queueItems.length - 1,
-                this.focusIndex + 1
+                this.focusRowIndex + 1
             );
             this.focusItem(nextItem);
         },
+        focusFirstColumn() {
+            this.focusItem(this.focusRowIndex, 0);
+        },
+        focusLastColumn() {
+            this.focusItem(this.focusRowIndex, this.visibleColumns.length - 1);
+        },
+        focusPreviousColumn() {
+            const prevColumn = Math.max(0, this.focusColumnIndex - 1);
+            this.focusItem(this.focusRowIndex, prevColumn);
+        },
+        focusNextColumn() {
+            const nextColumn = Math.min(
+                this.visibleColumns.length - 1,
+                this.focusColumnIndex + 1
+            );
+            this.focusItem(this.focusRowIndex, nextColumn);
+        },
         toggleSelectFocused() {
-            this.toggleSelectItem(this.queueItems[this.focusIndex]);
+            this.toggleSelectItem(this.queueItems[this.focusRowIndex]);
         },
         removeItems(items: Array<RowItem<PlayQueueItem>>) {
             this.activeQueue.remove(items.map((x) => x.data));
@@ -347,7 +405,7 @@ export default defineComponent({
             this.selectedItems = [];
         },
         playFocusedItem() {
-            this.playTrack(this.focusIndex);
+            this.playTrack(this.focusRowIndex);
         },
         itemDragEnter(item: RowItem<PlayQueueItem>, evt: DragEvent) {
             this.childDragOver += 1;
@@ -542,10 +600,14 @@ export default defineComponent({
     &.playlist__track--dragover {
         border-top: 3px dashed $colors-text;
     }
-
     &:hover,
     &.playlist__track--focused {
         background: $colors-highlight;
+    }
+
+    & .playlist__track__cell--focused {
+        background: $colors-highlight;
+        outline: 2px solid white;
     }
 }
 

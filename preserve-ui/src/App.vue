@@ -4,6 +4,7 @@
             <div>
                 <h1>{{ appName }}</h1>
                 <p
+                    aria-hidden="true"
                     :title="'VCS version: ' + appSha"
                     v-if="releaseVersionVisible"
                     @click.ctrl="releaseVersionVisible = false"
@@ -11,6 +12,8 @@
                     v{{ appVersion }}
                 </p>
                 <p
+                    aria-hidden="true"
+                    :title="'VCS version: ' + appSha"
                     v-if="!releaseVersionVisible"
                     @click.ctrl="releaseVersionVisible = true"
                 >
@@ -20,15 +23,24 @@
             <div class="user-menu">
                 <p v-if="!loggedIn">Not Logged in</p>
                 <p v-if="loggedIn">
-                    <span data-testid="loggedin-username">{{ username }}</span>
-                    (<span data-testid="loggedin-server-name">{{
-                        serverName
-                    }}</span
+                    <span
+                        data-testid="loggedin-username"
+                        aria-label="User"
+                        title="Username"
+                        >{{ username }}</span
+                    >
+                    (<span
+                        data-testid="loggedin-server-name"
+                        aria-label="Server"
+                        title="Active Server"
+                        >{{ serverName }}</span
                     >)
                 </p>
                 <i
                     v-if="loggedIn"
                     class="fi-widget settings-icon"
+                    aria-label="settings"
+                    role="button"
                     title="Settings"
                     @click="settingsOpen = !settingsOpen"
                 ></i>

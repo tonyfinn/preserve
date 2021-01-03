@@ -74,18 +74,53 @@ describe('Play Queue', function () {
             PlayQueue.tracks().should('have.length', 0);
         });
 
-        it('should navigate focus with arrow keys when pressing delete', () => {
+        it('should navigate focus with arrow keys', () => {
             App.visitLoaded();
             Library.search().type('Bastion');
             Library.tree().contains('Bastion').dblclick({
                 shiftKey: true,
             });
 
-            PlayQueue.tracks()
-                .eq(0)
+            PlayQueue.item(0)
+                .column(0)
                 .click()
                 .type('{downarrow}{downarrow}{uparrow}');
             cy.focused().should('contain', 'A Proper Story');
+        });
+
+        it('should navigate cells with arrow keys', () => {
+            App.visitLoaded();
+            Library.search().type('Bastion');
+            Library.tree().contains('Bastion').dblclick({
+                shiftKey: true,
+            });
+
+            PlayQueue.item(0)
+                .column(0)
+                .click()
+                .type('{rightarrow}{rightarrow}{leftarrow}');
+            cy.focused().should('contain', 'Darren Korb');
+        });
+
+        it('should focus the first cell when pressing home', () => {
+            App.visitLoaded();
+            Library.search().type('Bastion');
+            Library.tree().contains('Bastion').dblclick({
+                shiftKey: true,
+            });
+            PlayQueue.item(5).column(1).click().type('{home}');
+            cy.focused().should('contain', 'Twisted Streets');
+        });
+
+        it('should focus the last cell when pressing end', () => {
+            App.visitLoaded();
+            Library.search().type('Bastion');
+            Library.tree().contains('Bastion').dblclick({
+                shiftKey: true,
+            });
+
+            PlayQueue.item(5).column(1).click().type('{end}');
+            cy.focused().should('contain', 'Bastion Original Soundtrack');
         });
 
         it('should focus the first item when pressing ctrl-home', () => {
@@ -95,7 +130,7 @@ describe('Play Queue', function () {
                 shiftKey: true,
             });
 
-            PlayQueue.tracks().eq(5).click().type('{ctrl}{home}');
+            PlayQueue.item(5).column(0).click().type('{ctrl}{home}');
             cy.focused().should('contain', 'Get Used to It');
         });
 
@@ -106,7 +141,7 @@ describe('Play Queue', function () {
                 shiftKey: true,
             });
 
-            PlayQueue.tracks().eq(5).click().type('{ctrl}{end}');
+            PlayQueue.item(5).column(0).click().type('{ctrl}{end}');
             cy.focused().should(
                 'contain',
                 "The Pantheon (Ain't Gonna Catch You)"

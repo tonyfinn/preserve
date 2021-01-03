@@ -10,6 +10,7 @@
 * Play Queue tabs now scroll tabs rather than break layout
 * Volume and Shuffle/Repeat mode is now remembered
 * Playback is reported to the jellyfin server
+* Accessiblity: Table cells are now focusable to read their contents
 
 ## Tech changes
 
