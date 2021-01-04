@@ -63,7 +63,7 @@
         "fix": "npm run fix:eslint && npm run fix:prettier",
         "test:functional:open": "cypress open",
         "test:functional:dist": "cypress run --config baseUrl=http://localhost:5678",
-        "test:functional:local": "cypress run --config baseUrl=http://localhost:8081",
+        "test:functional:local": "cypress run --config baseUrl=http://localhost:8080",
         "start": "webpack-dev-server --hot",
         "serve": "PRESERVE_PATH=../dist node ./scripts/start-server.js"
     },

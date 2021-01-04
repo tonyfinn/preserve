@@ -5,7 +5,7 @@ import { PlayQueue } from '../pages/play-queue';
 
 describe('Player', () => {
     it('should update playback progress', () => {
-        App.visitLoaded();
+        App.visitLoggedIn();
         Library.search().type('winter cav');
         Library.tree().contains('Endgame').dblclick();
         let initialTime = 'Missing current time';
@@ -19,7 +19,7 @@ describe('Player', () => {
     });
 
     it('should pause playback when pause is pressed', () => {
-        App.visitLoaded();
+        App.visitLoggedIn();
         Library.search().type('winter cav');
         Library.tree().contains('Endgame').dblclick();
         let initialTime = 'Missing current time';
@@ -36,7 +36,7 @@ describe('Player', () => {
     });
 
     it('should play the next track when next clicked', () => {
-        App.visitLoaded();
+        App.visitLoggedIn();
         Library.tree().contains('Introversion Software').click();
         Library.tree().contains('Darwinia Soundtrack').dblclick();
 
@@ -53,7 +53,7 @@ describe('Player', () => {
     });
 
     it('should play the previous track when next clicked', () => {
-        App.visitLoaded();
+        App.visitLoggedIn();
         Library.tree().contains('Introversion Software').click();
         Library.tree().contains('Darwinia Soundtrack').dblclick();
 
@@ -73,7 +73,7 @@ describe('Player', () => {
     });
 
     it('should end playback after the last track completes with no repeat on', () => {
-        App.visitLoaded();
+        App.visitLoggedIn();
         Library.tree().contains('Introversion Software').click();
         Library.tree().contains('Darwinia Soundtrack').dblclick();
 
@@ -90,7 +90,7 @@ describe('Player', () => {
     });
 
     it('should play the first track after the last track completes with repeat on', () => {
-        App.visitLoaded();
+        App.visitLoggedIn();
         Library.tree().contains('Introversion Software').click();
         Library.tree().contains('Darwinia Soundtrack').dblclick();
 
@@ -111,7 +111,7 @@ describe('Player', () => {
     });
 
     it('should cycle repeat modes and remember on reload', () => {
-        App.visitLoaded();
+        App.visitLoggedIn();
         NowPlaying.repeatButton().click();
         NowPlaying.repeatButton().should('have.attr', 'aria-checked', 'true');
         NowPlaying.repeatButton().click();
@@ -123,7 +123,7 @@ describe('Player', () => {
     });
 
     it('should toggle shuffle and remember on reload', () => {
-        App.visitLoaded();
+        App.visitLoggedIn();
         NowPlaying.shuffleButton().click();
         NowPlaying.shuffleButton().should('have.attr', 'aria-checked', 'true');
 

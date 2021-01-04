@@ -113,12 +113,19 @@ export class JellyfinServerAuth
             new Configuration({ basePath: address, apiKey: authHeader })
         );
         const serverInfo = await queryServerDefinition(address);
-        const authResponse = await userApi.authenticateUserByName({
-            authenticateUserByName: {
-                Username: username,
-                Pw: password,
+        const authResponse = await userApi.authenticateUserByName(
+            {
+                authenticateUserByName: {
+                    Username: username,
+                    Pw: password,
+                },
             },
-        });
+            {
+                headers: {
+                    'X-Emby-Authorization': authHeader,
+                },
+            }
+        );
 
         if (authResponse.status === 200) {
             const authResult = authResponse.data;

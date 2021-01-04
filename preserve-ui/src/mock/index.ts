@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import axios, { AxiosRequestConfig } from 'axios';
 import MockAdapter from 'axios-mock-adapter';
 import { ACCESS_TOKEN, TEST_SERVER_URL, TEST_USER_ID } from './data/shared';
@@ -89,6 +91,30 @@ function paginateResult<T>(
     };
 }
 
+function filterByObjectWithId(
+    fieldName: string,
+    filterIds: string[]
+): (item: any) => boolean {
+    return (item: any) => {
+        if (!item[fieldName]) {
+            return false;
+        }
+        const itemIds = [];
+
+        for (const fieldWithId of item[fieldName]) {
+            itemIds.push(fieldWithId.Id);
+        }
+
+        for (const id of filterIds) {
+            if (itemIds.includes(id)) {
+                return true;
+            }
+        }
+
+        return false;
+    };
+}
+
 function registerMockHandlers(data: any) {
     const mock = new MockAdapter(axios);
     mock.onGet(`${TEST_SERVER_URL}/System/Info/Public`).reply(
@@ -136,24 +162,104 @@ function registerMockHandlers(data: any) {
         requireAuthHeader
     ).reply(function (
         config: AxiosRequestConfig
-    ): [number, PaginationResult<any> | null] {
+    ): Promise<[number, PaginationResult<any> | null]> {
         if (!config.url) {
-            return [500, null];
+            return Promise.resolve([500, null]);
         }
         const params = new URL(config.url).searchParams;
         const itemTypes =
             params.get('IncludeItemTypes') ||
             params.get('includeItemTypes') ||
             '';
-        if (itemTypes === 'MusicAlbum') {
-            return paginateResult(data.albums, 20)(config);
-        } else if (itemTypes === 'Audio') {
-            return paginateResult(data.tracks, 300)(config);
-        } else if (itemTypes === 'MusicArtist') {
-            return paginateResult(data.artists, 10)(config);
-        } else {
-            return [500, null];
+
+        const filterFuncs: Array<(item: any) => boolean> = [];
+
+        const searchTerm = params.get('searchTerm');
+        if (searchTerm) {
+            filterFuncs.push((item: any) =>
+                item.Name.toLowerCase().includes(searchTerm.toLowerCase())
+            );
         }
+
+        const idsString = params.get('ids');
+        if (idsString) {
+            const ids = idsString.split(',');
+            filterFuncs.push((item: any) => ids?.includes(item.Id));
+        }
+
+        const artistIdsString = params.get('artistIds');
+        if (artistIdsString) {
+            const filterArtistIds = artistIdsString.split(',');
+            filterFuncs.push(
+                filterByObjectWithId('ArtistItems', filterArtistIds)
+            );
+        }
+
+        const albumArtistIdsString = params.get('albumArtistIds');
+        if (albumArtistIdsString) {
+            const filterAlbumArtistIds = albumArtistIdsString.split(',');
+            filterFuncs.push(
+                filterByObjectWithId('AlbumArtists', filterAlbumArtistIds)
+            );
+        }
+
+        const albumIdsString = params.get('albumIds');
+        if (albumIdsString) {
+            const filterAlbumIds = albumIdsString.split(',');
+            filterFuncs.push((item: any) =>
+                filterAlbumIds.includes(item.AlbumId)
+            );
+        }
+
+        if (window.location.search.includes('neverLoad')) {
+            const startIndex = params.get('startIndex');
+            if (startIndex && parseInt(startIndex, 10) > 0) {
+                console.log(startIndex);
+                return new Promise(() => {
+                    return;
+                });
+            }
+        }
+
+        let items: any[];
+        let serverPageSize;
+        if (itemTypes === 'MusicAlbum') {
+            items = data.albums;
+            serverPageSize = 20;
+        } else if (itemTypes === 'Audio') {
+            items = data.tracks;
+            serverPageSize = 300;
+        } else if (itemTypes === 'MusicArtist') {
+            items = data.artists;
+            serverPageSize = 10;
+        } else {
+            const splitItemTypes = itemTypes.split(',');
+            items = [];
+            for (const itemType of splitItemTypes) {
+                if (itemType === 'MusicAlbum') {
+                    items = items.concat(data.albums);
+                } else if (itemType === 'Audio') {
+                    items = items.concat(data.tracks);
+                } else if (itemType === 'MusicArtist') {
+                    items = items.concat(data.artists);
+                } else {
+                    console.error('Failing request', config);
+                    return Promise.resolve([500, null]);
+                }
+            }
+            serverPageSize = 50;
+        }
+        const filteredItems = items.filter((item: any) => {
+            for (const filter of filterFuncs) {
+                if (!filter(item)) {
+                    return false;
+                }
+            }
+            return true;
+        });
+        return Promise.resolve(
+            paginateResult(filteredItems, serverPageSize)(config)
+        );
     });
 }
 

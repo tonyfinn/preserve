@@ -113,6 +113,11 @@ export default defineComponent({
         libraryGrouping(newValue) {
             this.settings.set('libraryGrouping', newValue);
         },
+        'libraryManager.allLoaded'(newValue, oldValue) {
+            if (oldValue === false && newValue === true) {
+                this.populateLibraryTree();
+            }
+        },
     },
     methods: {
         async populateChildren(

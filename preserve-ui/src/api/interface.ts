@@ -16,9 +16,8 @@ export class LibraryLoadState {
     artistLoaded: number;
     albumLoaded: number;
     trackLoaded: number;
-    stage = LibraryLoadStage.New;
 
-    constructor() {
+    constructor(public stage: LibraryLoadStage = LibraryLoadStage.New) {
         this.artistTotal = this.albumTotal = this.trackTotal = -1;
         this.artistLoaded = this.albumLoaded = this.trackLoaded = 0;
     }
@@ -54,7 +53,6 @@ export interface MediaServerAuth<
 
 export abstract class MediaServerLibrary {
     abstract loadState(): LibraryLoadState;
-    abstract populate(): Promise<void>;
 
     abstract getTracks(): Promise<Track[]>;
     abstract getArtists(): Promise<Artist[]>;
@@ -87,6 +85,16 @@ export abstract class MediaServerLibrary {
             }
         }
         return foundTracks;
+    }
+}
+
+export abstract class MediaServerLocalLibrary extends MediaServerLibrary {
+    abstract populate(): Promise<void>;
+}
+
+export abstract class MediaServerRemoteLibrary extends MediaServerLibrary {
+    loadState(): LibraryLoadState {
+        return new LibraryLoadState(LibraryLoadStage.Remote);
     }
 }
 

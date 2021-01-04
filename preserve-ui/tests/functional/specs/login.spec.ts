@@ -28,7 +28,7 @@ describe('Login', () => {
     });
 
     it('should skip login if has credentials', () => {
-        App.visitLoaded();
+        App.visitLoggedIn();
         LoginPage.form().should('not.exist');
         Notifications.tray().should('contain', 'Reconnected to Mock Server');
     });

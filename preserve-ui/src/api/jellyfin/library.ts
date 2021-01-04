@@ -30,10 +30,12 @@ import { reactive } from 'vue';
 import {
     LibraryLoadStage,
     LibraryLoadState,
-    MediaServerLibrary,
+    MediaServerLocalLibrary,
+    MediaServerRemoteLibrary,
 } from '../interface';
 import { getOrGenerateClientId } from 'preserve-ui/src/common/client';
 import { AxiosResponse } from 'axios';
+import { MediaServerLibraryFacade } from 'preserve-ui/src/library/facade';
 
 function artistIdFromStub(stub: NameGuidPair): string {
     if (stub.Id) {
@@ -159,8 +161,7 @@ function normaliseLibraryItem(item: BaseItemDto): LibraryItem | null {
     }
 }
 
-export class JellyfinLibraryLocal extends MediaServerLibrary {
-    private loaded = false;
+export class JellyfinLibraryLocal extends MediaServerLocalLibrary {
     private _loadState: LibraryLoadState;
 
     private artists: Array<Artist>;
@@ -578,7 +579,7 @@ export class JellyfinLibraryLocal extends MediaServerLibrary {
     }
 }
 
-export class JellyfinLibraryRemote extends MediaServerLibrary {
+export class JellyfinLibraryRemote extends MediaServerRemoteLibrary {
     constructor(
         private readonly configuration: Configuration,
         private readonly userId: string
@@ -586,12 +587,6 @@ export class JellyfinLibraryRemote extends MediaServerLibrary {
         super();
     }
 
-    loadState(): LibraryLoadState {
-        throw new Error('Method not implemented.');
-    }
-    populate(): Promise<void> {
-        throw new Error('Method not implemented.');
-    }
     getPlaybackUrl(_track: Track, _requestId: string): string {
         throw new Error('Method not implemented.');
     }
@@ -636,7 +631,9 @@ export class JellyfinLibraryRemote extends MediaServerLibrary {
     }
 
     async getAlbums(): Promise<Album[]> {
-        const jfAlbums = await new ItemsApi(this.configuration).getItemsByUserId({
+        const jfAlbums = await new ItemsApi(
+            this.configuration
+        ).getItemsByUserId({
             userId: this.userId,
             limit: 100,
             recursive: true,
@@ -649,7 +646,9 @@ export class JellyfinLibraryRemote extends MediaServerLibrary {
     }
 
     async getTracks(): Promise<Track[]> {
-        const jfTracks = await new ItemsApi(this.configuration).getItemsByUserId({
+        const jfTracks = await new ItemsApi(
+            this.configuration
+        ).getItemsByUserId({
             userId: this.userId,
             limit: 100,
             recursive: true,
@@ -670,7 +669,9 @@ export class JellyfinLibraryRemote extends MediaServerLibrary {
                   artistIds: [artistId],
               }
             : { albumArtistIds: [artistId] };
-        const jfAlbums = await new ItemsApi(this.configuration).getItemsByUserId({
+        const jfAlbums = await new ItemsApi(
+            this.configuration
+        ).getItemsByUserId({
             userId: this.userId,
             limit: 100,
             recursive: true,
@@ -692,7 +693,9 @@ export class JellyfinLibraryRemote extends MediaServerLibrary {
                   artistIds: [artistId],
               }
             : { albumArtistIds: [artistId] };
-        const jfTracks = await new ItemsApi(this.configuration).getItemsByUserId({
+        const jfTracks = await new ItemsApi(
+            this.configuration
+        ).getItemsByUserId({
             userId: this.userId,
             limit: 100,
             recursive: true,
@@ -706,7 +709,9 @@ export class JellyfinLibraryRemote extends MediaServerLibrary {
     }
 
     async getTracksOfAlbum(albumId: string): Promise<Track[]> {
-        const jfTracks = await new ItemsApi(this.configuration).getItemsByUserId({
+        const jfTracks = await new ItemsApi(
+            this.configuration
+        ).getItemsByUserId({
             userId: this.userId,
             limit: 100,
             recursive: true,
@@ -720,7 +725,9 @@ export class JellyfinLibraryRemote extends MediaServerLibrary {
     }
 
     async getTrackById(trackId: string): Promise<Track | null> {
-        const jfTracks = await new ItemsApi(this.configuration).getItemsByUserId({
+        const jfTracks = await new ItemsApi(
+            this.configuration
+        ).getItemsByUserId({
             userId: this.userId,
             limit: 100,
             recursive: true,
@@ -734,7 +741,9 @@ export class JellyfinLibraryRemote extends MediaServerLibrary {
     }
 
     async getTracksById(trackIds: string[]): Promise<Track[]> {
-        const jfTracks = await new ItemsApi(this.configuration).getItemsByUserId({
+        const jfTracks = await new ItemsApi(
+            this.configuration
+        ).getItemsByUserId({
             userId: this.userId,
             limit: 100,
             recursive: true,
@@ -748,136 +757,38 @@ export class JellyfinLibraryRemote extends MediaServerLibrary {
     }
 
     async search(searchText: string): Promise<LibraryItem[]> {
-        const jfItems = await new ItemsApi(this.configuration).getItemsByUserId({
-            userId: this.userId,
-            limit: 100,
-            recursive: true,
-            includeItemTypes: ['Audio', 'MusicArtist', 'MusicAlbum'],
-            startIndex: 0,
-            sortBy: 'Name',
-            sortOrder: 'Ascending',
-            searchTerm: searchText,
-        });
+        const jfItems = await new ItemsApi(this.configuration).getItemsByUserId(
+            {
+                userId: this.userId,
+                limit: 100,
+                recursive: true,
+                includeItemTypes: ['Audio', 'MusicArtist', 'MusicAlbum'],
+                startIndex: 0,
+                sortBy: 'Name',
+                sortOrder: 'Ascending',
+                searchTerm: searchText,
+            }
+        );
         return this.convertJfResponse(jfItems, normaliseLibraryItem);
     }
 }
-
-class ProxyLoadState {
-    constructor(private readonly proxiedState: LibraryLoadState) {}
-
-    get artistTotal() {
-        return this.proxiedState.artistTotal;
-    }
-
-    get albumTotal() {
-        return this.proxiedState.albumTotal;
-    }
-
-    get trackTotal() {
-        return this.proxiedState.trackTotal;
-    }
-
-    get artistLoaded() {
-        return this.proxiedState.artistLoaded;
-    }
-
-    get albumLoaded() {
-        return this.proxiedState.albumLoaded;
-    }
-
-    get trackLoaded() {
-        return this.proxiedState.trackLoaded;
-    }
-
-    get stage() {
-        return this.proxiedState.stage === LibraryLoadStage.Loaded
-            ? LibraryLoadStage.Loaded
-            : LibraryLoadStage.Remote;
-    }
-}
-
-export class JellyfinLibrary extends MediaServerLibrary {
-    private remote: JellyfinLibraryRemote;
-    private local: JellyfinLibraryLocal;
-    private _loadState: LibraryLoadState;
+export class JellyfinLibrary extends MediaServerLibraryFacade {
+    protected remote: JellyfinLibraryRemote;
+    protected local: JellyfinLibraryLocal;
 
     constructor(
         private readonly configuration: Configuration,
         private readonly userId: string,
         private readonly accessToken: string
     ) {
-        super();
+        super(
+            new JellyfinLibraryLocal(configuration, userId),
+            new JellyfinLibraryRemote(configuration, userId)
+        );
         this.remote = new JellyfinLibraryRemote(configuration, userId);
         this.local = new JellyfinLibraryLocal(configuration, userId);
 
-        this._loadState = (reactive(
-            new ProxyLoadState(this.local.loadState())
-        ) as unknown) as LibraryLoadState;
         this.local.populate();
-    }
-
-    loadState(): LibraryLoadState {
-        return this._loadState;
-    }
-
-    populate(): Promise<void> {
-        return this.local.populate();
-    }
-
-    private isRemote(): boolean {
-        return this.loadState().stage === LibraryLoadStage.Remote;
-    }
-
-    private activeLibrary(): MediaServerLibrary {
-        return this.isRemote() ? this.remote : this.local;
-    }
-
-    getTracks(): Promise<Track[]> {
-        return this.activeLibrary().getTracks();
-    }
-
-    getArtists(): Promise<Artist[]> {
-        return this.activeLibrary().getArtists();
-    }
-
-    getAlbumArtists(): Promise<Artist[]> {
-        return this.activeLibrary().getAlbumArtists();
-    }
-
-    getAlbums(): Promise<Album[]> {
-        return this.activeLibrary().getAlbums();
-    }
-
-    getAlbumsOfArtist(
-        artistId: string,
-        includeFeatured: boolean
-    ): Promise<Album[]> {
-        return this.activeLibrary().getAlbumsOfArtist(
-            artistId,
-            includeFeatured
-        );
-    }
-
-    getTracksOfArtist(
-        artistId: string,
-        includeFeatured: boolean
-    ): Promise<Track[]> {
-        return this.activeLibrary().getTracksOfArtist(
-            artistId,
-            includeFeatured
-        );
-    }
-
-    getTracksOfAlbum(albumId: string): Promise<Track[]> {
-        return this.activeLibrary().getTracksOfAlbum(albumId);
-    }
-
-    getTrackById(trackId: string): Promise<Track | null> {
-        return this.activeLibrary().getTrackById(trackId);
-    }
-
-    search(searchText: string): Promise<LibraryItem[]> {
-        return this.activeLibrary().search(searchText);
     }
 
     getPlaybackUrl(track: Track, requestId: string): string {

@@ -21,12 +21,13 @@
                 </p>
             </div>
             <div class="user-menu">
-                <div class="loading-progress" v-if="!allLoaded">
+                <div class="loading-progress" v-if="!libraryManager.allLoaded">
                     <i
                         class="loading-spinner-icon fi-loop"
                         aria-label="Loading"
                     ></i>
-                    {{ loadedCount }} / {{ loadingTotal }}
+                    {{ libraryManager.loadedCount() }} /
+                    {{ libraryManager.loadingTotal() }}
                 </div>
                 <p v-if="!loggedIn">Not Logged in</p>
                 <p v-if="loggedIn">
@@ -64,7 +65,6 @@
         </header>
         <playback-screen
             v-if="appLoaded && loggedIn"
-            :libraries="libraries"
             :queueManager="queueManager"
             :libraryManager="libraryManager"
             :settings="settings"
@@ -78,10 +78,6 @@
         ></login-screen>
         <div id="loading-spinner" v-if="!appLoaded && loggedIn">
             <h1>Loading</h1>
-            <p v-for="loadingItem in loadingItems" :key="loadingItem.name">
-                {{ loadingItem.name }}: {{ loadingItem.loadedCount }} /
-                {{ loadingItem.total > 0 ? loadingItem.total : 'Unknown' }}
-            </p>
         </div>
         <notification-toast class="notification-outlet"></notification-toast>
         <div id="dialog-container"></div>
@@ -99,23 +95,6 @@ import { QueueManager } from './queues/play-queue';
 import SettingsDialog from './SettingsDialog.vue';
 import { Settings, STORAGE_KEY_SETTINGS } from './common/settings';
 import { LibraryManager } from './library';
-import {
-    MediaServer,
-    MediaServerLibrary,
-    LibraryLoadState,
-    LibraryLoadStage,
-} from './api';
-
-function sumLibraryField<K extends keyof LibraryLoadState>(
-    libs: MediaServerLibrary[],
-    fieldName: K
-): number {
-    let n = 0;
-    for (const lib of libs) {
-        n += lib.loadState()[fieldName];
-    }
-    return n;
-}
 
 interface LoadingItem {
     name: string;
@@ -149,7 +128,6 @@ export default defineComponent({
             /* eslint-enable */
             loggedIn: false,
             reconnectComplete: false,
-            libraries: [] as Array<MediaServerLibrary>,
             serverManager,
             libraryManager,
             queueManager: null as QueueManager | null,
@@ -167,62 +145,11 @@ export default defineComponent({
     },
     computed: {
         appLoaded(): boolean {
-            const librariesLoaded = this.libraries
-                .map((l) =>
-                    [LibraryLoadStage.Loaded, LibraryLoadStage.Remote].includes(
-                        l.loadState().stage
-                    )
-                )
-                .reduce((first, second) => first && second, true);
             return (
                 this.reconnectComplete &&
-                ((this.loggedIn && librariesLoaded) || !this.loggedIn)
+                ((this.loggedIn && this.libraryManager.allReady()) ||
+                    !this.loggedIn)
             );
-        },
-        allLoaded(): boolean {
-            for (const library of this.libraries) {
-                if (library.loadState().stage !== LibraryLoadStage.Loaded) {
-                    return false;
-                }
-            }
-            return true;
-        },
-        loadedCount(): number {
-            return (
-                sumLibraryField(this.libraries, 'artistLoaded') +
-                sumLibraryField(this.libraries, 'albumLoaded') +
-                sumLibraryField(this.libraries, 'trackLoaded')
-            );
-        },
-        loadingTotal(): number {
-            return Math.max(
-                0,
-                sumLibraryField(this.libraries, 'artistTotal') +
-                    sumLibraryField(this.libraries, 'albumTotal') +
-                    sumLibraryField(this.libraries, 'trackTotal')
-            );
-        },
-        loadingItems(): Array<LoadingItem> {
-            return [
-                {
-                    name: 'Artists',
-                    total: sumLibraryField(this.libraries, 'artistTotal'),
-                    loadedCount: sumLibraryField(
-                        this.libraries,
-                        'artistLoaded'
-                    ),
-                },
-                {
-                    name: 'Albums',
-                    total: sumLibraryField(this.libraries, 'albumTotal'),
-                    loadedCount: sumLibraryField(this.libraries, 'albumLoaded'),
-                },
-                {
-                    name: 'Tracks',
-                    total: sumLibraryField(this.libraries, 'trackTotal'),
-                    loadedCount: sumLibraryField(this.libraries, 'trackLoaded'),
-                },
-            ];
         },
     },
     created() {
@@ -269,23 +196,14 @@ export default defineComponent({
                 activeServers[0]
                     .serverName()
                     .then((serverName) => (this.serverName = serverName));
-                await this.loadLibraries(activeServers);
+                this.queueManager = await QueueManager.create(
+                    this.libraryManager
+                );
                 this.reconnectComplete = true;
             } else {
                 this.loggedIn = false;
                 this.reconnectComplete = true;
             }
-        },
-        async loadLibraries(servers: MediaServer[]) {
-            const libraryLoads = [] as Array<Promise<void>>;
-            for (const server of servers) {
-                const library = server.library();
-                this.libraries.push(library);
-                // libraryLoads.push(library.populate());
-            }
-            await Promise.all(libraryLoads);
-            this.queueManager = await QueueManager.create(this.libraryManager);
-            console.log('New libraries: ', this.libraries);
         },
     },
 });

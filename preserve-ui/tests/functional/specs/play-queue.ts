@@ -6,7 +6,7 @@ import { PlayQueue } from '../pages/play-queue';
 describe('Play Queue', function () {
     describe('Track Listing', () => {
         it('should play a double clicked track', () => {
-            App.visitLoaded();
+            App.visitLoggedIn();
             Library.search().type('winter cav');
             Library.tree().contains('Endga').dblclick({
                 shiftKey: true,
@@ -25,7 +25,7 @@ describe('Play Queue', function () {
         });
 
         it('should remove a selected track when pressing delete', () => {
-            App.visitLoaded();
+            App.visitLoggedIn();
             Library.search().type('winter cav');
             Library.tree().contains('Endga').dblclick({
                 shiftKey: true,
@@ -40,7 +40,7 @@ describe('Play Queue', function () {
         });
 
         it('should remember the play queue on refresh', () => {
-            App.visitLoaded();
+            App.visitLoggedIn();
             Library.search().type('winter cav');
             Library.tree().contains('Endga').dblclick({
                 shiftKey: true,
@@ -55,7 +55,7 @@ describe('Play Queue', function () {
         });
 
         it('should remove multiple selected tracks when pressing delete', () => {
-            App.visitLoaded();
+            App.visitLoggedIn();
             Library.search().type('winter cav');
             Library.tree().contains('Endga').dblclick({
                 shiftKey: true,
@@ -75,7 +75,7 @@ describe('Play Queue', function () {
         });
 
         it('should navigate focus with arrow keys', () => {
-            App.visitLoaded();
+            App.visitLoggedIn();
             Library.search().type('Bastion');
             Library.tree().contains('Bastion').dblclick({
                 shiftKey: true,
@@ -89,7 +89,7 @@ describe('Play Queue', function () {
         });
 
         it('should navigate cells with arrow keys', () => {
-            App.visitLoaded();
+            App.visitLoggedIn();
             Library.search().type('Bastion');
             Library.tree().contains('Bastion').dblclick({
                 shiftKey: true,
@@ -103,7 +103,7 @@ describe('Play Queue', function () {
         });
 
         it('should focus the first cell when pressing home', () => {
-            App.visitLoaded();
+            App.visitLoggedIn();
             Library.search().type('Bastion');
             Library.tree().contains('Bastion').dblclick({
                 shiftKey: true,
@@ -113,7 +113,7 @@ describe('Play Queue', function () {
         });
 
         it('should focus the last cell when pressing end', () => {
-            App.visitLoaded();
+            App.visitLoggedIn();
             Library.search().type('Bastion');
             Library.tree().contains('Bastion').dblclick({
                 shiftKey: true,
@@ -124,7 +124,7 @@ describe('Play Queue', function () {
         });
 
         it('should focus the first item when pressing ctrl-home', () => {
-            App.visitLoaded();
+            App.visitLoggedIn();
             Library.search().type('Bastion');
             Library.tree().contains('Bastion').dblclick({
                 shiftKey: true,
@@ -135,7 +135,7 @@ describe('Play Queue', function () {
         });
 
         it('should focus the last item when pressing ctrl-end', () => {
-            App.visitLoaded();
+            App.visitLoggedIn();
             Library.search().type('Bastion');
             Library.tree().contains('Bastion').dblclick({
                 shiftKey: true,
@@ -149,7 +149,7 @@ describe('Play Queue', function () {
         });
 
         it('should select the focused item when pressing spacebar', () => {
-            App.visitLoaded();
+            App.visitLoggedIn();
             Library.search().type('Bastion');
             Library.tree().contains('Bastion').dblclick({
                 shiftKey: true,
@@ -165,7 +165,7 @@ describe('Play Queue', function () {
         });
 
         it('should select a range when shift-clicking', () => {
-            App.visitLoaded();
+            App.visitLoggedIn();
             Library.tree().contains('Stupendium').dblclick({
                 shiftKey: true,
             });
@@ -179,7 +179,7 @@ describe('Play Queue', function () {
         });
 
         it('should select a single extra element when ctrl-clicking', () => {
-            App.visitLoaded();
+            App.visitLoggedIn();
             Library.tree().contains('Stupendium').dblclick({
                 shiftKey: true,
             });
@@ -195,7 +195,7 @@ describe('Play Queue', function () {
 
     describe('Column Picker', () => {
         it('should show the default columns', () => {
-            App.visitLoaded();
+            App.visitLoggedIn();
             PlayQueue.columnPicker().toggle().click();
             cy.findByText('Visible Columns').should('exist');
             PlayQueue.columnPicker().column('Title').should('be.checked');
@@ -205,7 +205,7 @@ describe('Play Queue', function () {
         });
 
         it('should update the columns when clicked', () => {
-            App.visitLoaded();
+            App.visitLoggedIn();
             PlayQueue.columnPicker().toggle().click();
             PlayQueue.columnPicker().column('Artist').click();
             PlayQueue.columnPicker().column('Album Artist').click();
@@ -221,7 +221,7 @@ describe('Play Queue', function () {
         });
 
         it('should remember the chosen columns when refreshed', () => {
-            App.visitLoaded();
+            App.visitLoggedIn();
             PlayQueue.columnPicker().toggle().click();
             PlayQueue.columnPicker().column('Artist').click();
             PlayQueue.columnPicker().column('Album Artist').click();
@@ -241,7 +241,7 @@ describe('Play Queue', function () {
 
     describe('Queue Tabs', () => {
         it('should add a new queue', () => {
-            App.visitLoaded();
+            App.visitLoggedIn();
             Library.search().type('Bastion');
             Library.tree().contains('Bastion').dblclick({
                 shiftKey: true,
@@ -253,7 +253,7 @@ describe('Play Queue', function () {
         });
 
         it('should switch back to an old queue', () => {
-            App.visitLoaded();
+            App.visitLoggedIn();
             Library.search().type('Bastion');
             Library.tree().contains('Bastion').dblclick({
                 shiftKey: true,
@@ -265,7 +265,7 @@ describe('Play Queue', function () {
         });
 
         it('should remember all queues', () => {
-            App.visitLoaded();
+            App.visitLoggedIn();
             Library.search().type('Bastion');
             Library.tree().contains('Bastion').dblclick({
                 shiftKey: true,
@@ -291,7 +291,7 @@ describe('Play Queue', function () {
         });
 
         it('should support arrow key to switch queues', () => {
-            App.visitLoaded();
+            App.visitLoggedIn();
 
             PlayQueue.newQueue('First New Queue');
             PlayQueue.newQueue('Second New Queue');
@@ -307,7 +307,7 @@ describe('Play Queue', function () {
         });
 
         it('should support home to switch to first queue', () => {
-            App.visitLoaded();
+            App.visitLoggedIn();
 
             PlayQueue.newQueue('First New Queue');
             PlayQueue.newQueue('Second New Queue');
@@ -323,7 +323,7 @@ describe('Play Queue', function () {
         });
 
         it('should support end to switch to first queue', () => {
-            App.visitLoaded();
+            App.visitLoggedIn();
 
             PlayQueue.newQueue('First New Queue');
             PlayQueue.newQueue('Second New Queue');
@@ -339,7 +339,7 @@ describe('Play Queue', function () {
         });
 
         it('should support F2 key to rename queues', () => {
-            App.visitLoaded();
+            App.visitLoggedIn();
 
             PlayQueue.newQueue('First New Queue');
             PlayQueue.newQueue('Second New Queue');
@@ -359,7 +359,7 @@ describe('Play Queue', function () {
         });
 
         it('should abort rename on escape', () => {
-            App.visitLoaded();
+            App.visitLoggedIn();
 
             PlayQueue.newQueue('First New Queue');
             PlayQueue.newQueue('Second New Queue');
@@ -379,7 +379,7 @@ describe('Play Queue', function () {
         });
 
         it('should support delete key to remove queues', () => {
-            App.visitLoaded();
+            App.visitLoggedIn();
 
             PlayQueue.newQueue('First New Queue');
             PlayQueue.newQueue('Second New Queue');

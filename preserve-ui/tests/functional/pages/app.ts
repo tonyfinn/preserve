@@ -11,10 +11,20 @@ const savedServers = [
 
 export class App {
     static visitMocked(): void {
-        cy.visit('/?mock=true');
+        cy.visit('/?mock=true&neverLoad');
     }
-    static visitLoaded(): void {
+    static visitLoggedIn(): void {
         cy.visit('/?mock=true', {
+            onBeforeLoad(window) {
+                window.localStorage.setItem(
+                    'preserve_mock_servers',
+                    JSON.stringify(savedServers)
+                );
+            },
+        });
+    }
+    static visitLoadPending(): void {
+        cy.visit('/?mock=true&neverLoad', {
             onBeforeLoad(window) {
                 window.localStorage.setItem(
                     'preserve_mock_servers',

@@ -4,7 +4,29 @@ import { Album, Artist, ItemStub, LibraryItem, Track } from './types';
 
 import silenceOgg from '../../static/silence.ogg';
 import { isMock } from '../common/utils';
-import { MediaServerReporter, PlaybackState } from '../api/interface';
+import {
+    LibraryLoadStage,
+    LibraryLoadState,
+    MediaServerReporter,
+    PlaybackState,
+} from '../api/interface';
+
+function sumLibraryField<K extends keyof LibraryLoadState>(
+    libs: MediaServerLibrary[],
+    fieldName: K
+): number {
+    let n = 0;
+    for (const lib of libs) {
+        n += lib.loadState()[fieldName];
+    }
+    return n;
+}
+
+interface LoadingItem {
+    name: string;
+    total: number;
+    loadedCount: number;
+}
 
 export class LibraryManager {
     constructor(private readonly serverManager: ServerManager) {}
@@ -13,6 +35,69 @@ export class LibraryManager {
         return this.serverManager.activeServers()[0].library();
     }
 
+    private libraries(): MediaServerLibrary[] {
+        return this.serverManager
+            .activeServers()
+            .map((server) => server.library());
+    }
+
+    allReady(): boolean {
+        for (const library of this.libraries()) {
+            if (
+                library.loadState().stage !== LibraryLoadStage.Loaded &&
+                library.loadState().stage !== LibraryLoadStage.Remote
+            ) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    get allLoaded(): boolean {
+        for (const library of this.libraries()) {
+            if (library.loadState().stage !== LibraryLoadStage.Loaded) {
+                return false;
+            }
+        }
+        return true;
+    }
+    loadedCount(): number {
+        const libraries = this.libraries();
+        return (
+            sumLibraryField(libraries, 'artistLoaded') +
+            sumLibraryField(libraries, 'albumLoaded') +
+            sumLibraryField(libraries, 'trackLoaded')
+        );
+    }
+    loadingTotal(): number {
+        const libraries = this.libraries();
+        return Math.max(
+            0,
+            sumLibraryField(libraries, 'artistTotal') +
+                sumLibraryField(libraries, 'albumTotal') +
+                sumLibraryField(libraries, 'trackTotal')
+        );
+    }
+    loadingItems(): Array<LoadingItem> {
+        const libraries = this.libraries();
+        return [
+            {
+                name: 'Artists',
+                total: sumLibraryField(libraries, 'artistTotal'),
+                loadedCount: sumLibraryField(libraries, 'artistLoaded'),
+            },
+            {
+                name: 'Albums',
+                total: sumLibraryField(libraries, 'albumTotal'),
+                loadedCount: sumLibraryField(libraries, 'albumLoaded'),
+            },
+            {
+                name: 'Tracks',
+                total: sumLibraryField(libraries, 'trackTotal'),
+                loadedCount: sumLibraryField(libraries, 'trackLoaded'),
+            },
+        ];
+    }
     getTracks(): Promise<Track[]> {
         return this.activeLibrary().getTracks();
     }
