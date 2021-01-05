@@ -6,7 +6,7 @@
     "dependencies": {
         "@jellyfin/client-axios": "^10.7.0",
         "@types/hls.js": "^0.13.3",
-        "axios": "^0.19.2",
+        "axios": "^0.21.1",
         "axios-mock-adapter": "^1.19.0",
         "bowser": "^2.11.0",
         "hls.js": "^0.14.16",
@@ -33,6 +33,7 @@
         "eslint-plugin-vue": "^7.1.0",
         "express": "^4.17.1",
         "file-loader": "^6.2.0",
+        "fork-ts-checker-webpack-plugin": "^6.0.8",
         "html-webpack-plugin": "^4.5.0",
         "mini-css-extract-plugin": "^0.9.0",
         "node-sass": "^5.0.0",

@@ -1,2 +1,3 @@
 export { default as ColumnPicker } from './ColumnPicker.vue';
-export { RowItem, ColumnDef, Column } from './types';
+export type { RowItem, ColumnDef } from './types';
+export { Column } from './types';

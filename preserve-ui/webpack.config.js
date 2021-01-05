@@ -1,3 +1,4 @@
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { VueLoaderPlugin } = require('vue-loader');
@@ -66,7 +67,7 @@ module.exports = {
             {
                 test: /\.ts$/,
                 loader: 'ts-loader',
-                options: { appendTsSuffixTo: [/\.vue$/] },
+                options: { appendTsSuffixTo: [/\.vue$/], transpileOnly: true },
             },
             {
                 test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
@@ -97,6 +98,20 @@ module.exports = {
                     .execSync('git rev-parse --short HEAD')
                     .toString()
             ),
+        }),
+        new ForkTsCheckerWebpackPlugin({
+            typescript: {
+                configFile: '../tsconfig.json',
+                extensions: {
+                    vue: {
+                        enabled: true,
+                        compiler: '@vue/compiler-sfc',
+                    },
+                },
+            },
+            eslint: {
+                files: './src/**/*.{ts,js,vue}',
+            },
         }),
     ],
     optimization: {
