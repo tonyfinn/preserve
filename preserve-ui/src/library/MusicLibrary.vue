@@ -51,8 +51,6 @@ import { debounced } from '../common/utils';
 import { LibraryGroupOption } from './options';
 import { LibraryManager } from './manager';
 
-type LibraryTree = Array<LibraryItem>;
-
 function artistTreeNode(artist: Artist): TreeItem<LibraryItem> {
     return buildTreeNode(artist.id, artist.name, artist.type, artist);
 }
@@ -87,7 +85,6 @@ export default defineComponent({
             groupOptions: GROUP_OPTIONS,
             libraryGrouping: this.settings.libraryGrouping,
             loaded: false,
-            libraryTree: [] as LibraryTree,
             isSearching: false,
         };
     },
@@ -210,20 +207,17 @@ export default defineComponent({
                 case LibraryGroupOption.Artist_Album:
                 case LibraryGroupOption.Artist: {
                     const artists = await this.libraryManager.getArtists();
-                    this.libraryTree = artists;
                     this.treeItems = artists.map((a) => artistTreeNode(a));
                     break;
                 }
                 case LibraryGroupOption.AlbumArtist:
                 case LibraryGroupOption.AlbumArtist_Album: {
                     const albumArtists = await this.libraryManager.getAlbumArtists();
-                    this.libraryTree = albumArtists;
                     this.treeItems = albumArtists.map((a) => artistTreeNode(a));
                     break;
                 }
                 case LibraryGroupOption.Album: {
                     const albums = await this.libraryManager.getAlbums();
-                    this.libraryTree = albums;
                     this.treeItems = albums.map((album) =>
                         albumTreeNode(album)
                     );

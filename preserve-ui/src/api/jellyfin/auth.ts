@@ -1,6 +1,6 @@
-import { Configuration, SystemApi, UserApi } from '@jellyfin/client-axios';
 import { UNKNOWN_SERVER_NAME } from 'preserve-ui/src/common/constants';
 import { MediaServerAuth } from '../interface';
+import { JellyfinApiClient } from './jf-client';
 import { JellyfinServer } from './server';
 import { JellyfinServerDefinition } from './types';
 import { buildAuthHeader, queryServerDefinition } from './utils';
@@ -45,14 +45,9 @@ export class JellyfinServerAuth
             );
         }
 
-        const authHeader = buildAuthHeader(definition.accessToken);
+        const apiClient = JellyfinApiClient.fromDefinition(definition);
 
-        const testApi = new SystemApi(
-            new Configuration({
-                basePath: definition.address,
-                apiKey: authHeader,
-            })
-        );
+        const testApi = apiClient.system();
 
         try {
             const sysInfo = await testApi.getSystemInfo();
@@ -108,10 +103,8 @@ export class JellyfinServerAuth
         username: string,
         password: string
     ): Promise<JellyfinServer> {
-        const authHeader = buildAuthHeader();
-        const userApi = new UserApi(
-            new Configuration({ basePath: address, apiKey: authHeader })
-        );
+        const apiClient = new JellyfinApiClient(address);
+        const userApi = apiClient.user();
         const serverInfo = await queryServerDefinition(address);
         const authResponse = await userApi.authenticateUserByName(
             {
@@ -122,7 +115,7 @@ export class JellyfinServerAuth
             },
             {
                 headers: {
-                    'X-Emby-Authorization': authHeader,
+                    'X-Emby-Authorization': buildAuthHeader(),
                 },
             }
         );

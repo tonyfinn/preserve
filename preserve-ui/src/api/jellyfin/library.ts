@@ -1,9 +1,6 @@
 import {
-    Configuration,
     BaseItemDto,
     NameGuidPair,
-    ArtistsApi,
-    ItemsApi,
     BaseItemDtoQueryResult,
 } from '@jellyfin/client-axios';
 import {
@@ -36,6 +33,7 @@ import {
 import { getOrGenerateClientId } from 'preserve-ui/src/common/client';
 import { AxiosResponse } from 'axios';
 import { MediaServerLibraryFacade } from 'preserve-ui/src/library/facade';
+import { JellyfinApiClient } from './jf-client';
 
 function artistIdFromStub(stub: NameGuidPair): string {
     if (stub.Id) {
@@ -180,7 +178,7 @@ export class JellyfinLibraryLocal extends MediaServerLocalLibrary {
     private trackByAlbumLookup: Map<string, Array<Track>>;
 
     constructor(
-        private readonly configuration: Configuration,
+        private readonly apiClient: JellyfinApiClient,
         private readonly userId: string
     ) {
         super();
@@ -368,9 +366,7 @@ export class JellyfinLibraryLocal extends MediaServerLocalLibrary {
         let startIndex = 0;
         let items = [];
         do {
-            const firstResult = await new ArtistsApi(
-                this.configuration
-            ).getArtists({
+            const firstResult = await this.apiClient.artists().getArtists({
                 limit: 500,
                 startIndex: startIndex,
                 userId: this.userId,
@@ -382,7 +378,8 @@ export class JellyfinLibraryLocal extends MediaServerLocalLibrary {
             ) {
                 this._loadState.artistTotal = firstResult.data.TotalRecordCount;
                 items = firstResult.data.Items;
-                startIndex = this._loadState.artistLoaded += items.length;
+                this._loadState.artistLoaded += items.length;
+                startIndex = this._loadState.artistLoaded;
                 for (const item of items) {
                     this.storeArtist(item);
                 }
@@ -401,7 +398,7 @@ export class JellyfinLibraryLocal extends MediaServerLocalLibrary {
         let startIndex = 0;
         let items = [];
         do {
-            const itemsApi = new ItemsApi(this.configuration);
+            const itemsApi = this.apiClient.items();
             const result = await itemsApi.getItemsByUserId({
                 userId: this.userId,
                 limit: 500,
@@ -418,7 +415,8 @@ export class JellyfinLibraryLocal extends MediaServerLocalLibrary {
             ) {
                 this._loadState.albumTotal = result.data.TotalRecordCount;
                 items = result.data.Items;
-                startIndex = this._loadState.albumLoaded += items.length;
+                this._loadState.albumLoaded += items.length;
+                startIndex = this._loadState.albumLoaded;
                 for (const item of items) {
                     this.storeAlbum(item);
                 }
@@ -437,7 +435,7 @@ export class JellyfinLibraryLocal extends MediaServerLocalLibrary {
         let startIndex = 0;
         let items = [];
         do {
-            const itemsApi = new ItemsApi(this.configuration);
+            const itemsApi = this.apiClient.items();
             const result = await itemsApi.getItemsByUserId({
                 userId: this.userId,
                 limit: 500,
@@ -454,7 +452,8 @@ export class JellyfinLibraryLocal extends MediaServerLocalLibrary {
             ) {
                 this._loadState.trackTotal = result.data.TotalRecordCount;
                 items = result.data.Items;
-                startIndex = this._loadState.trackLoaded += items.length;
+                this._loadState.trackLoaded += items.length;
+                startIndex = this._loadState.trackLoaded;
                 for (const item of items) {
                     this.storeTrack(item);
                 }
@@ -581,7 +580,7 @@ export class JellyfinLibraryLocal extends MediaServerLocalLibrary {
 
 export class JellyfinLibraryRemote extends MediaServerRemoteLibrary {
     constructor(
-        private readonly configuration: Configuration,
+        private readonly apiClient: JellyfinApiClient,
         private readonly userId: string
     ) {
         super();
@@ -609,7 +608,7 @@ export class JellyfinLibraryRemote extends MediaServerRemoteLibrary {
     }
 
     async getArtists(): Promise<Artist[]> {
-        const jfArtists = await new ArtistsApi(this.configuration).getArtists({
+        const jfArtists = await this.apiClient.artists().getArtists({
             limit: 100,
             startIndex: 0,
             userId: this.userId,
@@ -619,9 +618,7 @@ export class JellyfinLibraryRemote extends MediaServerRemoteLibrary {
     }
 
     async getAlbumArtists(): Promise<Artist[]> {
-        const jfArtists = await new ArtistsApi(
-            this.configuration
-        ).getAlbumArtists({
+        const jfArtists = await this.apiClient.artists().getAlbumArtists({
             limit: 100,
             startIndex: 0,
             userId: this.userId,
@@ -631,9 +628,7 @@ export class JellyfinLibraryRemote extends MediaServerRemoteLibrary {
     }
 
     async getAlbums(): Promise<Album[]> {
-        const jfAlbums = await new ItemsApi(
-            this.configuration
-        ).getItemsByUserId({
+        const jfAlbums = await this.apiClient.items().getItemsByUserId({
             userId: this.userId,
             limit: 100,
             recursive: true,
@@ -646,9 +641,7 @@ export class JellyfinLibraryRemote extends MediaServerRemoteLibrary {
     }
 
     async getTracks(): Promise<Track[]> {
-        const jfTracks = await new ItemsApi(
-            this.configuration
-        ).getItemsByUserId({
+        const jfTracks = await this.apiClient.items().getItemsByUserId({
             userId: this.userId,
             limit: 100,
             recursive: true,
@@ -669,9 +662,7 @@ export class JellyfinLibraryRemote extends MediaServerRemoteLibrary {
                   artistIds: [artistId],
               }
             : { albumArtistIds: [artistId] };
-        const jfAlbums = await new ItemsApi(
-            this.configuration
-        ).getItemsByUserId({
+        const jfAlbums = await this.apiClient.items().getItemsByUserId({
             userId: this.userId,
             limit: 100,
             recursive: true,
@@ -693,9 +684,7 @@ export class JellyfinLibraryRemote extends MediaServerRemoteLibrary {
                   artistIds: [artistId],
               }
             : { albumArtistIds: [artistId] };
-        const jfTracks = await new ItemsApi(
-            this.configuration
-        ).getItemsByUserId({
+        const jfTracks = await this.apiClient.items().getItemsByUserId({
             userId: this.userId,
             limit: 100,
             recursive: true,
@@ -709,9 +698,7 @@ export class JellyfinLibraryRemote extends MediaServerRemoteLibrary {
     }
 
     async getTracksOfAlbum(albumId: string): Promise<Track[]> {
-        const jfTracks = await new ItemsApi(
-            this.configuration
-        ).getItemsByUserId({
+        const jfTracks = await this.apiClient.items().getItemsByUserId({
             userId: this.userId,
             limit: 100,
             recursive: true,
@@ -725,9 +712,7 @@ export class JellyfinLibraryRemote extends MediaServerRemoteLibrary {
     }
 
     async getTrackById(trackId: string): Promise<Track | null> {
-        const jfTracks = await new ItemsApi(
-            this.configuration
-        ).getItemsByUserId({
+        const jfTracks = await this.apiClient.items().getItemsByUserId({
             userId: this.userId,
             limit: 100,
             recursive: true,
@@ -741,9 +726,7 @@ export class JellyfinLibraryRemote extends MediaServerRemoteLibrary {
     }
 
     async getTracksById(trackIds: string[]): Promise<Track[]> {
-        const jfTracks = await new ItemsApi(
-            this.configuration
-        ).getItemsByUserId({
+        const jfTracks = await this.apiClient.items().getItemsByUserId({
             userId: this.userId,
             limit: 100,
             recursive: true,
@@ -757,49 +740,42 @@ export class JellyfinLibraryRemote extends MediaServerRemoteLibrary {
     }
 
     async search(searchText: string): Promise<LibraryItem[]> {
-        const jfItems = await new ItemsApi(this.configuration).getItemsByUserId(
-            {
-                userId: this.userId,
-                limit: 100,
-                recursive: true,
-                includeItemTypes: ['Audio', 'MusicArtist', 'MusicAlbum'],
-                startIndex: 0,
-                sortBy: 'Name',
-                sortOrder: 'Ascending',
-                searchTerm: searchText,
-            }
-        );
+        const jfItems = await this.apiClient.items().getItemsByUserId({
+            userId: this.userId,
+            limit: 100,
+            recursive: true,
+            includeItemTypes: ['Audio', 'MusicArtist', 'MusicAlbum'],
+            startIndex: 0,
+            sortBy: 'Name',
+            sortOrder: 'Ascending',
+            searchTerm: searchText,
+        });
         return this.convertJfResponse(jfItems, normaliseLibraryItem);
     }
 }
 export class JellyfinLibrary extends MediaServerLibraryFacade {
-    protected remote: JellyfinLibraryRemote;
-    protected local: JellyfinLibraryLocal;
-
     constructor(
-        private readonly configuration: Configuration,
-        private readonly userId: string,
-        private readonly accessToken: string
+        private readonly apiClient: JellyfinApiClient,
+        private readonly userId: string
     ) {
         super(
-            new JellyfinLibraryLocal(configuration, userId),
-            new JellyfinLibraryRemote(configuration, userId)
+            new JellyfinLibraryLocal(apiClient, userId),
+            new JellyfinLibraryRemote(apiClient, userId)
         );
-        this.remote = new JellyfinLibraryRemote(configuration, userId);
-        this.local = new JellyfinLibraryLocal(configuration, userId);
-
-        this.local.populate();
     }
 
     getPlaybackUrl(track: Track, requestId: string): string {
-        const basePath = this.configuration.basePath;
+        if (!this.apiClient.accessToken) {
+            throw new Error('Tried to get playback URL while logged out');
+        }
+        const basePath = this.apiClient.address;
 
         const baseUrl = `${basePath}/Audio/${track.id}/universal`;
 
         const queryParams = new URLSearchParams({
             userId: this.userId,
             deviceId: getOrGenerateClientId(),
-            api_key: this.accessToken,
+            api_key: this.apiClient.accessToken,
             playSessionId: requestId,
             maxStreamingBitrate: '140000000',
             container: 'opus,mp3|mp3,aac,m4a,m4b|aac,flac,webma,webm,wav,ogg',

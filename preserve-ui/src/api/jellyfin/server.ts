@@ -1,9 +1,10 @@
-import { Configuration, SessionApi, UserApi } from '@jellyfin/client-axios';
+import { Configuration } from '@jellyfin/client-axios';
 import {
     MediaServer,
     MediaServerLibrary,
     MediaServerReporter,
 } from '../interface';
+import { JellyfinApiClient } from './jf-client';
 import { JellyfinLibrary } from './library';
 import { JellyfinReporter } from './reporter';
 import { JellyfinServerDefinition, JELLYFIN_SERVER_TYPE } from './types';
@@ -25,11 +26,7 @@ export class JellyfinServer implements MediaServer {
         this.accessToken = def.accessToken;
         this.userId = def.userId;
 
-        this._library = new JellyfinLibrary(
-            this.apiConfiguration(),
-            def.userId,
-            this.accessToken
-        );
+        this._library = new JellyfinLibrary(this.apiClient(), def.userId);
     }
 
     reporter(): MediaServerReporter {
@@ -38,6 +35,10 @@ export class JellyfinServer implements MediaServer {
 
     serverId(): string {
         return this.id;
+    }
+
+    apiClient(): JellyfinApiClient {
+        return new JellyfinApiClient(this.address, this.accessToken);
     }
 
     apiConfiguration(): Configuration {
@@ -49,11 +50,9 @@ export class JellyfinServer implements MediaServer {
     }
 
     async username(): Promise<string> {
-        const userInfo = await new UserApi(this.apiConfiguration()).getUserById(
-            {
-                userId: this.userId,
-            }
-        );
+        const userInfo = await this.apiClient().user().getUserById({
+            userId: this.userId,
+        });
         if (userInfo?.data?.Name) {
             return userInfo.data.Name;
         } else {
@@ -66,7 +65,7 @@ export class JellyfinServer implements MediaServer {
     }
 
     async logout(): Promise<void> {
-        await new SessionApi(this.apiConfiguration()).reportSessionEnded();
+        await this.apiClient().session().reportSessionEnded();
     }
 
     library(): MediaServerLibrary {

@@ -116,7 +116,7 @@ function filterByObjectWithId(
 }
 
 function registerMockHandlers(data: any) {
-    const mock = new MockAdapter(axios);
+    const mock = new MockAdapter(axios, { onNoMatch: 'throwException' });
     mock.onGet(`${TEST_SERVER_URL}/System/Info/Public`).reply(
         200,
         data.systemInfoPublicResponse
@@ -155,6 +155,10 @@ function registerMockHandlers(data: any) {
         matchSome({ userId: TEST_USER_ID }),
         requireAuthHeader
     ).reply(paginateResult(data.artists, 10));
+
+    mock.onPost(`${TEST_SERVER_URL}/Sessions/Playing`).reply(204);
+    mock.onPost(`${TEST_SERVER_URL}/Sessions/Playing/Progress`).reply(204);
+    mock.onPost(`${TEST_SERVER_URL}/Sessions/Playing/Stopped`).reply(204);
 
     mock.onGet(
         new RegExp(`${TEST_SERVER_URL}/Users/${TEST_USER_ID}/Items`),
@@ -257,15 +261,19 @@ function registerMockHandlers(data: any) {
             }
             return true;
         });
-        return Promise.resolve(
-            paginateResult(filteredItems, serverPageSize)(config)
-        );
+        const paginatedItems = paginateResult(
+            filteredItems,
+            serverPageSize
+        )(config);
+        console.log('Returned mocked items', config, paginatedItems);
+        return Promise.resolve(paginatedItems);
     });
 }
 
 export async function initMocks(): Promise<void> {
     // Chunked async to prevent webpack needing to recompile the data every time you change config
     return import(/* webpackChunkName: "mock-data" */ './data').then((data) => {
+        console.log(data);
         registerMockHandlers(data);
     });
 }

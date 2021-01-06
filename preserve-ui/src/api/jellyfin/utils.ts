@@ -1,4 +1,3 @@
-import { Configuration, SystemApi } from '@jellyfin/client-axios';
 import {
     getClientName,
     getOrGenerateClientId,
@@ -7,6 +6,7 @@ import {
     STORAGE_KEY_LEGACY_SERVERS,
     UNKNOWN_SERVER_NAME,
 } from '../../../src/common/constants';
+import { JellyfinApiClient } from './jf-client';
 import {
     isRemoteServer,
     LegacySavedServer,
@@ -17,8 +17,8 @@ import {
 export async function queryServerDefinition(
     url: string
 ): Promise<JellyfinServerDefinition> {
-    const api = new SystemApi(new Configuration(), url);
-    const sysInfo = await api.getPublicSystemInfo();
+    const api = new JellyfinApiClient(url);
+    const sysInfo = await api.publicSystem().getPublicSystemInfo();
 
     const serverId = sysInfo.data.Id;
 
