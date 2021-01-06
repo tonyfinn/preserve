@@ -2,13 +2,27 @@ import {
     ArtistsApi,
     Configuration,
     ItemsApi,
+    PlaystateApi,
     SessionApi,
     SystemApi,
     UserApi,
 } from '@jellyfin/client-axios';
 import axios from 'axios';
+import {
+    getClientName,
+    getOrGenerateClientId,
+} from 'preserve-ui/src/common/client';
 import { JellyfinServerDefinition } from './types';
-import { buildAuthHeader } from './utils';
+
+function buildAuthHeader(accessToken?: string): string {
+    const deviceId = getOrGenerateClientId();
+    const deviceName = getClientName();
+    let tokenString = '';
+    if (accessToken) {
+        tokenString = `, Token="${accessToken}"`;
+    }
+    return `MediaBrowser Client="${APP_NAME}", Device="${deviceName}", DeviceId="${deviceId}", Version="${APP_VERSION}"${tokenString}`;
+}
 
 export class JellyfinApiClient {
     constructor(public readonly address: string, public accessToken?: string) {}
@@ -35,6 +49,10 @@ export class JellyfinApiClient {
 
     publicSystem(): SystemApi {
         return new SystemApi(new Configuration(), this.address, axios);
+    }
+
+    playstate(): PlaystateApi {
+        return new PlaystateApi(this.configuration(), this.address, axios);
     }
 
     system(): SystemApi {

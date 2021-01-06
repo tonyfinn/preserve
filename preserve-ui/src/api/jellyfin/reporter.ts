@@ -1,18 +1,17 @@
 import {
-    Configuration,
     PlaystateApi,
     RepeatMode as JfRepeatMode,
 } from '@jellyfin/client-axios';
 import { RepeatMode } from 'preserve-ui/src/player';
 import { MediaServerReporter, PlaybackState } from '../interface';
 import { JF_TICKS_PER_MS } from 'preserve-ui/src/common/constants';
-import axios from 'axios';
+import { JellyfinApiClient } from './jf-client';
 
 export class JellyfinReporter implements MediaServerReporter {
     private playstateApi: PlaystateApi;
 
-    constructor(configuration: Configuration) {
-        this.playstateApi = new PlaystateApi(configuration, undefined, axios);
+    constructor(apiClient: JellyfinApiClient) {
+        this.playstateApi = apiClient.playstate();
     }
 
     private mapRepeatMode(repeatMode: RepeatMode): JfRepeatMode {

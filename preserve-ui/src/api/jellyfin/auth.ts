@@ -3,7 +3,6 @@ import { MediaServerAuth } from '../interface';
 import { JellyfinApiClient } from './jf-client';
 import { JellyfinServer } from './server';
 import { JellyfinServerDefinition } from './types';
-import { buildAuthHeader, queryServerDefinition } from './utils';
 
 export enum ConnectErrorEnum {
     NoAccessToken,
@@ -21,6 +20,26 @@ export class ConnectError extends Error {
         Object.setPrototypeOf(this, new.target.prototype);
         this.name = ConnectError.name;
     }
+}
+
+async function queryServerDefinition(
+    url: string
+): Promise<JellyfinServerDefinition> {
+    const api = new JellyfinApiClient(url);
+    const sysInfo = await api.publicSystem().getPublicSystemInfo();
+
+    const serverId = sysInfo.data.Id;
+
+    if (!serverId) {
+        throw new Error('Server missing ID - cannot connect');
+    }
+
+    return {
+        id: serverId,
+        ty: 'jellyfin',
+        name: sysInfo.data.ServerName || `${UNKNOWN_SERVER_NAME} - ${serverId}`,
+        address: url,
+    };
 }
 
 export class JellyfinServerAuth
@@ -106,19 +125,12 @@ export class JellyfinServerAuth
         const apiClient = new JellyfinApiClient(address);
         const userApi = apiClient.user();
         const serverInfo = await queryServerDefinition(address);
-        const authResponse = await userApi.authenticateUserByName(
-            {
-                authenticateUserByName: {
-                    Username: username,
-                    Pw: password,
-                },
+        const authResponse = await userApi.authenticateUserByName({
+            authenticateUserByName: {
+                Username: username,
+                Pw: password,
             },
-            {
-                headers: {
-                    'X-Emby-Authorization': buildAuthHeader(),
-                },
-            }
-        );
+        });
 
         if (authResponse.status === 200) {
             const authResult = authResponse.data;

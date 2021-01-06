@@ -1,4 +1,3 @@
-import { Configuration } from '@jellyfin/client-axios';
 import {
     MediaServer,
     MediaServerLibrary,
@@ -8,7 +7,6 @@ import { JellyfinApiClient } from './jf-client';
 import { JellyfinLibrary } from './library';
 import { JellyfinReporter } from './reporter';
 import { JellyfinServerDefinition, JELLYFIN_SERVER_TYPE } from './types';
-import { buildAuthHeader } from './utils';
 
 export class JellyfinServer implements MediaServer {
     id: string;
@@ -30,7 +28,7 @@ export class JellyfinServer implements MediaServer {
     }
 
     reporter(): MediaServerReporter {
-        return new JellyfinReporter(this.apiConfiguration());
+        return new JellyfinReporter(this.apiClient());
     }
 
     serverId(): string {
@@ -39,14 +37,6 @@ export class JellyfinServer implements MediaServer {
 
     apiClient(): JellyfinApiClient {
         return new JellyfinApiClient(this.address, this.accessToken);
-    }
-
-    apiConfiguration(): Configuration {
-        const authHeader = buildAuthHeader(this.accessToken);
-        return new Configuration({
-            basePath: this.address,
-            apiKey: authHeader,
-        });
     }
 
     async username(): Promise<string> {
