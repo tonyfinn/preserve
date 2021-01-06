@@ -87,6 +87,9 @@ export class ServerManager {
                 password
             );
             this._activeServers.push(server);
+            this._knownServers = this._knownServers.filter(
+                (s) => s.id !== server.id
+            );
             this._knownServers.push(server.definition());
             window.localStorage.setItem(
                 STORAGE_KEY_SERVERS,

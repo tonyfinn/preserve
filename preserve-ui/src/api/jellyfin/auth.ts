@@ -1,6 +1,6 @@
 import { UNKNOWN_SERVER_NAME } from 'preserve-ui/src/common/constants';
 import { MediaServerAuth } from '../interface';
-import { JellyfinApiClient } from './jf-client';
+import { JellyfinApiClient } from './api-client';
 import { JellyfinServer } from './server';
 import { JellyfinServerDefinition } from './types';
 
@@ -123,14 +123,11 @@ export class JellyfinServerAuth
         password: string
     ): Promise<JellyfinServer> {
         const apiClient = new JellyfinApiClient(address);
-        const userApi = apiClient.user();
         const serverInfo = await queryServerDefinition(address);
-        const authResponse = await userApi.authenticateUserByName({
-            authenticateUserByName: {
-                Username: username,
-                Pw: password,
-            },
-        });
+        const authResponse = await apiClient.makeLoginRequest(
+            username,
+            password
+        );
 
         if (authResponse.status === 200) {
             const authResult = authResponse.data;

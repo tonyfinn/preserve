@@ -5,7 +5,7 @@ import {
 import { RepeatMode } from 'preserve-ui/src/player';
 import { MediaServerReporter, PlaybackState } from '../interface';
 import { JF_TICKS_PER_MS } from 'preserve-ui/src/common/constants';
-import { JellyfinApiClient } from './jf-client';
+import { JellyfinApiClient } from './api-client';
 
 export class JellyfinReporter implements MediaServerReporter {
     private playstateApi: PlaystateApi;

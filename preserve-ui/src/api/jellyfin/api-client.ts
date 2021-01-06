@@ -1,5 +1,6 @@
 import {
     ArtistsApi,
+    AuthenticationResult,
     Configuration,
     ItemsApi,
     PlaystateApi,
@@ -7,7 +8,7 @@ import {
     SystemApi,
     UserApi,
 } from '@jellyfin/client-axios';
-import axios from 'axios';
+import axios, { AxiosResponse } from 'axios';
 import {
     getClientName,
     getOrGenerateClientId,
@@ -61,6 +62,25 @@ export class JellyfinApiClient {
 
     user(): UserApi {
         return new UserApi(this.configuration(), this.address, axios);
+    }
+
+    makeLoginRequest(
+        username: string,
+        password: string
+    ): Promise<AxiosResponse<AuthenticationResult>> {
+        return this.user().authenticateUserByName(
+            {
+                authenticateUserByName: {
+                    Username: username,
+                    Pw: password,
+                },
+            },
+            {
+                headers: {
+                    'X-Emby-Authorization': buildAuthHeader(),
+                },
+            }
+        );
     }
 
     static fromDefinition(def: JellyfinServerDefinition): JellyfinApiClient {

@@ -33,7 +33,7 @@ import {
 import { getOrGenerateClientId } from 'preserve-ui/src/common/client';
 import { AxiosResponse } from 'axios';
 import { MediaServerLibraryFacade } from 'preserve-ui/src/library/facade';
-import { JellyfinApiClient } from './jf-client';
+import { JellyfinApiClient } from './api-client';
 
 function artistIdFromStub(stub: NameGuidPair): string {
     if (stub.Id) {

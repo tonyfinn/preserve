@@ -3,7 +3,7 @@ import {
     MediaServerLibrary,
     MediaServerReporter,
 } from '../interface';
-import { JellyfinApiClient } from './jf-client';
+import { JellyfinApiClient } from './api-client';
 import { JellyfinLibrary } from './library';
 import { JellyfinReporter } from './reporter';
 import { JellyfinServerDefinition, JELLYFIN_SERVER_TYPE } from './types';
