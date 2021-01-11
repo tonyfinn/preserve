@@ -1,3 +1,21 @@
+# 0.5.0
+
+## New Features
+
+* Background loading - Server side browsing/search will be used initially while all data loads
+  in the background. Once loaded, browsing/search will then be performed locally for fast results as before.
+
+## Bug fixes
+
+* Logging in to the same server again will replace existing entries, rather than duplicate the server
+  causing excessive notifications.
+* Fixed issues logging into Jellyfin 10.7.0 servers.
+
+
+## Tech changes
+
+* Moved to official `@jellyfin/axios-client` rather than self-generated client.
+
 # 0.4.2
 
 ## Tech changes
