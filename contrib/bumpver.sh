@@ -15,5 +15,16 @@ fi
     
 echo "New version is $newver"
 
-cat preserve-ui/package.json | jq --indent 4 --arg newver $newver '.version = $newver' | tee preserve-ui/package.json
-cat preserve-electron/package.json | jq --indent 4 --arg newver $newver '.version = $newver' | tee preserve-electron/package.json
+cat preserve-ui/package.json | \
+    jq --indent 4 \
+        --arg newver $newver '.version = $newver' \
+        > preserve-ui/package.json.new
+mv preserve-ui/package.json.new preserve-ui/package.json
+(cd preserve-ui && npm install)
+
+cat preserve-electron/package.json | \
+    jq --indent 4 \
+        --arg newver $newver '.version = $newver' \
+        > preserve-electron/package.json.new
+mv preserve-electron/package.json.new preserve-electron/package.json
+(cd preserve-electron && npm install)
