@@ -1,7 +1,7 @@
 {
     "name": "preserve-electron",
     "productName": "preserve-electron",
-    "version": "0.5.0",
+    "version": "0.5.1",
     "description": "Build an electron wrapped version of preserve",
     "main": "src/index.js",
     "scripts": {
@@ -15,6 +15,11 @@
     "author": {
         "name": "Tony Finn",
         "email": "tony@tonyfinn.com"
+    },
+    "repository": {
+        "type": "git",
+        "url": "gitlab:tonyfinn/preserve",
+        "directory": "preserve-electron"
     },
     "license": "MIT",
     "config": {

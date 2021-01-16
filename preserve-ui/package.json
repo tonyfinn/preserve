@@ -1,6 +1,6 @@
 {
     "name": "preserve",
-    "version": "0.5.0",
+    "version": "0.5.1",
     "description": "Dense Media Player for Jellyfin",
     "main": "index.js",
     "dependencies": {
@@ -67,6 +67,11 @@
         "test:functional:local": "cypress run --config baseUrl=http://localhost:8080",
         "start": "webpack-dev-server --hot",
         "serve": "PRESERVE_PATH=../dist node ./scripts/start-server.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "gitlab:tonyfinn/preserve",
+        "directory": "preserve-ui"
     },
     "author": "Tony Finn <dev@tonyfinn.com>",
     "license": "GPL-2.0-or-later"
