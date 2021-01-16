@@ -14,15 +14,26 @@
                 placeholder="Search your library"
             />
         </form>
-        <psv-tree
-            v-if="loaded"
-            class="library-tree"
-            :items="treeItems"
-            :populateChildren="populateChildren"
-            @tree-activate-item="$emit('activate-item', $event)"
-            @update-selection="updateSelection"
-        ></psv-tree>
-        <p v-if="!loaded">Loading...</p>
+        <div class="tree-area">
+            <psv-tree
+                v-if="loaded"
+                class="library-tree"
+                :items="treeItems"
+                :populateChildren="populateChildren"
+                @tree-activate-item="$emit('activate-item', $event)"
+                @update-selection="updateSelection"
+            ></psv-tree>
+            <div v-if="loaded">
+                <p v-if="!allLibrariesLocal">
+                    <i
+                        class="loading-spinner-icon fi-loop"
+                        aria-hidden="true"
+                    ></i>
+                    Loading (use search for others)
+                </p>
+            </div>
+            <p v-if="!loaded">Loading...</p>
+        </div>
         <select
             data-testid="music-library-sort"
             class="sort-mode"
@@ -85,6 +96,7 @@ export default defineComponent({
             groupOptions: GROUP_OPTIONS,
             libraryGrouping: this.settings.libraryGrouping,
             loaded: false,
+            allLibrariesLocal: false,
             isSearching: false,
         };
     },
@@ -111,6 +123,7 @@ export default defineComponent({
             this.settings.set('libraryGrouping', newValue);
         },
         'libraryManager.allLoaded'(newValue, oldValue) {
+            this.allLibrariesLocal = newValue;
             if (oldValue === false && newValue === true) {
                 this.populateLibraryTree();
             }
@@ -273,14 +286,14 @@ export default defineComponent({
     margin-top: $dims-padding;
 }
 
-#music-library > .psv-tree {
+#music-library > .tree-area {
     text-overflow: ellipsis;
     overflow-wrap: anywhere;
     overflow-x: hidden;
     overflow-y: auto;
 }
 
-#music-library > .psv-tree > :last-child {
+#music-library > .tree-area > :last-child {
     padding-bottom: $dims-bottom-spacing;
 }
 </style>

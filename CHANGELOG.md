@@ -1,3 +1,9 @@
+# 0.5.1
+
+## New Features
+
+* Indicate in library tree when loading is occuring that you can search for unloaded items
+
 # 0.5.0
 
 ## New Features
