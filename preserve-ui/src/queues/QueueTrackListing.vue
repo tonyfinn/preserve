@@ -280,6 +280,7 @@ export default defineComponent({
             nextTick(() => {
                 this.ensureVisible(Math.max(0, this.activeQueue.size() - 2));
             });
+            this.player.generateShuffleOrder();
             if (options.playNow) {
                 this.playTrack(nextIndex);
             }
@@ -399,6 +400,7 @@ export default defineComponent({
         },
         removeItems(items: Array<RowItem<PlayQueueItem>>) {
             this.activeQueue.remove(items.map((x) => x.data));
+            this.player.generateShuffleOrder();
         },
         removeSelectedItems() {
             this.removeItems(this.selectedItems);

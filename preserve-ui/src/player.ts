@@ -184,7 +184,7 @@ export class AudioPlayer {
     }
 
     listenToQueueUpdates(playQueue: PlayQueue): number {
-        return playQueue.onChange.on(() => this._shuffle());
+        return playQueue.onChange.on(() => this.generateShuffleOrder());
     }
 
     activeTrack(): Track | null {
@@ -216,6 +216,7 @@ export class AudioPlayer {
         this.onQueueChange.trigger({
             newQueue: playQueue,
         });
+        this.generateShuffleOrder();
     }
 
     play(index: number): void {
@@ -431,7 +432,7 @@ export class AudioPlayer {
         }
     }
 
-    _shuffle(): void {
+    generateShuffleOrder(): void {
         const shuffleOrder = [];
         for (let i = 0; i < this.playQueue.size(); i++) {
             shuffleOrder.push(i);
@@ -452,7 +453,7 @@ export class AudioPlayer {
             this.shuffleMode === ShuffleMode.Off
                 ? ShuffleMode.Shuffle
                 : ShuffleMode.Off;
-        this._shuffle();
+        this.generateShuffleOrder();
         if (this.shuffleMode === ShuffleMode.Shuffle) {
             this.playQueue.index = 0;
             const firstShuffledIndex = this.shuffleOrder[0];
@@ -503,7 +504,7 @@ export class AudioPlayer {
     setShuffleMode(shuffleMode: ShuffleMode): void {
         this.shuffleMode = shuffleMode;
         if (shuffleMode === ShuffleMode.Shuffle) {
-            this._shuffle();
+            this.generateShuffleOrder();
         }
         const activeTrack = this.activeTrack();
         if (activeTrack) {
