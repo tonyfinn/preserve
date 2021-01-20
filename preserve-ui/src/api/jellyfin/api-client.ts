@@ -13,6 +13,7 @@ import {
     getClientName,
     getOrGenerateClientId,
 } from 'preserve-ui/src/common/client';
+import { MediaServerTestResult } from '../interface';
 import { JellyfinServerDefinition } from './types';
 
 function buildAuthHeader(accessToken?: string): string {
@@ -81,6 +82,21 @@ export class JellyfinApiClient {
                 },
             }
         );
+    }
+
+    static async test(address: string): Promise<MediaServerTestResult> {
+        try {
+            const result = await new JellyfinApiClient(address)
+                .publicSystem()
+                .getPublicSystemInfo();
+            if (result.status === 200) {
+                return MediaServerTestResult.Success;
+            } else {
+                return MediaServerTestResult.InvalidServer;
+            }
+        } catch {
+            return MediaServerTestResult.NoServer;
+        }
     }
 
     static fromDefinition(def: JellyfinServerDefinition): JellyfinApiClient {

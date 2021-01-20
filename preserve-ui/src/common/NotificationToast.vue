@@ -111,7 +111,7 @@ export default defineComponent({
 }
 
 .notification-default {
-    background-color: grey;
+    background-color: $colors-info;
 }
 
 .notification-success {

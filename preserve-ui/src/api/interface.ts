@@ -29,6 +29,12 @@ export interface BaseServerDefinition {
     name: string;
 }
 
+export enum MediaServerTestResult {
+    NoServer,
+    InvalidServer,
+    Success,
+}
+
 export interface MediaServer {
     library(): MediaServerLibrary;
     reporter(): MediaServerReporter;

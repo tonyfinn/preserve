@@ -1,4 +1,8 @@
-import { BaseServerDefinition, MediaServer } from '../api/interface';
+import {
+    BaseServerDefinition,
+    MediaServer,
+    MediaServerTestResult,
+} from '../api/interface';
 import {
     getOldJellyfinServers,
     JellyfinServerAuth,
@@ -13,6 +17,7 @@ import {
     NOTIFICATION_TIME_FOREVER,
     NOTIFICATION_TIME_SHORT,
 } from './notifications';
+import { JellyfinApiClient } from '../api/jellyfin/api-client';
 
 export type ServerDefinition = JellyfinServerDefinition | BaseServerDefinition;
 
@@ -99,6 +104,16 @@ export class ServerManager {
         } else {
             throw new Error(`Unknown server type '${type}'`);
         }
+    }
+
+    async test(
+        type: ServerType,
+        address: string
+    ): Promise<MediaServerTestResult> {
+        if (type === JELLYFIN_SERVER_TYPE) {
+            return JellyfinApiClient.test(address);
+        }
+        return MediaServerTestResult.InvalidServer;
     }
 
     async reconnect(): Promise<void> {
