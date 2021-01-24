@@ -1,7 +1,7 @@
 {
     "name": "preserve-electron",
     "productName": "preserve-electron",
-    "version": "0.5.1",
+    "version": "0.5.2",
     "description": "Build an electron wrapped version of preserve",
     "main": "src/index.js",
     "scripts": {

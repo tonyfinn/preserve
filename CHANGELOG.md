@@ -1,3 +1,13 @@
+# 0.5.2
+
+## New Features
+
+* If the URL does not have http/https prefix, the login screen will try connect using both and report the status
+
+## Bug fixes
+
+* If shuffle mode is saved, the shuffle order on load would not include all tracks.
+
 # 0.5.1
 
 ## New Features
