@@ -51,8 +51,19 @@ declare global {
     interface Navigator {
         mediaSession?: MediaSession;
     }
+
+    interface MediaImage {
+        src: string;
+        sizes?: string;
+        type?: string;
+    }
     class MediaMetadata {
-        constructor(opts: { title?: string; artist?: string; album?: string });
+        constructor(opts: {
+            title?: string;
+            artist?: string;
+            album?: string;
+            artwork?: MediaImage[];
+        });
     }
 }
 
@@ -238,11 +249,18 @@ export class AudioPlayer {
         this.playing = true;
         const artist = artistNames(track);
         if (navigator.mediaSession) {
-            navigator.mediaSession.metadata = new MediaMetadata({
+            const trackArtUrl = this.libraryManager.getTrackArtUrl(track, 256);
+            const albumArtArray = [];
+            if (trackArtUrl) {
+                albumArtArray.push({ src: trackArtUrl });
+            }
+            const metadata = new MediaMetadata({
                 title: track.name,
                 album: track.album.name,
                 artist,
+                artwork: albumArtArray,
             });
+            navigator.mediaSession.metadata = metadata;
             navigator.mediaSession.playbackState = 'playing';
         }
         document.title = `${track.name} - ${artist} | Preserve`;

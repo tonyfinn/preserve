@@ -16,6 +16,9 @@
                 v-if="activeTrack"
                 aria-label="Track Information"
             >
+                <div class="playback-cover-art">
+                    <img v-if="albumArtSrc" :src="albumArtSrc" alt="" />
+                </div>
                 <div class="track-information">
                     <span
                         data-testid="nowplaying-track"
@@ -160,7 +163,7 @@ import {
     RepeatMode,
     ShuffleMode,
 } from './player';
-import { artistNames } from './library';
+import { artistNames, LibraryManager } from './library';
 import SliderBar from './common/SliderBar.vue';
 import { formatTime } from './common/utils';
 import {
@@ -179,6 +182,10 @@ export default defineComponent({
         },
         settings: {
             type: Settings,
+            required: true,
+        },
+        libraryManager: {
+            type: LibraryManager,
             required: true,
         },
     },
@@ -253,6 +260,12 @@ export default defineComponent({
             }
             return UNKNOWN_ALBUM_NAME;
         },
+        albumArtSrc(): string | null {
+            if (!this.activeTrack) {
+                return null;
+            }
+            return this.libraryManager.getTrackArtUrl(this.activeTrack, 100);
+        },
         repeatModeLabel(): string {
             switch (this.repeatMode) {
                 case RepeatMode.Off:
@@ -322,8 +335,17 @@ export default defineComponent({
 
     .now-playing {
         display: grid;
-        grid-template-columns: 1fr auto;
+        grid-template-columns: auto 1fr auto;
         grid-auto-flow: column;
+
+        .playback-cover-art {
+            max-height: 2em;
+            img {
+                margin: $dims-padding-dense $dims-padding $dims-padding-dense 0;
+                max-height: 2em;
+                max-width: 2em;
+            }
+        }
 
         .track-title {
             display: block;

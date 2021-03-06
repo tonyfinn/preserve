@@ -136,6 +136,10 @@ export class LibraryManager {
         return this.activeLibrary().getTrackById(trackId);
     }
 
+    getTrackArtUrl(track: Track, size?: number): string | null {
+        return this.activeLibrary().getTrackArtUrl(track, size);
+    }
+
     search(searchText: string): Promise<LibraryItem[]> {
         return this.activeLibrary().search(searchText);
     }

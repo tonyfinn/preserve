@@ -4,6 +4,7 @@ export interface Item {
     id: string;
     serverId: string;
     type: ItemType;
+    libraryProviderData?: { [name: string]: unknown };
 }
 
 export interface ItemStub {
@@ -31,7 +32,6 @@ export interface Album extends Item {
     artists: Array<ItemStub>;
     albumArtists: Array<ItemStub>;
     tracks: Array<Track>;
-    albumArtId?: string;
     type: 'album';
 }
 
@@ -42,7 +42,6 @@ export interface Track extends Item {
     genres: Array<string>;
     album: ItemStub;
     year?: number;
-    albumArtId?: string;
     trackNumber?: number;
     duration: number;
     discNumber?: number;

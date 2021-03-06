@@ -17,6 +17,7 @@
         <playback-footer
             :player="player"
             :settings="settings"
+            :libraryManager="libraryManager"
         ></playback-footer>
         <div class="drag-counter">
             {{ selectedItems.length }} items selected

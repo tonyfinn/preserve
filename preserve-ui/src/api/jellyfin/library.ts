@@ -35,6 +35,7 @@ import { getOrGenerateClientId } from 'preserve-ui/src/common/client';
 import { AxiosResponse } from 'axios';
 import { MediaServerLibraryFacade } from 'preserve-ui/src/library/facade';
 import { JellyfinApiClient } from './api-client';
+import { ALBUM_PRIMARY_ART_FIELD, TRACK_PIMARY_ART_FIELD } from './types';
 
 function artistIdFromStub(stub: NameGuidPair): string {
     if (stub.Id) {
@@ -110,7 +111,6 @@ function normaliseAlbum(album: BaseItemDto): Album | null {
         albumArtists: normaliseArtistStubs(album.AlbumArtists || []),
         artists: normaliseArtistStubs(album.ArtistItems || []),
         tracks: [],
-        albumArtId: album.ImageTags?.Primary,
         year: album.ProductionYear || undefined,
         type: 'album',
         synthetic: false,
@@ -137,7 +137,10 @@ function normaliseTrack(track: BaseItemDto): Track | null {
         trackNumber: track.IndexNumber || undefined,
         discNumber: track.ParentIndexNumber || undefined,
         duration: Math.floor(track.RunTimeTicks / (JF_TICKS_PER_MS * 1000)),
-        albumArtId: track.AlbumPrimaryImageTag || undefined,
+        libraryProviderData: {
+            [TRACK_PIMARY_ART_FIELD]: track.ImageTags?.Primary || undefined,
+            [ALBUM_PRIMARY_ART_FIELD]: track.AlbumPrimaryImageTag || undefined,
+        },
         year: track.ProductionYear || undefined,
         album: {
             id: albumIdFromBaseItem(track),
@@ -322,7 +325,11 @@ export class JellyfinLibraryLocal extends MediaServerLocalLibrary {
     }
 
     getPlaybackUrl(_track: Track, _requestId: string): string {
-        throw new Error('Method not implemented.');
+        throw new Error('Method not implemented, use jellyfin facade.');
+    }
+
+    getTrackArtUrl(_track: Track, _size?: number): string {
+        throw new Error('Method not implemented, use jellyfin facade.');
     }
 
     private storeArtist(jfArtist: BaseItemDto) {
@@ -489,7 +496,6 @@ export class JellyfinLibraryLocal extends MediaServerLocalLibrary {
             serverId: track.serverId,
             albumArtists: [...track.albumArtists],
             artists: [...track.artists],
-            albumArtId: track.albumArtId,
             year: track.year,
             tracks: [],
             type: 'album',
@@ -590,7 +596,11 @@ export class JellyfinLibraryRemote extends MediaServerRemoteLibrary {
     }
 
     getPlaybackUrl(_track: Track, _requestId: string): string {
-        throw new Error('Method not implemented.');
+        throw new Error('Method not implemented, use jellyfin facade');
+    }
+
+    getTrackArtUrl(_track: Track, _size?: number): string {
+        throw new Error('Method not implemented, use jellyfin facade.');
     }
 
     private convertJfResponse<T>(
@@ -791,5 +801,33 @@ export class JellyfinLibrary extends MediaServerLibraryFacade {
         });
 
         return `${baseUrl}?${queryParams}`;
+    }
+
+    getTrackArtUrl(track: Track, size?: number): string | null {
+        const basePath = this.apiClient.address;
+
+        const queryParams = new URLSearchParams();
+        let itemId;
+        const trackPrimaryArt =
+            track.libraryProviderData &&
+            track.libraryProviderData[TRACK_PIMARY_ART_FIELD];
+        const albumPrimaryArt =
+            track.libraryProviderData &&
+            track.libraryProviderData[ALBUM_PRIMARY_ART_FIELD];
+        if (typeof trackPrimaryArt === 'string') {
+            queryParams.set('tag', trackPrimaryArt);
+            itemId = track.id;
+        } else if (typeof albumPrimaryArt === 'string') {
+            queryParams.set('tag', albumPrimaryArt);
+            itemId = track.album.id;
+        }
+
+        if (size) {
+            queryParams.set('height', `${size}`);
+        }
+
+        const artUrl = `${basePath}/Items/${itemId}/Images/Primary?${queryParams}`;
+
+        return itemId ? artUrl : null;
     }
 }

@@ -69,6 +69,10 @@ export abstract class MediaServerLibraryFacade extends MediaServerLibrary {
         return this.activeLibrary().getTracks();
     }
 
+    getTrackArtUrl(track: Track, size?: number): string | null {
+        return this.activeLibrary().getTrackArtUrl(track, size);
+    }
+
     getArtists(): Promise<Artist[]> {
         return this.activeLibrary().getArtists();
     }

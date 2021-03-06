@@ -3,6 +3,7 @@
 ## New Features
 
 * New fields in track listing (genre, year)
+* Show album art of currently playing track.
 
 
 # 0.5.2

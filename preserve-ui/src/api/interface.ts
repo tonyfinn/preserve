@@ -79,6 +79,7 @@ export abstract class MediaServerLibrary {
     abstract search(searchText: string): Promise<LibraryItem[]>;
 
     abstract getPlaybackUrl(track: Track, requestId: string): string;
+    abstract getTrackArtUrl(track: Track, size?: number): string | null;
 
     async getTracksByIds(trackIds: string[]): Promise<Track[]> {
         const results = await Promise.all(
