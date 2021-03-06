@@ -3,6 +3,7 @@ import { ColumnDef, RowItem } from '../common/table';
 import { Column } from '../common/table/types';
 import { formatTime } from '../common/utils';
 import { albumArtistNames, artistNames } from '../library';
+import { genreNames } from '../library/utils';
 import { PlayQueueItem } from './play-queue';
 
 export enum PlayColumn {
@@ -13,6 +14,8 @@ export enum PlayColumn {
     AlbumArtist,
     Album,
     Duration,
+    Year,
+    Genre,
 }
 
 export const PLAY_QUEUE_COLUMNS: Array<ColumnDef<PlayColumn, PlayQueueItem>> = [
@@ -67,6 +70,20 @@ export const PLAY_QUEUE_COLUMNS: Array<ColumnDef<PlayColumn, PlayQueueItem>> = [
         field: PlayColumn.Duration,
         renderer(row: RowItem<PlayQueueItem>): string {
             return formatTime(row.data.track.duration);
+        },
+    },
+    {
+        title: 'Year',
+        field: PlayColumn.Year,
+        renderer(row: RowItem<PlayQueueItem>): string {
+            return row.data.track.year?.toString() || '--';
+        },
+    },
+    {
+        title: 'Genre',
+        field: PlayColumn.Genre,
+        renderer(row: RowItem<PlayQueueItem>): string {
+            return genreNames(row.data.track);
         },
     },
 ];

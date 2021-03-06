@@ -52,3 +52,10 @@ export function albumArtistNames(t: Track): string {
     }
     return UNKNOWN_ARTIST_NAME;
 }
+
+export function genreNames(t: Track): string {
+    if (t.genres && t.genres.length > 0) {
+        return t.genres.join('; ');
+    }
+    return 'Unknown';
+}

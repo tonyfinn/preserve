@@ -239,6 +239,48 @@ describe('Play Queue', function () {
         });
     });
 
+    describe('Columns', () => {
+        it('should show all columns when enabled', () => {
+            App.visitLoggedIn();
+            PlayQueue.columnPicker().toggle().click();
+            PlayQueue.columnPicker().column('Disc Number').click();
+            PlayQueue.columnPicker().column('Track Number').click();
+            PlayQueue.columnPicker().column('Album Artist').click();
+            PlayQueue.columnPicker().column('Duration').click();
+            PlayQueue.columnPicker().column('Year').click();
+            PlayQueue.columnPicker().column('Genre').click();
+            PlayQueue.columnPicker().checkedColumns().should('have.length', 9);
+
+            Library.search().type('Pantheon');
+            Library.tree().contains('Pantheon').dblclick({
+                shiftKey: true,
+            });
+
+            // Disc Number
+            PlayQueue.item(0).column(0).should('contain', 1);
+            // Track Number
+            PlayQueue.item(0).column(1).should('contain', 22);
+            // Title
+            PlayQueue.item(0)
+                .column(2)
+                .should('contain', "The Pantheon (Ain't Gonna Catch You)");
+            // Artist
+            PlayQueue.item(0).column(3).should('contain', 'Darren Korb');
+            // Album Artist
+            PlayQueue.item(0).column(4).should('contain', 'Darren Korb');
+            // Album
+            PlayQueue.item(0)
+                .column(5)
+                .should('contain', 'Bastion Original Soundtrack');
+            // Duration
+            PlayQueue.item(0).column(6).should('contain', '02:27');
+            // Year
+            PlayQueue.item(0).column(7).should('contain', '2011');
+            // Genre
+            PlayQueue.item(0).column(8).should('contain', 'Soundtrack');
+        });
+    });
+
     describe('Queue Tabs', () => {
         it('should add a new queue', () => {
             App.visitLoggedIn();

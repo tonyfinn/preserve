@@ -2,6 +2,7 @@ import {
     BaseItemDto,
     NameGuidPair,
     BaseItemDtoQueryResult,
+    ItemFields,
 } from '@jellyfin/client-axios';
 import {
     JF_TICKS_PER_MS,
@@ -132,6 +133,7 @@ function normaliseTrack(track: BaseItemDto): Track | null {
         serverId: track.ServerId,
         artists: normaliseArtistStubs(track.ArtistItems || []),
         albumArtists: normaliseArtistStubs(track.AlbumArtists || []),
+        genres: track.Genres || [],
         trackNumber: track.IndexNumber || undefined,
         discNumber: track.ParentIndexNumber || undefined,
         duration: Math.floor(track.RunTimeTicks / (JF_TICKS_PER_MS * 1000)),
@@ -444,6 +446,7 @@ export class JellyfinLibraryLocal extends MediaServerLocalLibrary {
                 startIndex: startIndex,
                 sortBy: 'Name',
                 sortOrder: 'Ascending',
+                fields: [ItemFields.Genres],
             });
             if (
                 result.status === 200 &&

@@ -39,6 +39,7 @@ export interface Track extends Item {
     name: string;
     artists: Array<ItemStub>;
     albumArtists: Array<ItemStub>;
+    genres: Array<string>;
     album: ItemStub;
     year?: number;
     albumArtId?: string;
