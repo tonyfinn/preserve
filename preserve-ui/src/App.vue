@@ -96,12 +96,6 @@ import SettingsDialog from './SettingsDialog.vue';
 import { Settings, STORAGE_KEY_SETTINGS } from './common/settings';
 import { LibraryManager } from './library';
 
-interface LoadingItem {
-    name: string;
-    total: number;
-    loadedCount: number;
-}
-
 export default defineComponent({
     components: {
         LoginScreen,
@@ -129,7 +123,7 @@ export default defineComponent({
             loggedIn: false,
             reconnectComplete: false,
             serverManager,
-            libraryManager,
+            libraryManager: libraryManager,
             queueManager: null as QueueManager | null,
             releaseVersionVisible: true,
             settingsOpen: false,

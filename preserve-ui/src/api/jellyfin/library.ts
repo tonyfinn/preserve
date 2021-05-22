@@ -36,6 +36,7 @@ import { AxiosResponse } from 'axios';
 import { MediaServerLibraryFacade } from 'preserve-ui/src/library/facade';
 import { JellyfinApiClient } from './api-client';
 import { ALBUM_PRIMARY_ART_FIELD, TRACK_PIMARY_ART_FIELD } from './types';
+import { LibraryBuilder, LibraryDatabase } from 'preserve-ui/src/library/db';
 
 function artistIdFromStub(stub: NameGuidPair): string {
     if (stub.Id) {
@@ -171,6 +172,10 @@ export class JellyfinLibraryLocal extends MediaServerLocalLibrary {
     private albums: Array<Album>;
     private tracks: Array<Track>;
 
+    private libraryDb: Promise<LibraryDatabase>;
+    private libraryResolve: (db: LibraryDatabase) => void;
+    private libraryReject: (err: Error) => void;
+
     private artistByIdLookup: ItemLookup<Artist>;
     private albumByIdLookup: ItemLookup<Album>;
     private trackByIdLookup: ItemLookup<Track>;
@@ -191,6 +196,21 @@ export class JellyfinLibraryLocal extends MediaServerLocalLibrary {
         this.artists = [];
         this.albums = [];
         this.tracks = [];
+        this.libraryResolve = () => {
+            throw new Error(
+                'Tried to complete library load before load start - this should not happen'
+            );
+        };
+        this.libraryReject = (err) => {
+            throw new Error(
+                'Tried to fail library load before load start - this should not happen' +
+                    err.message
+            );
+        };
+        this.libraryDb = new Promise((resolve, reject) => {
+            this.libraryResolve = resolve;
+            this.libraryReject = reject;
+        });
 
         this.artistByIdLookup = new Map();
         this.albumByIdLookup = new Map();
@@ -277,19 +297,30 @@ export class JellyfinLibraryLocal extends MediaServerLocalLibrary {
     }
 
     async populate(): Promise<void> {
+        const libraryBuilder = new LibraryBuilder(`jellyfin`);
         const artistLoading = this.loadArtists();
         const albumLoading = this.loadAlbums();
         const trackLoading = this.loadTracks();
 
-        return Promise.all([artistLoading, albumLoading, trackLoading]).then(
-            ([_artists, _albums, tracks]) => {
-                this.buildSyntheticArtists(tracks);
-                this.buildSyntheticArtists(this.albums);
-                this.buildSyntheticAlbums(tracks);
-                this.artists.sort(sortArtists);
-                this._loadState.stage = LibraryLoadStage.Loaded;
-            }
-        );
+        const tracks = (
+            await Promise.all([trackLoading, artistLoading, albumLoading])
+        )[0];
+        for (const artist of this.artists) {
+            libraryBuilder.addArtist(artist);
+        }
+        for (const album of this.albums) {
+            libraryBuilder.addAlbum(album);
+        }
+        for (const track of this.tracks) {
+            libraryBuilder.addTrack(track);
+        }
+        this.buildSyntheticArtists(tracks);
+        this.buildSyntheticArtists(this.albums);
+        this.buildSyntheticAlbums(tracks);
+        this.artists.sort(sortArtists);
+        const library = await libraryBuilder.build();
+        this.libraryResolve(library);
+        this._loadState.stage = LibraryLoadStage.Loaded;
     }
 
     async search(searchText: string): Promise<LibraryItem[]> {

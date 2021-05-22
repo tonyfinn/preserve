@@ -22,7 +22,7 @@ module.exports = {
         // mock: './src/mock/index.ts',
     },
     output: {
-        filename: devMode ? '[name].js' : '[name].[hash].js',
+        filename: devMode ? '[name].js' : '[name].[contenthash].js',
         path: path.resolve(__dirname, '../dist'),
     },
     module: {
@@ -33,19 +33,12 @@ module.exports = {
             },
             {
                 test: /\.(png|gif|svg|ogg)$/,
-                loader: 'file-loader',
+                type: 'asset/resource',
             },
             {
                 test: /\.scss$/,
                 use: [
-                    devMode
-                        ? 'style-loader'
-                        : {
-                              loader: MiniCssExtractPlugin.loader,
-                              options: {
-                                  hmr: devMode,
-                              },
-                          },
+                    devMode ? 'style-loader' : MiniCssExtractPlugin.loader,
                     'css-loader',
                     'sass-loader',
                 ],
@@ -53,14 +46,7 @@ module.exports = {
             {
                 test: /\.css$/,
                 use: [
-                    devMode
-                        ? 'style-loader'
-                        : {
-                              loader: MiniCssExtractPlugin.loader,
-                              options: {
-                                  hmr: devMode,
-                              },
-                          },
+                    devMode ? 'style-loader' : MiniCssExtractPlugin.loader,
                     'css-loader',
                 ],
             },
@@ -71,18 +57,18 @@ module.exports = {
             },
             {
                 test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-                loader: 'url-loader?limit=10000&mimetype=application/font-woff',
+                type: 'asset',
             },
             {
                 test: /\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-                loader: 'file-loader',
+                type: 'asset/resource',
             },
         ],
     },
     plugins: [
         new MiniCssExtractPlugin({
-            filename: devMode ? '[name].css' : '[name].[hash].css',
-            chunkFilename: devMode ? '[id].css' : '[id].[hash].css',
+            filename: devMode ? '[name].css' : '[name].[contenthash].css',
+            chunkFilename: devMode ? '[id].css' : '[id].[contenthash].css',
         }),
         new HtmlWebpackPlugin({
             favicon: 'static/favicon.ico',
