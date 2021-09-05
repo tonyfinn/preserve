@@ -1,5 +1,4 @@
-# 0.5.3 (unreleased)
-
+# 0.5.3
 ## New Features
 
 * New fields in track listing (genre, year)
