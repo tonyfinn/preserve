@@ -29,8 +29,8 @@ export const GROUP_OPTIONS = [
     },
     {
         value: LibraryGroupOption.Artist,
-        label: 'Artist',
         order: [GroupingField.Artist],
+        label: 'Artist',
     },
     {
         value: LibraryGroupOption.AlbumArtist,
@@ -38,22 +38,27 @@ export const GROUP_OPTIONS = [
         label: 'Album Artist',
     },
     {
+        value: LibraryGroupOption.Album,
+        order: [GroupingField.Album],
+        label: 'Album',
+    },
+    /*{
         value: LibraryGroupOption.Genre_Album,
-        label: 'Genre > Album',
         order: [GroupingField.Genre, GroupingField.Album],
+        label: 'Genre > Album',
     },
     {
         value: LibraryGroupOption.Genre_AlbumArtist,
-        label: 'Genre > Album Artist',
         order: [GroupingField.Genre, GroupingField.AlbumArtist],
+        label: 'Genre > Album Artist',
     },
     {
         value: LibraryGroupOption.Genre_AlbumArtist_Album,
-        label: 'Genre > Album Artist > Album',
         order: [
             GroupingField.Genre,
             GroupingField.AlbumArtist,
             GroupingField.Album,
         ],
-    },
+        label: 'Genre > Album Artist > Album',
+    },*/
 ];

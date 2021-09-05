@@ -176,6 +176,8 @@ export class JellyfinLibraryLocal extends MediaServerLocalLibrary {
     private libraryResolve: (db: LibraryDatabase) => void;
     private libraryReject: (err: Error) => void;
 
+    private enableIdbDatabase = false;
+
     private artistByIdLookup: ItemLookup<Artist>;
     private albumByIdLookup: ItemLookup<Album>;
     private trackByIdLookup: ItemLookup<Track>;
@@ -297,7 +299,6 @@ export class JellyfinLibraryLocal extends MediaServerLocalLibrary {
     }
 
     async populate(): Promise<void> {
-        const libraryBuilder = new LibraryBuilder(`jellyfin`);
         const artistLoading = this.loadArtists();
         const albumLoading = this.loadAlbums();
         const trackLoading = this.loadTracks();
@@ -305,21 +306,24 @@ export class JellyfinLibraryLocal extends MediaServerLocalLibrary {
         const tracks = (
             await Promise.all([trackLoading, artistLoading, albumLoading])
         )[0];
-        for (const artist of this.artists) {
-            libraryBuilder.addArtist(artist);
-        }
-        for (const album of this.albums) {
-            libraryBuilder.addAlbum(album);
-        }
-        for (const track of this.tracks) {
-            libraryBuilder.addTrack(track);
-        }
         this.buildSyntheticArtists(tracks);
         this.buildSyntheticArtists(this.albums);
         this.buildSyntheticAlbums(tracks);
         this.artists.sort(sortArtists);
-        const library = await libraryBuilder.build();
-        this.libraryResolve(library);
+        if (this.enableIdbDatabase) {
+            const libraryBuilder = new LibraryBuilder(`jellyfin`);
+            for (const artist of this.artists) {
+                libraryBuilder.addArtist(artist);
+            }
+            for (const album of this.albums) {
+                libraryBuilder.addAlbum(album);
+            }
+            for (const track of this.tracks) {
+                libraryBuilder.addTrack(track);
+            }
+            const library = await libraryBuilder.build();
+            this.libraryResolve(library);
+        }
         this._loadState.stage = LibraryLoadStage.Loaded;
     }
 

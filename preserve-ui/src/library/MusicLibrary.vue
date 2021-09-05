@@ -15,15 +15,12 @@
             />
         </form>
         <div class="tree-area">
-            <psv-tree
-                v-if="loaded"
-                class="library-tree"
-                :items="treeItems"
-                :populateChildren="populateChildren"
-                @tree-activate-item="$emit('activate-item', $event)"
-                @update-selection="updateSelection"
-            ></psv-tree>
             <div v-if="loaded">
+                <p v-if="refreshPending">
+                    <button @click="switchToLoaded">
+                        Show Newly Loaded Items
+                    </button>
+                </p>
                 <p v-if="!allLibrariesLocal">
                     <i
                         class="loading-spinner-icon fi-loop"
@@ -32,6 +29,14 @@
                     Loading (use search for others)
                 </p>
             </div>
+            <psv-tree
+                v-if="loaded"
+                class="library-tree"
+                :items="treeItems"
+                :populateChildren="populateChildren"
+                @tree-activate-item="$emit('activate-item', $event)"
+                @update-selection="updateSelection"
+            ></psv-tree>
             <p v-if="!loaded">Loading...</p>
         </div>
         <select
@@ -97,6 +102,8 @@ export default defineComponent({
             libraryGrouping: this.settings.libraryGrouping,
             loaded: false,
             allLibrariesLocal: false,
+            hasUserInteraction: false,
+            refreshPending: false,
             isSearching: false,
         };
     },
@@ -112,6 +119,7 @@ export default defineComponent({
     },
     watch: {
         searchText() {
+            this.hasUserInteraction = true;
             if (this.debouncedSearch) {
                 this.debouncedSearch();
             }
@@ -125,15 +133,24 @@ export default defineComponent({
         'libraryManager.allLoaded'(newValue, oldValue) {
             this.allLibrariesLocal = newValue;
             if (oldValue === false && newValue === true) {
-                this.populateLibraryTree();
+                if (this.hasUserInteraction) {
+                    this.refreshPending = true;
+                } else {
+                    this.populateLibraryTree();
+                }
             }
         },
     },
     methods: {
+        switchToLoaded() {
+            this.refreshPending = false;
+            this.populateLibraryTree();
+        },
         async populateChildren(
             treeItem: TreeItem<LibraryItem>,
             parents: Array<TreeItem<LibraryItem>>
         ): Promise<Array<TreeItem<LibraryItem>>> {
+            this.hasUserInteraction = true;
             const item = treeItem.data;
             if (item.type === 'artist') {
                 if (
