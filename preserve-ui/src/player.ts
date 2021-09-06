@@ -498,7 +498,8 @@ export class AudioPlayer {
 
     setVolume(volume: number): void {
         this.muted = false;
-        this.element.volume = this.volume = volume;
+        this.volume = volume;
+        this.element.volume = Math.pow(volume, 4);
         const activeTrack = this.activeTrack();
         if (activeTrack) {
             this.libraryManager.reportVolumeChange(
