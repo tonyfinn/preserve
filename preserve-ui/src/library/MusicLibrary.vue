@@ -242,7 +242,8 @@ export default defineComponent({
                 }
                 case LibraryGroupOption.AlbumArtist:
                 case LibraryGroupOption.AlbumArtist_Album: {
-                    const albumArtists = await this.libraryManager.getAlbumArtists();
+                    const albumArtists =
+                        await this.libraryManager.getAlbumArtists();
                     this.treeItems = albumArtists.map((a) => artistTreeNode(a));
                     break;
                 }

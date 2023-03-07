@@ -104,9 +104,8 @@ export default defineComponent({
         SettingsDialog,
     },
     data() {
-        const settingsString = window.localStorage.getItem(
-            STORAGE_KEY_SETTINGS
-        );
+        const settingsString =
+            window.localStorage.getItem(STORAGE_KEY_SETTINGS);
         const savedSettings: Partial<Settings> = settingsString
             ? JSON.parse(settingsString)
             : {};

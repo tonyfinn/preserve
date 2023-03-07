@@ -17,12 +17,10 @@
                 :aria-selected="isActiveQueue(playQueue)"
                 :class="{
                     'playlist-picker__playlist': true,
-                    'playlist-picker__playlist--active': isActiveQueue(
-                        playQueue
-                    ),
-                    'playlist-picker__playlist--playing': isPlayingQueue(
-                        playQueue
-                    ),
+                    'playlist-picker__playlist--active':
+                        isActiveQueue(playQueue),
+                    'playlist-picker__playlist--playing':
+                        isPlayingQueue(playQueue),
                 }"
                 :tabindex="isActiveQueue(playQueue) ? 0 : -1"
                 @click="showQueue(playQueue)"

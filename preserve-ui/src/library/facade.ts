@@ -48,9 +48,9 @@ export abstract class MediaServerLibraryFacade extends MediaServerLibrary {
     ) {
         super();
         this.local.populate();
-        this._loadState = (reactive(
+        this._loadState = reactive(
             new ProxyLoadState(this.local.loadState())
-        ) as unknown) as LibraryLoadState;
+        ) as unknown as LibraryLoadState;
     }
 
     private isRemote(): boolean {

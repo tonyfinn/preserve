@@ -88,7 +88,8 @@ export default defineComponent({
         exportPlaylist() {
             switch (this.selectedDownloadType) {
                 case DownloadType.JSON: {
-                    const exportString = this.queueManager.queuesToExportString();
+                    const exportString =
+                        this.queueManager.queuesToExportString();
                     const playlistBlob = new Blob([exportString], {
                         type: 'application/x-preserve-playlist',
                     });

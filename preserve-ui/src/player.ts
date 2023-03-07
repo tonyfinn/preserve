@@ -42,31 +42,6 @@ interface EndEvent {
     state: PlaybackState;
 }
 
-declare global {
-    class MediaSession {
-        metadata: MediaMetadata;
-        playbackState: 'none' | 'paused' | 'playing';
-        setActionHandler(evt: string, handler: () => void): void;
-    }
-    interface Navigator {
-        mediaSession?: MediaSession;
-    }
-
-    interface MediaImage {
-        src: string;
-        sizes?: string;
-        type?: string;
-    }
-    class MediaMetadata {
-        constructor(opts: {
-            title?: string;
-            artist?: string;
-            album?: string;
-            artwork?: MediaImage[];
-        });
-    }
-}
-
 export enum RepeatMode {
     Off,
     Repeat,
@@ -336,9 +311,8 @@ export class AudioPlayer {
         });
         if (prevTrack) {
             if (this.shuffleMode === ShuffleMode.Shuffle) {
-                const shuffledTrackIndex = this.shuffleOrder[
-                    this.playQueue.index
-                ];
+                const shuffledTrackIndex =
+                    this.shuffleOrder[this.playQueue.index];
                 const shuffledTrack = this.playQueue.getTrack(
                     shuffledTrackIndex
                 ) as Track;
@@ -363,9 +337,8 @@ export class AudioPlayer {
         });
         if (nextTrack) {
             if (this.shuffleMode === ShuffleMode.Shuffle) {
-                const shuffledTrackIndex = this.shuffleOrder[
-                    this.playQueue.index
-                ];
+                const shuffledTrackIndex =
+                    this.shuffleOrder[this.playQueue.index];
                 const shuffledTrack = this.playQueue.getTrack(
                     shuffledTrackIndex
                 ) as Track;

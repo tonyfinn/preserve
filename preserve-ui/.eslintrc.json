@@ -26,9 +26,7 @@
         "eslint:recommended",
         "plugin:vue/vue3-essential",
         "plugin:@typescript-eslint/recommended",
-        "prettier",
-        "prettier/vue",
-        "prettier/@typescript-eslint"
+        "prettier"
     ],
     "root": true,
     "parser": "vue-eslint-parser",

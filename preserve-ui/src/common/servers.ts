@@ -53,9 +53,8 @@ export class ServerManager {
             );
             return legacyServers;
         }
-        const savedServersJson = window.localStorage.getItem(
-            STORAGE_KEY_SERVERS
-        );
+        const savedServersJson =
+            window.localStorage.getItem(STORAGE_KEY_SERVERS);
         if (!savedServersJson) {
             return [];
         }
@@ -128,7 +127,7 @@ export class ServerManager {
                         NotificationType.Success,
                         NOTIFICATION_TIME_SHORT
                     );
-                } catch (e) {
+                } catch (e: any) {
                     NotificationService.notify(
                         `Could not reconnect to ${serverDef.name} - ${e.message}`,
                         NotificationType.Error,

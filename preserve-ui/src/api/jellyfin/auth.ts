@@ -1,4 +1,4 @@
-import { UNKNOWN_SERVER_NAME } from 'preserve-ui/src/common/constants';
+import { UNKNOWN_SERVER_NAME } from '../..//common/constants';
 import { MediaServerAuth } from '../interface';
 import { JellyfinApiClient } from './api-client';
 import { JellyfinServer } from './server';
@@ -43,7 +43,8 @@ async function queryServerDefinition(
 }
 
 export class JellyfinServerAuth
-    implements MediaServerAuth<JellyfinServerDefinition, JellyfinServer> {
+    implements MediaServerAuth<JellyfinServerDefinition, JellyfinServer>
+{
     async reconnect(
         definition: JellyfinServerDefinition
     ): Promise<JellyfinServer> {
@@ -80,7 +81,7 @@ export class JellyfinServerAuth
                 userId: definition.userId,
                 accessToken: definition.accessToken,
             });
-        } catch (e) {
+        } catch (e: any) {
             if (e.response && e.response.status === 401) {
                 if (e.response.status === 401) {
                     return Promise.reject(
