@@ -1,5 +1,5 @@
 {
-  description = "tonyfinn.com home page";
+  description = "Preserve Media Player";
 
   inputs = {
     nixpkgs.url = "nixpkgs/nixos-23.11";
