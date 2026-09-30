@@ -1,4 +1,4 @@
-import { PlayQueue, PlayQueueItem } from './play-queue';
+import { PlayQueue, type PlayQueueItem } from './play-queue';
 
 function queueItemToXmlNode(
     doc: XMLDocument,

@@ -128,7 +128,7 @@ import { AudioPlayer, PlaybackEventType } from '../player';
 import { Track, ItemStub, LibraryManager } from '../library';
 import { QueueManager, PlayQueueItem, PlayQueue } from '.';
 import { ITEM_STUB_MIME_TYPE } from '../common/constants';
-import { RowItem, Column, ColumnPicker } from '../common/table';
+import { type RowItem, Column, type ColumnPicker } from '../common/table';
 import { PlayColumn, savedQueueColumns } from './columns';
 import { Settings } from '../common/settings';
 

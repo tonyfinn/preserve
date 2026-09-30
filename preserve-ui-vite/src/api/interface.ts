@@ -1,4 +1,4 @@
-import { Album, Artist, LibraryItem, Track } from '../library';
+import type { Album, Artist, LibraryItem, Track } from '../library';
 import { RepeatMode, ShuffleMode } from '../player';
 
 export enum LibraryLoadStage {

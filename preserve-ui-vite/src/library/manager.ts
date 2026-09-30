@@ -1,14 +1,14 @@
 import { getChildTracks, MediaServerLibrary } from '../api';
 import { ServerManager } from '../common/servers';
-import { Album, Artist, ItemStub, LibraryItem, Track } from './types';
+import type { Album, Artist, ItemStub, LibraryItem, Track } from './types';
 
 import silenceOgg from '../assets/silence.ogg';
 import { isMock } from '../common/utils';
 import {
     LibraryLoadStage,
     LibraryLoadState,
-    MediaServerReporter,
-    PlaybackState,
+    type MediaServerReporter,
+    type PlaybackState,
 } from '../api/interface';
 
 function sumLibraryField<K extends keyof LibraryLoadState>(

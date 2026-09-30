@@ -4,9 +4,9 @@ import {
 } from '../../../src/common/constants';
 import {
     isRemoteServer,
-    LegacySavedServer,
-    LegacyServerInfo,
-    JellyfinServerDefinition,
+    type LegacySavedServer,
+    type LegacyServerInfo,
+    type JellyfinServerDefinition,
 } from './types';
 
 export function getOldJellyfinServers(): Array<JellyfinServerDefinition> {

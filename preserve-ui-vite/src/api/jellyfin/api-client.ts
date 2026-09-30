@@ -1,20 +1,27 @@
 import {
-    ArtistsApi,
-    AuthenticationResult,
+    Api,
+    Jellyfin,
+} from '@jellyfin/sdk';
+import {
+    ArtistApi,
+    type AuthenticationResult,
     Configuration,
-    ItemsApi,
+    ItemLookupApi,
     PlaystateApi,
     SessionApi,
     SystemApi,
-    UserApi,
-} from '@jellyfin/sdk';
-import axios, { AxiosResponse } from 'axios';
+    UserApi
+} from '@jellyfin/sdk/lib/generated-client';
+import {
+    getArtistApi
+} from '@jellyfin/sdk/lib/utils/api';
+import axios, { type AxiosResponse } from 'axios';
 import {
     getClientName,
     getOrGenerateClientId,
 } from '../../common/client';
 import { MediaServerTestResult } from '../interface';
-import { JellyfinServerDefinition } from './types';
+import { type JellyfinServerDefinition } from './types';
 
 function buildAuthHeader(accessToken?: string): string {
     const deviceId = getOrGenerateClientId();
@@ -27,7 +34,22 @@ function buildAuthHeader(accessToken?: string): string {
 }
 
 export class JellyfinApiClient {
-    constructor(public readonly address: string, public accessToken?: string) {}
+    private jellyfin: Jellyfin;
+    private api: Api;
+
+    constructor(public readonly address: string, public accessToken?: string) {
+        this.jellyfin = new Jellyfin({
+            clientInfo: {
+                name: APP_NAME,
+                version: APP_VERSION
+            },
+            deviceInfo: {
+                name: getClientName(),
+                id: getOrGenerateClientId(),
+            }
+        });
+        this.api = this.jellyfin.createApi(address);
+    }
 
     configuration(): Configuration {
         const authHeader = buildAuthHeader(this.accessToken);
@@ -37,11 +59,11 @@ export class JellyfinApiClient {
         });
     }
 
-    artists(): ArtistsApi {
-        return new ArtistsApi(this.configuration(), this.address, axios);
+    async artists(): Promise<ArtistApi> {
+        return getArtistApi(this.api);
     }
 
-    items(): ItemsApi {
+    items(): ItemLookupApi {
         return new ItemsApi(this.configuration(), this.address, axios);
     }
 

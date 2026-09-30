@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import axios, { AxiosRequestConfig } from 'axios';
+import axios, { type AxiosRequestConfig } from 'axios';
 import MockAdapter from 'axios-mock-adapter';
 import { ACCESS_TOKEN, TEST_SERVER_URL, TEST_USER_ID } from './data/shared';
 

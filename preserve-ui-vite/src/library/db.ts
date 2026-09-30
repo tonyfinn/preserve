@@ -1,6 +1,6 @@
-import { Album, Artist, HasArtists, Item, ItemStub, Track } from './types';
+import type { Album, Artist, HasArtists, Item, ItemStub, Track } from './types';
 
-import { DBSchema, openDB, IDBPDatabase, deleteDB } from 'idb';
+import { type DBSchema, openDB, type IDBPDatabase, deleteDB } from 'idb';
 
 import { UNKNOWN_ALBUM_NAME } from '../common/constants';
 

@@ -1,5 +1,5 @@
 import { reactive } from 'vue';
-import { Album, Artist, LibraryItem, Track } from '.';
+import type { Album, Artist, LibraryItem, Track } from './types';
 import { LibraryLoadStage, LibraryLoadState, MediaServerLibrary } from '../api';
 import {
     MediaServerLocalLibrary,

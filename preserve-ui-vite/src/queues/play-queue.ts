@@ -1,4 +1,4 @@
-import { LibraryManager, Track } from '../library';
+import { LibraryManager, type Track } from '../library';
 import EventEmitter from '../common/events';
 import { RepeatMode } from '../player';
 import { reactive } from 'vue';

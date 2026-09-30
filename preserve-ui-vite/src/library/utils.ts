@@ -1,5 +1,5 @@
 import { UNKNOWN_ARTIST_NAME } from '../common/constants';
-import { Artist, Album, Track } from './types';
+import type { Artist, Album, Track } from './types';
 
 export function sortTracks(a: Track, b: Track): number {
     const aDisc = a.discNumber || -1;

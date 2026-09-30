@@ -10,14 +10,14 @@ import {
     UNKNOWN_ARTIST_NAME,
 } from '../../common/constants';
 import {
-    Track,
-    Artist,
-    Album,
+    type Track,
+    type Artist,
+    type Album,
     sortArtists,
     sortTracks,
     sortAlbums,
 } from '../../library';
-import {
+import type {
     HasArtists,
     Item,
     ItemLookup,
@@ -32,7 +32,7 @@ import {
     MediaServerRemoteLibrary,
 } from '../interface';
 import { getOrGenerateClientId } from '../../common/client';
-import { AxiosResponse } from 'axios';
+import type { AxiosResponse } from 'axios';
 import { MediaServerLibraryFacade } from '../../library/facade';
 import { JellyfinApiClient } from './api-client';
 import { ALBUM_PRIMARY_ART_FIELD, TRACK_PIMARY_ART_FIELD } from './types';

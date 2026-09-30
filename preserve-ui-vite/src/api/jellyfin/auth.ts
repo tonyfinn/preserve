@@ -1,8 +1,8 @@
 import { UNKNOWN_SERVER_NAME } from '../../common/constants';
-import { MediaServerAuth } from '../interface';
+import type { MediaServerAuth } from '../interface';
 import { JellyfinApiClient } from './api-client';
 import { JellyfinServer } from './server';
-import { JellyfinServerDefinition } from './types';
+import type { JellyfinServerDefinition } from './types';
 
 export enum ConnectErrorEnum {
     NoAccessToken,

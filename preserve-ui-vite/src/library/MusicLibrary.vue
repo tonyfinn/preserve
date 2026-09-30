@@ -56,7 +56,7 @@
 </template>
 
 <script lang="ts">
-import { Album, Artist, LibraryItem, Track } from './types';
+import type { Album, Artist, LibraryItem, Track } from './types';
 import { GROUP_OPTIONS } from './options';
 import { Settings } from '../common/settings';
 import { PsvTree, TreeItem } from '../common/tree';

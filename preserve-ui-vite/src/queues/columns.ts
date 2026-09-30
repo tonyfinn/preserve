@@ -1,10 +1,10 @@
 import { Settings } from '../common/settings';
-import { ColumnDef, RowItem } from '../common/table';
+import type { ColumnDef, RowItem } from '../common/table';
 import { Column } from '../common/table/types';
 import { formatTime } from '../common/utils';
 import { albumArtistNames, artistNames } from '../library';
 import { genreNames } from '../library/utils';
-import { PlayQueueItem } from './play-queue';
+import type { PlayQueueItem } from './play-queue';
 
 export enum PlayColumn {
     DiscNumber,

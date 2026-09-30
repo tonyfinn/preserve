@@ -1,4 +1,4 @@
-import { BaseServerDefinition } from '../interface';
+import type { BaseServerDefinition } from '../interface';
 export const JELLYFIN_SERVER_TYPE = 'jellyfin';
 
 export const TRACK_PIMARY_ART_FIELD = 'primaryArtTag';

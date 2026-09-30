@@ -1,14 +1,14 @@
 import {
-    BaseServerDefinition,
-    MediaServer,
+    type BaseServerDefinition,
+    type MediaServer,
     MediaServerTestResult,
 } from '../api/interface';
 import {
     getOldJellyfinServers,
     JellyfinServerAuth,
-    JellyfinServerDefinition,
+    type JellyfinServerDefinition,
     JELLYFIN_SERVER_TYPE,
-    ServerType,
+    type ServerType,
 } from '../api';
 import { STORAGE_KEY_LEGACY_SERVERS, STORAGE_KEY_SERVERS } from './constants';
 import {

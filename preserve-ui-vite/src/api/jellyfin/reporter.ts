@@ -3,7 +3,7 @@ import {
     RepeatMode as JfRepeatMode,
 } from '@jellyfin/sdk';
 import { RepeatMode } from '../../player';
-import { MediaServerReporter, PlaybackState } from '../interface';
+import type { MediaServerReporter, PlaybackState } from '../interface';
 import { JF_TICKS_PER_MS } from '../../common/constants';
 import { JellyfinApiClient } from './api-client';
 

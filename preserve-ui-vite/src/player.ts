@@ -1,10 +1,10 @@
-import { Track, artistNames, LibraryManager } from './library';
+import { type Track, artistNames, LibraryManager } from './library';
 import EventEmitter from './common/events';
-import { PlayQueue, QueueChangeEvent } from './queues/play-queue';
+import { PlayQueue, type QueueChangeEvent } from './queues/play-queue';
 
 import Hls from 'hls.js';
 import { NotificationService, NotificationType } from './common/notifications';
-import { PlaybackState } from './api/interface';
+import { type PlaybackState } from './api/interface';
 
 export enum PlaybackEventType {
     Play,
