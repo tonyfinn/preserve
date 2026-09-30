@@ -1,4 +1,20 @@
+# 0.6.0-beta1
+
+Note: Web client only, the electron client is not yet updated (needs rebuilding)
+
+## New Features
+
+* Jellyfin support changes: Now compatible with Jellyfin 12, no longer compatibile with Jellyfin < 10.8
+
+## Tech Changes
+
+* Build system ported from Webpack to Vite
+* Jellyfin API client migrated from @jellyfin/client-axios to @jellyfin/sdk
+* Vue upgraded from 3.0 to 3.5
+
+
 # 0.5.3
+
 ## New Features
 
 * New fields in track listing (genre, year)
