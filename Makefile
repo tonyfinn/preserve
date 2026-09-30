@@ -54,7 +54,7 @@ preserve-ui-vite/node_modules:
 dist: dist/index.html
 
 dist/index.html: preserve-ui-vite/node_modules
-	cd ${UI_SRC_DIR} &&	${PNPM} vite build
+	cd ${UI_SRC_DIR} &&	${PNPM} vite build --outDir=../dist
 
 serve: dist
 	cd ${UI_SRC_DIR} && ${PNPM} dev
