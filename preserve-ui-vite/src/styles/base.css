@@ -1,0 +1,56 @@
+@import './colors.css';
+@import './dims.css';
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    background-color: var(--colors-background);
+    color: var(--colors-text);
+    font-family: Calibri, Helvetica, Arial, sans-serif;
+}
+
+body {
+    height: 100vh;
+    width: 100vw;
+}
+
+@media not speech {
+    .sr-only {
+        display: none;
+    }
+}
+
+input[type='text'],
+input[type='password'],
+input[type='submit'],
+button {
+    padding: var(--dims-padding-dense);
+    border-radius: var(--dims-border-radius-subtle);
+}
+
+button {
+    background-color: var(--colors-primary-bright);
+    padding: var(--dims-padding);
+    color: var(--colors-text);
+    border: none;
+
+    &:hover {
+        background: hsl(from var(--colors-primary) h s calc(l + 40%));
+        color: #fff;
+    }
+
+    &:hover.active {
+        background: hsl(from var(--colors-primary) h s calc(l + 40%));
+        color: var(--colors-text-dark);
+    }
+
+    &:active,
+    &.active {
+        background: hsl(from var(--colors-primary) h s calc(l + 20%));
+        color: var(--colors-text-dark);
+    }
+}

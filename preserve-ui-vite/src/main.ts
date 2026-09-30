@@ -1,4 +1,4 @@
-import './styles/base.scss';
+import './styles/base.css';
 import './vendor/foundation-icons/foundation-icons.css';
 import App from './App.vue';
 import { createApp } from 'vue';

@@ -159,15 +159,13 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss" scoped>
-@import 'styles/dims.scss';
-
+<style scoped>
 .download-type {
     display: grid;
     grid-auto-flow: column;
     justify-content: start;
     align-content: center;
-    grid-gap: $dims-padding;
+    grid-gap: var(--dims-padding);
 
     button {
         margin-right: 1em;

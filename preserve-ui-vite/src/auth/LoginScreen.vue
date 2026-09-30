@@ -152,32 +152,29 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss">
-@import '../styles/colors.scss';
-@import '../styles/dims.scss';
-
+<style>
 #login-form {
     width: 30em;
     margin: 1em auto;
 
     .server-test {
-        border-radius: $dims-border-radius-subtle;
-        padding: $dims-padding-dense;
-        margin: $dims-padding 0;
+        border-radius: var(--dims-border-radius-subtle);
+        padding: var(--dims-padding-dense);
+        margin: var(--dims-padding) 0;
     }
 
     .server-test-testing {
-        background: $colors-info;
+        background: var(--colors-info);
     }
 
     .server-test-failed {
-        background: $colors-error;
-        color: $colors-text-dark;
+        background: var(--colors-error);
+        color: var(--colors-text-dark);
     }
 
     .server-test-success {
-        background: $colors-success;
-        color: $colors-text-dark;
+        background: var(--colors-success);
+        color: var(--colors-text-dark);
     }
 
     label,

@@ -320,18 +320,15 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss">
-@import './styles/colors.scss';
-@import './styles/dims.scss';
-
+<style>
 #playback-footer > .main-footer {
-    background-color: $colors-primary;
+    background-color: var(--colors-primary);
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     grid-template-rows: 1fr;
     align-items: center;
-    padding: $dims-padding;
-    grid-gap: $dims-padding;
+    padding: var(--dims-padding);
+    grid-gap: var(--dims-padding);
 
     .now-playing {
         display: grid;
@@ -341,7 +338,7 @@ export default defineComponent({
         .playback-cover-art {
             max-height: 2em;
             img {
-                margin: $dims-padding-dense $dims-padding $dims-padding-dense 0;
+                margin: var(--dims-padding-dense) var(--dims-padding) var(--dims-padding-dense) 0;
                 max-height: 2em;
                 max-width: 2em;
             }
@@ -367,7 +364,7 @@ export default defineComponent({
     .button-group {
         display: grid;
         grid-auto-flow: column;
-        grid-column-gap: $dims-padding;
+        grid-column-gap: var(--dims-padding);
         justify-content: center;
     }
 
@@ -382,7 +379,7 @@ export default defineComponent({
         &:hover,
         &:active,
         &.active {
-            border: 2px solid $colors-primary-bright;
+            border: 2px solid var(--colors-primary-bright);
         }
     }
 
@@ -429,7 +426,7 @@ export default defineComponent({
 #playback-footer .gui-volume {
     display: grid;
     grid-auto-flow: column;
-    grid-gap: $dims-padding;
+    grid-gap: var(--dims-padding);
     align-items: center;
 
     i::before {

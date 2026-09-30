@@ -42,12 +42,10 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss" scoped>
-@import '../styles/dims.scss';
-
+<style scoped>
 #playlist {
     overflow-y: scroll;
-    padding: $dims-padding-dense;
+    padding: var(--dims-padding-dense);
     padding-top: 0;
 }
 </style>

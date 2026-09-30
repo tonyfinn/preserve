@@ -514,10 +514,7 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss">
-@import '../styles/colors.scss';
-@import '../styles/dims.scss';
-
+<style>
 .playlist__queue-wrapper {
     display: grid;
     align-items: start;
@@ -526,11 +523,11 @@ export default defineComponent({
 }
 
 .playlist__queue-wrapper--dragover {
-    border: 3px dashed $colors-text;
+    border: 3px dashed var(--colors-text);
 }
 
 .playlist__queue-wrapper--dragover .playlist__queue {
-    border-bottom: 3px dashed $colors-text;
+    border-bottom: 3px dashed var(--colors-text);
 }
 
 .playlist__column-picker {
@@ -539,30 +536,30 @@ export default defineComponent({
     position: sticky;
     top: 2em;
     z-index: 1;
-    padding: $dims-padding-dense;
-
-    &--picking {
-        padding: $dims-padding;
-        background-color: $colors-background;
-        border: 1px solid white;
-    }
+    padding: var(--dims-padding-dense);
 
     button {
         width: 100%;
     }
 }
 
+.playlist__column-picker--picking {
+    padding: var(--dims-padding);
+    background-color: var(--colors-background);
+    border: 1px solid white;
+}
+
 .playlist__queue {
-    padding: $dims-padding;
+    padding: var(--dims-padding);
     border-collapse: collapse;
-    margin-bottom: $dims-bottom-spacing;
+    margin-bottom: var(--dims-bottom-spacing);
     grid-row: 1 / 3;
     grid-column: 1 / 3;
 }
 
 .playlist__queue th {
-    padding: $dims-padding-dense;
-    background-color: $colors-background;
+    padding: var(--dims-padding-dense);
+    background-color: var(--colors-background);
     text-align: left;
     position: sticky;
     top: 1.8em;
@@ -578,12 +575,12 @@ export default defineComponent({
 }
 
 .playlist__queue td {
-    padding: $dims-padding-dense;
+    padding: var(--dims-padding-dense);
     border: 0;
 }
 
 .playlist__queue tr:nth-child(even) {
-    background: $colors-background-alt;
+    background: var(--colors-background-alt);
 }
 
 .playlist__queue tbody tr {
@@ -592,23 +589,23 @@ export default defineComponent({
     &.playlist__track--playing {
         font-weight: bold;
         font-style: italic;
-        background: $colors-active;
+        background: var(--colors-active);
     }
 
     &.playlist__track--selected {
-        background: $colors-selected;
+        background: var(--colors-selected);
     }
 
     &.playlist__track--dragover {
-        border-top: 3px dashed $colors-text;
+        border-top: 3px dashed var(--colors-text);
     }
     &:hover,
     &.playlist__track--focused {
-        background: $colors-highlight;
+        background: var(--colors-highlight);
     }
 
     & .playlist__track__cell--focused {
-        background: $colors-highlight;
+        background: var(--colors-highlight);
         outline: 2px solid white;
     }
 }
@@ -621,7 +618,7 @@ export default defineComponent({
     color: black;
     max-height: 5em;
     overflow: hidden;
-    border-radius: $dims-border-radius-subtle;
+    border-radius: var(--dims-border-radius-subtle);
 
     ul {
         list-style-type: none;

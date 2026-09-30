@@ -43,15 +43,13 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss" scoped>
-@import '../../styles/dims.scss';
-
+<style scoped>
 ul {
     list-style-type: none;
 }
 
 label {
     display: inline-block;
-    padding: $dims-padding-dense;
+    padding: var(--dims-padding-dense);
 }
 </style>

@@ -203,10 +203,7 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss">
-@import '../../styles/colors.scss';
-@import '../../styles/dims.scss';
-
+<style>
 .psv-tree {
     list-style: none;
 }
@@ -215,21 +212,21 @@ export default defineComponent({
     width: 100%;
 
     .psv-tree-node {
-        margin: 0 $dims-padding;
+        margin: 0 var(--dims-padding);
     }
 
     header,
     p {
-        padding: $dims-padding-dense;
+        padding: var(--dims-padding-dense);
     }
 }
 
 .psv-tree-node--selected {
-    background-color: $colors-selected;
+    background-color: var(--colors-selected);
 }
 
 .psv-tree-node--focused {
-    background-color: $colors-highlight;
+    background-color: var(--colors-highlight);
 }
 
 .psv-tree-node header,
@@ -237,7 +234,7 @@ export default defineComponent({
     cursor: pointer;
 
     &:hover {
-        background-color: $colors-highlight;
+        background-color: var(--colors-highlight);
     }
 }
 
@@ -259,7 +256,7 @@ export default defineComponent({
 }
 
 .psv-tree-node:last-child {
-    margin-bottom: $dims-padding;
+    margin-bottom: var(--dims-padding);
 }
 
 .psv-tree-node > .psv-tree {

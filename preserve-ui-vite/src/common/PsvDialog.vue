@@ -37,16 +37,14 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss" scoped>
-@import '../styles/colors.scss';
-@import '../styles/dims.scss';
+<style scoped>
 .dialog {
     margin: 1em auto;
     max-width: 60em;
-    padding: $dims-padding;
-    border-radius: $dims-border-radius;
-    background-color: $colors-background;
-    border: 2px solid $colors-primary;
+    padding: var(--dims-padding);
+    border-radius: var(--dims-border-radius);
+    background-color: var(--colors-background);
+    border: 2px solid var(--colors-primary);
     pointer-events: auto;
 
     & > header {

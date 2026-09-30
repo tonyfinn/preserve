@@ -88,10 +88,7 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss" scoped>
-@import '../styles/colors.scss';
-@import '../styles/dims.scss';
-
+<style scoped>
 .notification-grid {
     margin-top: 1em;
     display: grid;
@@ -101,26 +98,26 @@ export default defineComponent({
 }
 
 .notification {
-    padding: $dims-padding;
+    padding: var(--dims-padding);
     width: 60em;
     max-width: 80vw;
     display: grid;
     grid-template-columns: 1fr 1.5em;
-    border-radius: $dims-border-radius;
+    border-radius: var(--dims-border-radius);
     pointer-events: auto;
 }
 
 .notification-default {
-    background-color: $colors-info;
+    background-color: var(--colors-info);
 }
 
 .notification-success {
-    background-color: $colors-success;
-    color: $colors-text-dark;
+    background-color: var(--colors-success);
+    color: var(--colors-text-dark);
 }
 
 .notification-error {
-    background-color: $colors-error;
-    color: $colors-text-dark;
+    background-color: var(--colors-error);
+    color: var(--colors-text-dark);
 }
 </style>

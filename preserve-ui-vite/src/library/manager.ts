@@ -2,7 +2,7 @@ import { getChildTracks, MediaServerLibrary } from '../api';
 import { ServerManager } from '../common/servers';
 import { Album, Artist, ItemStub, LibraryItem, Track } from './types';
 
-import silenceOgg from '../../static/silence.ogg';
+import silenceOgg from '../assets/silence.ogg';
 import { isMock } from '../common/utils';
 import {
     LibraryLoadStage,

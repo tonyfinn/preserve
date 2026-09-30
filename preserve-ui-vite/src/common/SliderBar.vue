@@ -74,19 +74,17 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss" scoped>
-@import '../styles/colors.scss';
-
+<style scoped>
 .slider-highlight {
-    background-color: $colors-success;
+    background-color: var(--colors-success);
     height: 100%;
 }
 .slider-highlight-wrapper {
-    background-color: $colors-selected;
+    background-color: var(--colors-selected);
     width: 100%;
     height: 100%;
 }
 .slider {
-    border: 2px solid $colors-highlight;
+    border: 2px solid var(--colors-highlight);
 }
 </style>

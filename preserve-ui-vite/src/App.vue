@@ -203,10 +203,7 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss">
-@import './styles/colors.scss';
-@import './styles/dims.scss';
-
+<style>
 #app {
     display: grid;
     height: 100vh;
@@ -247,10 +244,10 @@ export default defineComponent({
 }
 
 #app-header {
-    background-color: $colors-primary;
+    background-color: var(--colors-primary);
     grid-row: 1;
     grid-column: 1;
-    padding: $dims-padding;
+    padding: var(--dims-padding);
     display: grid;
     grid-template-columns: 1fr auto;
 

@@ -111,9 +111,7 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss">
-@import './styles/dims.scss';
-
+<style>
 #playback-screen {
     display: grid;
     grid-template-rows: minmax(0, 1fr) auto;
@@ -125,7 +123,7 @@ export default defineComponent({
         left: -1000px;
         background-color: white;
         color: black;
-        border-radius: $dims-border-radius-subtle;
+        border-radius: var(--dims-border-radius-subtle);
     }
 }
 

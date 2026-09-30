@@ -264,12 +264,9 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss">
-@import '../styles/colors.scss';
-@import '../styles/dims.scss';
-
+<style>
 #music-library {
-    padding: $dims-padding-dense;
+    padding: var(--dims-padding-dense);
     display: grid;
     grid-template-rows: auto 1fr auto;
 }
@@ -277,22 +274,22 @@ export default defineComponent({
 #music-library.searching .psv-tree > .psv-tree-node {
     > header .expander::after {
         font-family: 'foundation-icons';
-        padding-left: $dims-padding;
+        padding-left: var(--dims-padding);
         display: inline-block;
     }
 
     &.album > header .expander::after {
-        content: '\f1a4'; // fi-record
+        content: '\f1a4'; /* fi-record */
     }
 
     &.artist > header .expander::after {
-        content: '\f1fe'; // fi-torso
+        content: '\f1fe'; /* fi-torso */
     }
 }
 
 .search-controls {
     width: 100%;
-    margin-bottom: $dims-padding;
+    margin-bottom: var(--dims-padding);
 }
 
 .search-controls input {
@@ -300,7 +297,7 @@ export default defineComponent({
 }
 
 .sort-mode {
-    margin-top: $dims-padding;
+    margin-top: var(--dims-padding);
 }
 
 #music-library > .tree-area {
@@ -311,6 +308,6 @@ export default defineComponent({
 }
 
 #music-library > .tree-area > :last-child {
-    padding-bottom: $dims-bottom-spacing;
+    padding-bottom: var(--dims-bottom-spacing);
 }
 </style>

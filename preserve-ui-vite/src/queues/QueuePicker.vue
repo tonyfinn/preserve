@@ -360,12 +360,9 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss">
-@import '../styles/colors.scss';
-@import '../styles/dims.scss';
-
+<style>
 .playlist-picker {
-    background-color: $colors-primary;
+    background-color: var(--colors-primary);
     height: 1.8em;
     position: sticky;
     top: 0;
@@ -383,14 +380,14 @@ export default defineComponent({
     }
 
     li {
-        background-color: $colors-background-alt;
-        padding: $dims-padding-dense $dims-padding;
-        border-left: 2px solid $colors-highlight;
+        background-color: var(--colors-background-alt);
+        padding: var(--dims-padding-dense) var(--dims-padding);
+        border-left: 2px solid var(--colors-highlight);
         display: grid;
         grid-auto-flow: column;
-        grid-gap: $dims-padding;
+        grid-gap: var(--dims-padding);
         justify-content: center;
-        color: $colors-text;
+        color: var(--colors-text);
         vertical-align: bottom;
         align-items: start;
         cursor: pointer;
@@ -403,24 +400,6 @@ export default defineComponent({
         white-space: nowrap;
     }
 
-    &__playlist {
-        &--active {
-            background-color: $colors-background !important;
-        }
-        &--playing {
-            font-weight: bold;
-            font-style: italic;
-        }
-
-        button {
-            border: 0;
-            padding: 0;
-            background: transparent;
-            color: $colors-text;
-            cursor: pointer;
-        }
-    }
-
     .floating-controls {
         position: absolute;
         top: 0;
@@ -430,12 +409,12 @@ export default defineComponent({
         grid-auto-flow: column;
 
         &.floating-controls-right {
-            border-left: 2px solid $colors-highlight;
+            border-left: 2px solid var(--colors-highlight);
             right: 0;
         }
 
         &.floating-controls-left {
-            border-right: 2px solid $colors-highlight;
+            border-right: 2px solid var(--colors-highlight);
             left: 0;
         }
 
@@ -443,9 +422,30 @@ export default defineComponent({
             height: 100%;
             border-radius: 0;
             border-width: 0 2px;
-            background-color: $colors-background;
-            padding: $dims-padding-dense $dims-padding;
+            background-color: var(--colors-background);
+            padding: var(--dims-padding-dense) var(--dims-padding);
         }
     }
+}
+
+/**
+  TODO: This used SASS class name building for BEM states but can't be nested in native CSS.
+  Consider converting to class combination
+*/
+.playlist-picker__playlist--active {
+    background-color: var(--colors-background) !important;
+}
+
+.playlist-picker__playlist--playing {
+    font-weight: bold;
+    font-style: italic;
+}
+
+.playlist-picker__playlist button {
+    border: 0;
+    padding: 0;
+    background: transparent;
+    color: var(--colors-text);
+    cursor: pointer;
 }
 </style>
