@@ -42,9 +42,9 @@ export class JellyfinApiClient {
             deviceInfo: {
                 name: getClientName(),
                 id: getOrGenerateClientId(),
-            }
+            },
         });
-        this.api = this.jellyfin.createApi(address)
+        this.api = this.jellyfin.createApi(address, accessToken)
     }
 
     auth(): AuthenticationApi {
