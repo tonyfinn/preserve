@@ -1,17 +1,17 @@
 import {
-    PlaystateApi,
     RepeatMode as JfRepeatMode,
-} from '@jellyfin/sdk';
+    SessionApi,
+} from '@jellyfin/sdk/lib/generated-client';
 import { RepeatMode } from '../../player';
 import type { MediaServerReporter, PlaybackState } from '../interface';
 import { JF_TICKS_PER_MS } from '../../common/constants';
 import { JellyfinApiClient } from './api-client';
 
 export class JellyfinReporter implements MediaServerReporter {
-    private playstateApi: PlaystateApi;
+    private sessionApi: SessionApi;
 
     constructor(apiClient: JellyfinApiClient) {
-        this.playstateApi = apiClient.playstate();
+        this.sessionApi = apiClient.session();
     }
 
     private mapRepeatMode(repeatMode: RepeatMode): JfRepeatMode {
@@ -28,7 +28,7 @@ export class JellyfinReporter implements MediaServerReporter {
         if (!playback.trackId) {
             return;
         }
-        this.playstateApi.reportPlaybackProgress({
+        this.sessionApi.reportPlaybackProgress({
             playbackProgressInfo: {
                 ItemId: playback.trackId,
                 RepeatMode: this.mapRepeatMode(playback.repeatMode),
@@ -51,7 +51,7 @@ export class JellyfinReporter implements MediaServerReporter {
             );
             return;
         }
-        this.playstateApi.reportPlaybackStart({
+        this.sessionApi.reportPlaybackStart({
             playbackStartInfo: {
                 ItemId: playback.trackId,
                 RepeatMode: this.mapRepeatMode(playback.repeatMode),
@@ -83,7 +83,7 @@ export class JellyfinReporter implements MediaServerReporter {
             );
             return;
         }
-        this.playstateApi.reportPlaybackStopped({
+        this.sessionApi.reportPlaybackStopped({
             playbackStopInfo: {
                 ItemId: playback.trackId,
                 PositionTicks: Math.floor(

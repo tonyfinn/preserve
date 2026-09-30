@@ -1,5 +1,5 @@
 import { sorted } from '../common/utils';
-import { ItemStub, sortAlbums, sortTracks, Track } from '../library';
+import { type ItemStub, sortAlbums, sortTracks, type Track } from '../library';
 import { MediaServerLibrary } from './interface';
 
 export async function getChildTracks(

@@ -1,12 +1,12 @@
 import {
-    MediaServer,
+    type MediaServer,
     MediaServerLibrary,
-    MediaServerReporter,
+    type MediaServerReporter,
 } from '../interface';
 import { JellyfinApiClient } from './api-client';
 import { JellyfinLibrary } from './library';
 import { JellyfinReporter } from './reporter';
-import { JellyfinServerDefinition, JELLYFIN_SERVER_TYPE } from './types';
+import { type JellyfinServerDefinition, JELLYFIN_SERVER_TYPE } from './types';
 
 export class JellyfinServer implements MediaServer {
     id: string;

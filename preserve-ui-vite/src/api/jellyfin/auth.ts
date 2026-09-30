@@ -26,7 +26,7 @@ async function queryServerDefinition(
     url: string
 ): Promise<JellyfinServerDefinition> {
     const api = new JellyfinApiClient(url);
-    const sysInfo = await api.publicSystem().getPublicSystemInfo();
+    const sysInfo = await api.system().getPublicSystemInfo();
 
     const serverId = sysInfo.data.Id;
 
