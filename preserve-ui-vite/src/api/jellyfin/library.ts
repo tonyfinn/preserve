@@ -1,9 +1,11 @@
 import {
-    BaseItemDto,
-    NameGuidPair,
-    BaseItemDtoQueryResult,
+    type BaseItemDto,
+    type NameGuidPair,
+    type BaseItemDtoQueryResult,
     ItemFields,
-} from '@jellyfin/sdk';
+    ItemSortBy,
+    SortOrder,
+} from '@jellyfin/sdk/lib/generated-client';
 import {
     JF_TICKS_PER_MS,
     UNKNOWN_ALBUM_NAME,
@@ -442,15 +444,15 @@ export class JellyfinLibraryLocal extends MediaServerLocalLibrary {
         let startIndex = 0;
         let items = [];
         do {
-            const itemsApi = this.apiClient.items();
-            const result = await itemsApi.getItemsByUserId({
+            const libraryApi = this.apiClient.library();
+            const result = await libraryApi.getItems({
                 userId: this.userId,
                 limit: 500,
                 recursive: true,
                 includeItemTypes: ['MusicAlbum'],
                 startIndex: startIndex,
-                sortBy: 'Name',
-                sortOrder: 'Ascending',
+                sortBy: [ItemSortBy.SortName],
+                sortOrder: [SortOrder.Ascending],
             });
             if (
                 result.status === 200 &&
@@ -479,15 +481,15 @@ export class JellyfinLibraryLocal extends MediaServerLocalLibrary {
         let startIndex = 0;
         let items = [];
         do {
-            const itemsApi = this.apiClient.items();
-            const result = await itemsApi.getItemsByUserId({
+            const libraryApi = this.apiClient.library();
+            const result = await libraryApi.getItems({
                 userId: this.userId,
                 limit: 500,
                 recursive: true,
                 includeItemTypes: ['Audio'],
                 startIndex: startIndex,
-                sortBy: 'Name',
-                sortOrder: 'Ascending',
+                sortBy: [ItemSortBy.SortName],
+                sortOrder: [SortOrder.Ascending],
                 fields: [ItemFields.Genres],
             });
             if (
@@ -676,27 +678,27 @@ export class JellyfinLibraryRemote extends MediaServerRemoteLibrary {
     }
 
     async getAlbums(): Promise<Album[]> {
-        const jfAlbums = await this.apiClient.items().getItemsByUserId({
+        const jfAlbums = await this.apiClient.library().getItems({
             userId: this.userId,
             limit: 100,
             recursive: true,
             includeItemTypes: ['MusicAlbum'],
             startIndex: 0,
-            sortBy: 'Name',
-            sortOrder: 'Ascending',
+            sortBy: [ItemSortBy.Name],
+            sortOrder: [SortOrder.Descending],
         });
         return this.convertJfResponse(jfAlbums, normaliseAlbum);
     }
 
     async getTracks(): Promise<Track[]> {
-        const jfTracks = await this.apiClient.items().getItemsByUserId({
+        const jfTracks = await this.apiClient.library().getItems({
             userId: this.userId,
             limit: 100,
             recursive: true,
             includeItemTypes: ['Audio'],
             startIndex: 0,
-            sortBy: 'Name',
-            sortOrder: 'Ascending',
+            sortBy: [ItemSortBy.SortName],
+            sortOrder: [SortOrder.Ascending],
         });
         return this.convertJfResponse(jfTracks, normaliseTrack);
     }
@@ -710,14 +712,14 @@ export class JellyfinLibraryRemote extends MediaServerRemoteLibrary {
                   artistIds: [artistId],
               }
             : { albumArtistIds: [artistId] };
-        const jfAlbums = await this.apiClient.items().getItemsByUserId({
+        const jfAlbums = await this.apiClient.library().getItems({
             userId: this.userId,
             limit: 100,
             recursive: true,
             includeItemTypes: ['MusicAlbum'],
             startIndex: 0,
-            sortBy: 'Name',
-            sortOrder: 'Ascending',
+            sortBy: [ItemSortBy.SortName],
+            sortOrder: [SortOrder.Ascending],
             ...artistFilter,
         });
         return this.convertJfResponse(jfAlbums, normaliseAlbum);
@@ -732,70 +734,70 @@ export class JellyfinLibraryRemote extends MediaServerRemoteLibrary {
                   artistIds: [artistId],
               }
             : { albumArtistIds: [artistId] };
-        const jfTracks = await this.apiClient.items().getItemsByUserId({
+        const jfTracks = await this.apiClient.library().getItems({
             userId: this.userId,
             limit: 100,
             recursive: true,
             includeItemTypes: ['Audio'],
             startIndex: 0,
-            sortBy: 'Name',
-            sortOrder: 'Ascending',
+            sortBy: [ItemSortBy.SortName],
+            sortOrder: [SortOrder.Ascending],
             ...artistFilter,
         });
         return this.convertJfResponse(jfTracks, normaliseTrack);
     }
 
     async getTracksOfAlbum(albumId: string): Promise<Track[]> {
-        const jfTracks = await this.apiClient.items().getItemsByUserId({
+        const jfTracks = await this.apiClient.library().getItems({
             userId: this.userId,
             limit: 100,
             recursive: true,
             includeItemTypes: ['Audio'],
             startIndex: 0,
-            sortBy: 'Name',
-            sortOrder: 'Ascending',
+            sortBy: [ItemSortBy.SortName],
+            sortOrder: [SortOrder.Ascending],
             albumIds: [albumId],
         });
         return this.convertJfResponse(jfTracks, normaliseTrack);
     }
 
     async getTrackById(trackId: string): Promise<Track | null> {
-        const jfTracks = await this.apiClient.items().getItemsByUserId({
+        const jfTracks = await this.apiClient.library().getItems({
             userId: this.userId,
             limit: 100,
             recursive: true,
             includeItemTypes: ['Audio'],
             startIndex: 0,
-            sortBy: 'Name',
-            sortOrder: 'Ascending',
+            sortBy: [ItemSortBy.SortName],
+            sortOrder: [SortOrder.Ascending],
             ids: [trackId],
         });
         return this.convertJfResponse(jfTracks, normaliseTrack)[0] || null;
     }
 
     async getTracksById(trackIds: string[]): Promise<Track[]> {
-        const jfTracks = await this.apiClient.items().getItemsByUserId({
+        const jfTracks = await this.apiClient.library().getItems({
             userId: this.userId,
             limit: 100,
             recursive: true,
             includeItemTypes: ['Audio'],
             startIndex: 0,
-            sortBy: 'Name',
-            sortOrder: 'Ascending',
+            sortBy: [ItemSortBy.SortName],
+            sortOrder: [SortOrder.Ascending],
             ids: trackIds,
         });
         return this.convertJfResponse(jfTracks, normaliseTrack);
     }
 
     async search(searchText: string): Promise<LibraryItem[]> {
-        const jfItems = await this.apiClient.items().getItemsByUserId({
+        const jfItems = await this.apiClient.library().getItems({
             userId: this.userId,
             limit: 100,
             recursive: true,
             includeItemTypes: ['Audio', 'MusicArtist', 'MusicAlbum'],
             startIndex: 0,
-            sortBy: 'Name',
-            sortOrder: 'Ascending',
+            sortBy: [ItemSortBy.SortName],
+            sortOrder: [SortOrder.Ascending],
             searchTerm: searchText,
         });
         return this.convertJfResponse(jfItems, normaliseLibraryItem);

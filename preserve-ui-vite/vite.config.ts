@@ -3,5 +3,9 @@ import { defineConfig } from 'vite'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [vue()],
+    define: {
+        APP_NAME: JSON.stringify('Preserve'),
+        APP_VERSION: JSON.stringify(require('./package.json').version),
+    },
+    plugins: [vue()],
 })

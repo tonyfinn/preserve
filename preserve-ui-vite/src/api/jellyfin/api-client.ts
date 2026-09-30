@@ -7,6 +7,7 @@ import {
     AuthenticationApi,
     type AuthenticationResult,
     ItemLookupApi,
+    LibraryApi,
     SessionApi,
     SystemApi,
     UserApi
@@ -14,7 +15,7 @@ import {
 import {
     getArtistApi,
     getAuthenticationApi,
-    getItemLookupApi,
+    getLibraryApi,
     getSessionApi,
     getSystemApi,
     getUserApi
@@ -54,8 +55,8 @@ export class JellyfinApiClient {
         return getArtistApi(this.api);
     }
 
-    items(): ItemLookupApi {
-        return getItemLookupApi(this.api);
+    library(): LibraryApi {
+        return getLibraryApi(this.api);
     }
 
     session(): SessionApi {
