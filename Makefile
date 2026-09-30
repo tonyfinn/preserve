@@ -10,7 +10,7 @@ INSTALL_PROGRAM = ${INSTALL}
 INSTALL_DATA = ${INSTALL} -m 644
 INSTALL_LOCATION = ${DESTDIR}${webappsdir}/preserve
 
-VERSION != jq -r '.version' preserve-ui/package.json
+VERSION != jq -r '.version' preserve-ui-vite/package.json
 PACKAGE_WEB_PATH = ${srcdir}/target/preserve-${VERSION}.tar.gz
 
 UI_SRC_DIR = ${srcdir}/preserve-ui-vite
