@@ -7,7 +7,7 @@ pkgdesc="Efficiency oriented media player/jellyfin frontend"
 arch=(any)
 url="https://gitlab.com/tonyfinn/preserve"
 license=(GPL)
-makedepends=(git jq npm)
+makedepends=(git jq pnpm)
 optdepends=(
     'caddy2: systemd unit',
     'nginx: web server config provided',

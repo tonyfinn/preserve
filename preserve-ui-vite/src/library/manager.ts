@@ -29,13 +29,13 @@ interface LoadingItem {
 }
 
 export class LibraryManager {
-    constructor(private readonly serverManager: ServerManager) {}
+    constructor(public serverManager: ServerManager) {}
 
-    private activeLibrary(): MediaServerLibrary {
+    activeLibrary(): MediaServerLibrary {
         return this.serverManager.activeServers()[0].library();
     }
 
-    private libraries(): MediaServerLibrary[] {
+    libraries(): MediaServerLibrary[] {
         return this.serverManager
             .activeServers()
             .map((server) => server.library());

@@ -28,8 +28,8 @@ export function isJellyfinServer(
 }
 
 export class ServerManager {
-    private _activeServers: Array<MediaServer>;
-    private _knownServers: Array<ServerDefinition>;
+    public _activeServers: Array<MediaServer>;
+    public _knownServers: Array<ServerDefinition>;
 
     constructor() {
         this._activeServers = [];
@@ -41,7 +41,7 @@ export class ServerManager {
         }
     }
 
-    private getSavedServers(): Array<ServerDefinition> {
+    getSavedServers(): Array<ServerDefinition> {
         if (
             window.localStorage.getItem(STORAGE_KEY_LEGACY_SERVERS) &&
             !window.localStorage.getItem(STORAGE_KEY_SERVERS)

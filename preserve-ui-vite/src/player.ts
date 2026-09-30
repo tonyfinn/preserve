@@ -60,6 +60,8 @@ export type PlaybackEvent =
     | EndEvent
     | TimeEvent;
 
+export type HlsInterface = Pick<Hls, keyof Hls>;
+
 export class AudioPlayer {
     useHls: boolean;
     playQueue: PlayQueue;
@@ -69,78 +71,78 @@ export class AudioPlayer {
     shuffleMode: ShuffleMode;
     volume: number;
 
-    public playbackEvent: EventEmitter<PlaybackEvent> = new EventEmitter();
-    public onQueueChange: EventEmitter<QueueChangeEvent> = new EventEmitter();
+    playbackEvent: EventEmitter<PlaybackEvent> = new EventEmitter();
+    onQueueChange: EventEmitter<QueueChangeEvent> = new EventEmitter();
 
-    private shuffleOrder: Array<number> = [];
-    private hls: Hls | null = null;
-    private playbackStartDate: Date = new Date();
-    private lastProgressReportTime: Date = new Date();
+    _shuffleOrder: Array<number> = [];
+    _hls: HlsInterface | null = null;
+    _playbackStartDate: Date = new Date();
+    _lastProgressReportTime: Date = new Date();
 
-    private playQueueUpdateHandler: number;
-    private element: HTMLAudioElement;
+    _playQueueUpdateHandler: number;
+    _element: HTMLAudioElement;
     static instance: AudioPlayer;
 
-    constructor(private readonly libraryManager: LibraryManager) {
-        this.element = document.createElement('audio');
+    constructor(public _libraryManager: LibraryManager) {
+        this._element = document.createElement('audio');
         this.playQueue = new PlayQueue('Default');
-        this.playQueueUpdateHandler = this.listenToQueueUpdates(this.playQueue);
+        this._playQueueUpdateHandler = this.listenToQueueUpdates(this.playQueue);
         this.useHls = false;
         this.playing = false;
         this.repeatMode = RepeatMode.Off;
         this.shuffleMode = ShuffleMode.Off;
         this.volume = 1;
         this.muted = false;
-        this.element.addEventListener('ended', () => {
+        this._element.addEventListener('ended', () => {
             const activeTrack = this.activeTrack();
             if (activeTrack) {
-                this.libraryManager.reportPlaybackFinished(
+                this._libraryManager.reportPlaybackFinished(
                     activeTrack,
                     this.playbackState()
                 );
             }
             this._handleTrackEnd();
         });
-        this.element.addEventListener('timeupdate', () => {
+        this._element.addEventListener('timeupdate', () => {
             this.playbackEvent.trigger({
                 type: PlaybackEventType.Time,
-                time: this.element.currentTime,
+                time: this._element.currentTime,
                 state: this.playbackState(),
             });
             const now = new Date();
             const activeTrack = this.activeTrack();
             if (
-                now.getTime() - this.lastProgressReportTime.getTime() > 10000 &&
+                now.getTime() - this._lastProgressReportTime.getTime() > 10000 &&
                 activeTrack
             ) {
-                this.libraryManager.reportPlaybackProgress(
+                this._libraryManager.reportPlaybackProgress(
                     activeTrack,
                     this.playbackState()
                 );
-                this.lastProgressReportTime = now;
+                this._lastProgressReportTime = now;
             }
         });
-        this.element.addEventListener('play', () => {
+            this._element.addEventListener('play', () => {
             this.playbackEvent.trigger({
                 type: PlaybackEventType.Resume,
                 state: this.playbackState(),
             });
         });
-        this.element.addEventListener('pause', () => {
+        this._element.addEventListener('pause', () => {
             this.playbackEvent.trigger({
                 type: PlaybackEventType.Pause,
                 state: this.playbackState(),
             });
             const activeTrack = this.activeTrack();
             if (activeTrack) {
-                this.libraryManager.reportPaused(
+                this._libraryManager.reportPaused(
                     activeTrack,
                     this.playbackState()
                 );
             }
         });
-        this.element.addEventListener('error', () => {
-            console.error('Playback error: ', this.element.error);
+        this._element.addEventListener('error', () => {
+            console.error('Playback error: ', this._element.error);
         });
 
         if (navigator.mediaSession) {
@@ -186,8 +188,8 @@ export class AudioPlayer {
             volume: this.volume,
             muted: this.muted,
             paused: !this.playing,
-            startTime: this.playbackStartDate,
-            progressMs: this.element.currentTime * 1000,
+            startTime: this._playbackStartDate,
+            progressMs: this._element.currentTime * 1000,
         };
     }
 
@@ -196,9 +198,9 @@ export class AudioPlayer {
     }
 
     setQueue(playQueue: PlayQueue): void {
-        this.playQueue.onChange.off(this.playQueueUpdateHandler);
+        this.playQueue.onChange.off(this._playQueueUpdateHandler);
         this.playQueue = playQueue;
-        this.playQueueUpdateHandler = this.listenToQueueUpdates(playQueue);
+        this._playQueueUpdateHandler = this.listenToQueueUpdates(playQueue);
         this.onQueueChange.trigger({
             newQueue: playQueue,
         });
@@ -214,17 +216,17 @@ export class AudioPlayer {
     }
 
     setTime(time: number): void {
-        if (this.element) {
-            this.element.currentTime = time;
+        if (this._element) {
+            this._element.currentTime = time;
         }
     }
 
     _startPlayback(track: Track, index: number): void {
-        this.element.play();
+        this._element.play();
         this.playing = true;
         const artist = artistNames(track);
         if (navigator.mediaSession) {
-            const trackArtUrl = this.libraryManager.getTrackArtUrl(track, 256);
+            const trackArtUrl = this._libraryManager.getTrackArtUrl(track, 256);
             const albumArtArray = [];
             if (trackArtUrl) {
                 albumArtArray.push({ src: trackArtUrl });
@@ -248,42 +250,42 @@ export class AudioPlayer {
     }
 
     _playHls(track: Track, index: number): void {
-        if (this.hls) {
-            this.hls.destroy();
+        if (this._hls) {
+            this._hls.destroy();
         }
-        const playbackUrl = this.libraryManager.getPlaybackUrl(
+        const playbackUrl = this._libraryManager.getPlaybackUrl(
             track,
             new Date().getTime().toString()
         );
-        this.hls = new Hls({
+        this._hls = new Hls({
             manifestLoadingTimeOut: 20000,
             xhrSetup: function (xhr) {
                 xhr.withCredentials = true;
             },
         });
-        this.hls.loadSource(playbackUrl);
-        this.hls.attachMedia(this.element);
-        this.hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        this._hls.loadSource(playbackUrl);
+        this._hls.attachMedia(this._element);
+        this._hls.on(Hls.Events.MANIFEST_PARSED, () => {
             this._startPlayback(track, index);
         });
-        this.hls.on(Hls.Events.ERROR, (_evt, data) => {
+        this._hls.on(Hls.Events.ERROR, (_evt, data) => {
             console.error('HLS error', data);
         });
     }
 
     _playNative(track: Track, index: number): void {
         const startDate = new Date();
-        this.element.src = this.libraryManager.getPlaybackUrl(
+        this._element.src = this._libraryManager.getPlaybackUrl(
             track,
             startDate.getTime().toString()
         );
-        this.element.load();
-        this.element
+        this._element.load();
+        this._element
             .play()
             .then(() => {
-                this.playbackStartDate = startDate;
+                this._playbackStartDate = startDate;
                 this._startPlayback(track, index);
-                this.libraryManager.reportPlaybackStart(
+                this._libraryManager.reportPlaybackStart(
                     track,
                     this.playbackState()
                 );
@@ -311,7 +313,7 @@ export class AudioPlayer {
         });
         if (prevTrack) {
             if (this.shuffleMode === ShuffleMode.Shuffle) {
-                const shuffledTrackIndex = this.shuffleOrder[
+                const shuffledTrackIndex = this._shuffleOrder[
                     this.playQueue.index
                 ];
                 const shuffledTrack = this.playQueue.getTrack(
@@ -338,7 +340,7 @@ export class AudioPlayer {
         });
         if (nextTrack) {
             if (this.shuffleMode === ShuffleMode.Shuffle) {
-                const shuffledTrackIndex = this.shuffleOrder[
+                const shuffledTrackIndex = this._shuffleOrder[
                     this.playQueue.index
                 ];
                 const shuffledTrack = this.playQueue.getTrack(
@@ -349,7 +351,7 @@ export class AudioPlayer {
                 this.playTrack(nextTrack, this.playQueue.index);
             }
         } else {
-            this.element.pause();
+            this._element.pause();
             this.playing = false;
             document.title = 'Preserve';
             this.playbackEvent.trigger({
@@ -366,9 +368,9 @@ export class AudioPlayer {
     async _resume(): Promise<void> {
         const activeTrack = this.activeTrack();
         if (activeTrack) {
-            await this.element.play();
+            await this._element.play();
             this.playing = true;
-            this.libraryManager.reportResumed(
+            this._libraryManager.reportResumed(
                 activeTrack,
                 this.playbackState()
             );
@@ -384,10 +386,10 @@ export class AudioPlayer {
 
     _pause(): void {
         const activeTrack = this.activeTrack();
-        this.element.pause();
+        this._element.pause();
         this.playing = false;
         if (activeTrack) {
-            this.libraryManager.reportPaused(activeTrack, this.playbackState());
+            this._libraryManager.reportPaused(activeTrack, this.playbackState());
         }
         if (navigator.mediaSession) {
             navigator.mediaSession.playbackState = 'paused';
@@ -399,7 +401,7 @@ export class AudioPlayer {
     }
 
     togglePlay(): void {
-        if (this.element.paused) {
+        if (this._element.paused) {
             this._resume();
         } else {
             this._pause();
@@ -408,7 +410,7 @@ export class AudioPlayer {
 
     stop(): void {
         if (this.playing) {
-            this.element.pause();
+            this._element.pause();
             this.playing = false;
             document.title = 'Preserve';
             this.playbackEvent.trigger({
@@ -417,7 +419,7 @@ export class AudioPlayer {
             });
             const activeTrack = this.activeTrack();
             if (activeTrack) {
-                this.libraryManager.reportPlaybackFinished(
+                this._libraryManager.reportPlaybackFinished(
                     activeTrack,
                     this.playbackState()
                 );
@@ -438,7 +440,7 @@ export class AudioPlayer {
                 shuffleOrder[i],
             ];
         }
-        this.shuffleOrder = shuffleOrder;
+        this._shuffleOrder = shuffleOrder;
     }
 
     toggleShuffle(): ShuffleMode {
@@ -449,7 +451,7 @@ export class AudioPlayer {
         this.generateShuffleOrder();
         if (this.shuffleMode === ShuffleMode.Shuffle) {
             this.playQueue.index = 0;
-            const firstShuffledIndex = this.shuffleOrder[0];
+            const firstShuffledIndex = this._shuffleOrder[0];
             if (this.playQueue.size() > 0) {
                 const shuffledTrack = this.playQueue.getTrack(
                     firstShuffledIndex
@@ -474,10 +476,10 @@ export class AudioPlayer {
     setVolume(volume: number): void {
         this.muted = false;
         this.volume = volume;
-        this.element.volume = Math.pow(volume, 4);
+        this._element.volume = Math.pow(volume, 4);
         const activeTrack = this.activeTrack();
         if (activeTrack) {
-            this.libraryManager.reportVolumeChange(
+            this._libraryManager.reportVolumeChange(
                 activeTrack,
                 this.playbackState()
             );
@@ -488,7 +490,7 @@ export class AudioPlayer {
         this.repeatMode = repeatMode;
         const activeTrack = this.activeTrack();
         if (activeTrack) {
-            this.libraryManager.reportRepeatChanged(
+            this._libraryManager.reportRepeatChanged(
                 activeTrack,
                 this.playbackState()
             );
@@ -502,7 +504,7 @@ export class AudioPlayer {
         }
         const activeTrack = this.activeTrack();
         if (activeTrack) {
-            this.libraryManager.reportShuffleChanged(
+            this._libraryManager.reportShuffleChanged(
                 activeTrack,
                 this.playbackState()
             );
@@ -512,13 +514,13 @@ export class AudioPlayer {
     toggleMute(): boolean {
         this.muted = !this.muted;
         if (this.muted) {
-            this.element.volume = 0;
+            this._element.volume = 0;
         } else {
-            this.element.volume = this.volume;
+            this._element.volume = this.volume;
         }
         const activeTrack = this.activeTrack();
         if (activeTrack) {
-            this.libraryManager.reportMutedToggled(
+            this._libraryManager.reportMutedToggled(
                 activeTrack,
                 this.playbackState()
             );

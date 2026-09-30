@@ -53,7 +53,7 @@
                     @click="settingsOpen = !settingsOpen"
                 ></i>
                 <settings-dialog
-                    v-if="settingsOpen"
+                    v-if="settingsOpen && queueManager"
                     v-model="settings"
                     :queueManager="queueManager"
                     @close-settings="settingsOpen = false"
@@ -64,14 +64,14 @@
             </div>
         </header>
         <playback-screen
-            v-if="appLoaded && loggedIn"
+            v-if="appLoaded && loggedIn && queueManager && libraryManager"
             :queueManager="queueManager"
             :libraryManager="libraryManager"
             :settings="settings"
             class="screen-root"
         ></playback-screen>
         <login-screen
-            v-if="appLoaded && !loggedIn"
+            v-if="appLoaded && !loggedIn && serverManager"
             class="screen-root"
             :serverManager="serverManager"
             @login-complete="setupServers"
