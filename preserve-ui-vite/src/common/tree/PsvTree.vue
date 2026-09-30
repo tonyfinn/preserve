@@ -23,16 +23,16 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, nextTick } from 'vue';
+import { defineComponent, type PropType, nextTick } from 'vue';
 import {
-    TreeItem,
+    type TreeItem,
     SelectionType,
-    TreeSelectionEvent,
-    TreeExpandEvent,
-    TreeItemNode,
-    TreeFocusEvent,
+    type TreeSelectionEvent,
+    type TreeExpandEvent,
+    type TreeItemNode,
+    type TreeFocusEvent,
     ChildrenLoadState,
-    TreeActivateEvent,
+    type TreeActivateEvent,
     TreeItemEventType,
 } from './tree-item';
 import { PsvTreeNode } from '.';

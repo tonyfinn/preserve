@@ -29,7 +29,7 @@
 import {
     NotificationService,
     NotificationType,
-    Notification,
+    type Notification,
 } from './notifications';
 import { defineComponent } from 'vue';
 

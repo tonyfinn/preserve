@@ -59,7 +59,7 @@
 import type { Album, Artist, LibraryItem, Track } from './types';
 import { GROUP_OPTIONS } from './options';
 import { Settings } from '../common/settings';
-import { PsvTree, TreeItem } from '../common/tree';
+import { PsvTree, type TreeItem } from '../common/tree';
 import { defineComponent } from 'vue';
 
 import { buildTreeNode, buildTreeLeaf } from '../common/tree/tree-item';

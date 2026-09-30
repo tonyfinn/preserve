@@ -29,12 +29,12 @@
 import { ITEM_STUB_MIME_TYPE } from './common/constants';
 import MusicLibrary from './library/MusicLibrary.vue';
 import { AudioPlayer } from './player';
-import { LibraryItem, LibraryManager } from './library';
+import { type LibraryItem, LibraryManager } from './library';
 import { Settings } from './common/settings';
 import PlaybackFooter from './PlaybackFooter.vue';
 import { PlayQueues, QueueManager } from './queues';
 import { defineComponent } from 'vue';
-import { TreeActivateEvent } from './common/tree/tree-item';
+import { type TreeActivateEvent } from './common/tree/tree-item';
 
 export default defineComponent({
     components: {

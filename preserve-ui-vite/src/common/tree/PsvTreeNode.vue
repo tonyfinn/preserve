@@ -63,17 +63,17 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType } from 'vue';
+import { defineComponent, type PropType } from 'vue';
 import {
-    TreeItem,
+    type TreeItem,
     SelectionType,
     ChildrenLoadState,
     TreeItemEventType,
-    TreeSelectionEvent,
-    TreeActivateEvent,
-    TreeExpandEvent,
-    TreeFocusEvent,
-    TreeItemNode,
+    type TreeSelectionEvent,
+    type TreeActivateEvent,
+    type TreeExpandEvent,
+    type TreeFocusEvent,
+    type TreeItemNode,
 } from './tree-item';
 
 export default defineComponent({

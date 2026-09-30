@@ -57,7 +57,7 @@
 import { NotificationService, NotificationType } from '../common/notifications';
 import { defineComponent } from 'vue';
 import { ServerManager } from '../common/servers';
-import { JELLYFIN_SERVER_TYPE, ServerType } from '../api';
+import { JELLYFIN_SERVER_TYPE, type ServerType } from '../api';
 import { MediaServerTestResult } from '../api/interface';
 
 interface ServerResolveResult {
