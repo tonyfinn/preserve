@@ -4,6 +4,7 @@ datarootdir = ${prefix}/share
 webappsdir = ${datarootdir}/webapps
 
 NPM = npm
+PNPM = pnpm
 INSTALL = install
 INSTALL_PROGRAM = ${INSTALL}
 INSTALL_DATA = ${INSTALL} -m 644
@@ -12,7 +13,7 @@ INSTALL_LOCATION = ${DESTDIR}${webappsdir}/preserve
 VERSION != jq -r '.version' preserve-ui/package.json
 PACKAGE_WEB_PATH = ${srcdir}/target/preserve-${VERSION}.tar.gz
 
-UI_SRC_DIR = ${srcdir}/preserve-ui
+UI_SRC_DIR = ${srcdir}/preserve-ui-vite
 ELECTRON_SRC_DIR = ${srcdir}/preserve-electron
 
 .PHONY: clean dist icons \
@@ -23,8 +24,8 @@ ELECTRON_SRC_DIR = ${srcdir}/preserve-electron
 
 # Don't rebuild node_modules if missing unless needed,
 # but also do not automatically clean it up
-.INTERMEDIATE: preserve-ui/node_modules
-.SECONDARY: preserve-ui/node_modules
+.INTERMEDIATE: preserve-ui-vite/node_modules
+.SECONDARY: preserve-ui-vite/node_modules
 
 default: package
 
@@ -37,27 +38,26 @@ clean:
 	rm -rf ${srcdir}/build/
 	rm -rf ${srcdir}/target/
 
-check: preserve-ui/node_modules
+check: preserve-ui-vite/node_modules
 	cd ${UI_SRC_DIR} && ${NPM} run lint
 	cd ${UI_SRC_DIR} && node scripts/start-server.js &
 	@sleep 5
 	cd ${UI_SRC_DIR} && ${NPM} run test:functional:dist
 	cd ${UI_SRC_DIR} && node scripts/stop-server.js
 
-devserver: preserve-ui/node_modules
-	cd ${UI_SRC_DIR} && ${NPM} run start
+devserver: preserve-ui-vite/node_modules
+	cd ${UI_SRC_DIR} && ${PNPM} dev
 
-
-preserve-ui/node_modules:
-	cd ${UI_SRC_DIR} && ${NPM} ci
+preserve-ui-vite/node_modules:
+	cd ${UI_SRC_DIR} && ${PNPM} install
 
 dist: dist/index.html
 
-dist/index.html: preserve-ui/node_modules
-	cd ${UI_SRC_DIR} &&	${NPM} run build:prod
+dist/index.html: preserve-ui-vite/node_modules
+	cd ${UI_SRC_DIR} &&	${PNPM} vite build
 
 serve: dist
-	cd ${UI_SRC_DIR} && ${NPM} run serve
+	cd ${UI_SRC_DIR} && ${PNPM} dev
 
 install: dist
 	${INSTALL} -d -m755 ${INSTALL_LOCATION}
@@ -89,7 +89,7 @@ package: package-web package-electron
 package-web: $(PACKAGE_WEB_PATH)
 
 $(PACKAGE_WEB_PATH): dist/index.html
-	mkdir -p ${srcdir}/target/ 
+	mkdir -p ${srcdir}/target/
 	cd ${srcdir} && tar -czf ${PACKAGE_WEB_PATH} --transform=s/dist/preserve-${VERSION}/g dist/*
 
 package-electron: package-electron-linux package-electron-windows
