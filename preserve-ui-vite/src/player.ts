@@ -259,7 +259,11 @@ export class AudioPlayer {
         );
         this._hls = new Hls({
             manifestLoadingTimeOut: 20000,
-            xhrSetup: function (xhr) {
+            xhrSetup: (xhr, url) => {
+                xhr.open("GET", url);
+                for (var [name, value] of this._libraryManager.getPlaybackHeaders()) {
+                    xhr.setRequestHeader(name, value);
+                }
                 xhr.withCredentials = true;
             },
         });

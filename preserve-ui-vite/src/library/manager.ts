@@ -151,6 +151,10 @@ export class LibraryManager {
         return this.activeLibrary().getPlaybackUrl(track, requestId);
     }
 
+    getPlaybackHeaders(): Array<[string, string]> {
+        return this.activeLibrary().getPlaybackHeaders();
+    }
+
     getTracksByIds(trackIds: string[]): Promise<Track[]> {
         return this.activeLibrary().getTracksByIds(trackIds);
     }

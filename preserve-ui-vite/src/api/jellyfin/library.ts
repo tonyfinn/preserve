@@ -365,6 +365,10 @@ export class JellyfinLibraryLocal extends MediaServerLocalLibrary {
         throw new Error('Method not implemented, use jellyfin facade.');
     }
 
+    getPlaybackHeaders(): Array<[string, string]> {
+        throw new Error('Method not implemented, use jellyfin facade.');
+    }
+
     getTrackArtUrl(_track: Track, _size?: number): string {
         throw new Error('Method not implemented, use jellyfin facade.');
     }
@@ -636,6 +640,10 @@ export class JellyfinLibraryRemote extends MediaServerRemoteLibrary {
         throw new Error('Method not implemented, use jellyfin facade');
     }
 
+    getPlaybackHeaders(): Array<[string, string]> {
+        throw new Error('Method not implemented, use jellyfin facade');
+    }
+
     getTrackArtUrl(_track: Track, _size?: number): string {
         throw new Error('Method not implemented, use jellyfin facade.');
     }
@@ -825,7 +833,7 @@ export class JellyfinLibrary extends MediaServerLibraryFacade {
         const queryParams = new URLSearchParams({
             userId: this.userId,
             deviceId: getOrGenerateClientId(),
-            api_key: this.apiClient.accessToken,
+            ApiKey: this.apiClient.accessToken,
             playSessionId: requestId,
             maxStreamingBitrate: '140000000',
             container: 'opus,mp3|mp3,aac,m4a,m4b|aac,flac,webma,webm,wav,ogg',
@@ -838,6 +846,10 @@ export class JellyfinLibrary extends MediaServerLibraryFacade {
         });
 
         return `${baseUrl}?${queryParams}`;
+    }
+
+    getPlaybackHeaders(): Array<[string, string]> {
+        return [['Authorization', this.apiClient.authorizationHeader()]];
     }
 
     getTrackArtUrl(track: Track, size?: number): string | null {

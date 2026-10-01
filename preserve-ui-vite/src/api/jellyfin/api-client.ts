@@ -47,6 +47,10 @@ export class JellyfinApiClient {
         this.api = this.jellyfin.createApi(address, accessToken)
     }
 
+    authorizationHeader(): string {
+        return this.api.authorizationHeader;
+    }
+
     auth(): AuthenticationApi {
         return getAuthenticationApi(this.api);
     }
