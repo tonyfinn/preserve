@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { UNKNOWN_SERVER_NAME } from '../../common/constants';
 import type { MediaServerAuth } from '../interface';
 import { JellyfinApiClient } from './api-client';
@@ -81,7 +82,7 @@ export class JellyfinServerAuth
                 accessToken: definition.accessToken,
             });
         } catch (e) {
-            if (e.response && e.response.status === 401) {
+            if (axios.isAxiosError(e) && e.response && e.response.status === 401) {
                 if (e.response.status === 401) {
                     return Promise.reject(
                         new ConnectError(
@@ -97,7 +98,7 @@ export class JellyfinServerAuth
                         )
                     );
                 }
-            } else if (e.request) {
+            } else if (axios.isAxiosError(e) && e.request) {
                 return Promise.reject(
                     new ConnectError(
                         'Could not connect to server: No response from server',

@@ -18,6 +18,7 @@ import {
     NOTIFICATION_TIME_SHORT,
 } from './notifications';
 import { JellyfinApiClient } from '../api/jellyfin/api-client';
+import axios from 'axios';
 
 export type ServerDefinition = JellyfinServerDefinition | BaseServerDefinition;
 
@@ -129,8 +130,9 @@ export class ServerManager {
                         NOTIFICATION_TIME_SHORT
                     );
                 } catch (e) {
+                    const message = axios.isAxiosError(e) ? e.message : (e instanceof Error ? e.message : JSON.stringify(e))
                     NotificationService.notify(
-                        `Could not reconnect to ${serverDef.name} - ${e.message}`,
+                        `Could not reconnect to ${serverDef.name} - ${message}`,
                         NotificationType.Error,
                         NOTIFICATION_TIME_FOREVER
                     );
