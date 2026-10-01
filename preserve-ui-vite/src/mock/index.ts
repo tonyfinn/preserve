@@ -10,7 +10,7 @@ interface Params {
 
 const requireAuthHeader = {
     asymmetricMatch(headers: Params): boolean {
-        const authHeader = headers['X-Emby-Authorization'];
+        const authHeader = headers['Authorization'];
         if (!authHeader) {
             console.log('Rejected: No auth header');
             return false;
@@ -134,26 +134,24 @@ function registerMockHandlers(data: any) {
     );
     mock.onGet(
         `${TEST_SERVER_URL}/System/Info`,
-        undefined,
-        requireAuthHeader
+        { headers: requireAuthHeader },
     ).reply(200, data.systemInfoResponse);
 
     mock.onGet(
         `${TEST_SERVER_URL}/System/Info`,
-        undefined,
-        missingHeader
+        { headers: missingHeader },
     ).reply(401);
 
     mock.onGet(
         `${TEST_SERVER_URL}/Users/${TEST_USER_ID}`,
-        undefined,
-        requireAuthHeader
+        { headers: requireAuthHeader },
     ).reply(200, data.testUserInfoResponse);
 
     mock.onGet(
         new RegExp(`${TEST_SERVER_URL}/Artists`),
-        matchSome({ userId: TEST_USER_ID }),
-        requireAuthHeader
+        {
+            headers: requireAuthHeader,
+        }
     ).reply(paginateResult(data.artists, 10));
 
     mock.onPost(`${TEST_SERVER_URL}/Sessions/Playing`).reply(204);
@@ -161,9 +159,8 @@ function registerMockHandlers(data: any) {
     mock.onPost(`${TEST_SERVER_URL}/Sessions/Playing/Stopped`).reply(204);
 
     mock.onGet(
-        new RegExp(`${TEST_SERVER_URL}/Users/${TEST_USER_ID}/Items`),
-        undefined,
-        requireAuthHeader
+        new RegExp(`${TEST_SERVER_URL}/Items`),
+        { headers: requireAuthHeader },
     ).reply(function (
         config: AxiosRequestConfig
     ): Promise<[number, PaginationResult<any> | null]> {
@@ -271,9 +268,7 @@ function registerMockHandlers(data: any) {
 }
 
 export async function initMocks(): Promise<void> {
-    // Chunked async to prevent webpack needing to recompile the data every time you change config
-    return import(/* webpackChunkName: "mock-data" */ './data').then((data) => {
-        console.log(data);
-        registerMockHandlers(data);
-    });
+    const data = await import('./data/index.ts');
+    console.log(data);
+    registerMockHandlers(data);
 }

@@ -10,8 +10,11 @@ function startApp() {
 }
 
 if (isMock()) {
-    // TODO: Restore mock loading
-    startApp();
+    import('./mock/index.ts')
+        .then((mocks) => {
+            return mocks.initMocks();
+        })
+        .then(startApp);
 } else {
     startApp();
 }
