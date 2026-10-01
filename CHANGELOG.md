@@ -1,3 +1,15 @@
+# 0.6.0-beta2
+
+Note: Web client only, the electron client is not yet updated (needs rebuilding)
+
+## Bugfixes
+
+* Send non-deprecated api key field for audio playback
+
+## Tech changes
+
+* Fix typescript failures introduced after typescript/vue upgrades
+
 # 0.6.0-beta1
 
 Note: Web client only, the electron client is not yet updated (needs rebuilding)
