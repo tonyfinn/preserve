@@ -22,6 +22,7 @@ interface ArtistEntry {
 }
 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+// @ts-expect-error WIP: unused until IndexedDB persistence is wired up
 interface LibrarySchema extends DBSchema {
     tracks: {
         value: TrackEntry;

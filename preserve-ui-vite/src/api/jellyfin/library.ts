@@ -174,8 +174,10 @@ export class JellyfinLibraryLocal extends MediaServerLocalLibrary {
     private albums: Array<Album>;
     private tracks: Array<Track>;
 
+    // @ts-expect-error WIP: unused until IndexedDB persistence is wired up
     private libraryDb: Promise<LibraryDatabase>;
     private libraryResolve: (db: LibraryDatabase) => void;
+    // @ts-expect-error WIP: unused until IndexedDB persistence is wired up
     private libraryReject: (err: Error) => void;
 
     private enableIdbDatabase = false;
