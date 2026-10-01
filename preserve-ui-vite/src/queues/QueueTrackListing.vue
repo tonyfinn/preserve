@@ -55,7 +55,7 @@
                         'playlist__track--focused': isRowFocused(rowIndex),
                     }"
                     :aria-selected="queueItem.selected"
-                    :aria-label="queueItem.data.title"
+                    :aria-label="queueItem.data.track.name"
                     @mousedown.stop.exact="selectItem(queueItem, rowIndex)"
                     @mousedown.ctrl.stop.exact="toggleSelectItem(queueItem)"
                     @mousedown.shift.stop.exact="

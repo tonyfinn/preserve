@@ -4,7 +4,7 @@
         data-testid="music-library-tree"
         aria-label="Music Library"
         :class="{
-            searching: this.isSearching,
+            searching: isSearching,
         }"
     >
         <form role="search" @submit.prevent class="search-controls">
@@ -147,11 +147,11 @@ export default defineComponent({
             this.populateLibraryTree();
         },
         async populateChildren(
-            treeItem: TreeItem<LibraryItem>,
-            parents: Array<TreeItem<LibraryItem>>
-        ): Promise<Array<TreeItem<LibraryItem>>> {
+            treeItem: TreeItem<unknown>,
+            parents: Array<TreeItem<unknown>>
+        ): Promise<Array<TreeItem<unknown>>> {
             this.hasUserInteraction = true;
-            const item = treeItem.data;
+            const item = treeItem.data as LibraryItem;
             if (item.type === 'artist') {
                 if (
                     this.settings.libraryGrouping ===
@@ -184,7 +184,7 @@ export default defineComponent({
                     return tracks.map(trackTreeNode);
                 }
             } else if (item.type === 'album') {
-                const parent = parents[0]?.data;
+                const parent = parents[0]?.data as LibraryItem | undefined;
 
                 let tracks = await this.libraryManager.getTracksOfAlbum(
                     item.id

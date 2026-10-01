@@ -1,7 +1,7 @@
 <template>
     <div
         class="slider"
-        :title="this.modelValue"
+        :title="String(modelValue)"
         @wheel.prevent.stop="handleWheel"
         @mousedown="handleMouse"
         @mousemove="handleMouse"

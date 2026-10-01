@@ -6,7 +6,6 @@ import {
     ArtistApi,
     AuthenticationApi,
     type AuthenticationResult,
-    ItemLookupApi,
     LibraryApi,
     SessionApi,
     SystemApi,
@@ -20,7 +19,7 @@ import {
     getSystemApi,
     getUserApi
 } from '@jellyfin/sdk/lib/utils/api';
-import axios, { type AxiosResponse } from 'axios';
+import { type AxiosResponse } from 'axios';
 import {
     getClientName,
     getOrGenerateClientId,

@@ -53,7 +53,7 @@
                 @focus-item="$emit('focus-item', $event)"
                 @activate-item="$emit('activate-item', $event)"
                 v-if="item.expanded && childrenLoaded(item)"
-                :items="item.children"
+                :items="itemChildren(item)"
                 :parents="itemParents(item)"
                 :populateChildren="populateChildren"
             ></psv-tree-node>
@@ -121,8 +121,11 @@ export default defineComponent({
             }
             return item.expanded;
         },
-        itemParents(item: TreeItem<unknown>): Array<TreeItem<unknown>> {
-            return [...this.parents, item];
+        itemChildren(item: TreeItem<unknown>): Array<TreeItem<unknown>> {
+            return item.isLeaf ? [] : item.children;
+        },
+        itemParents(item: TreeItem<unknown>): Array<TreeItemNode<unknown>> {
+            return item.isLeaf ? [] : [...this.parents, item];
         },
         focusItem(item: TreeItem<unknown>) {
             const focusEvent: TreeFocusEvent<unknown> = {

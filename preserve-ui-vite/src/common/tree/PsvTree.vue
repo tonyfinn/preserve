@@ -48,7 +48,7 @@ export default defineComponent({
         populateChildren: {
             type: Function as PropType<
                 (
-                    node: TreeItemNode<unknown>,
+                    node: TreeItem<unknown>,
                     parents: Array<TreeItem<unknown>>
                 ) => Promise<Array<TreeItem<unknown>>>
             >,

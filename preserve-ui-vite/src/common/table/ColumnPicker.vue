@@ -23,11 +23,11 @@ export default defineComponent({
     props: {
         modelValue: {
             required: true,
-            type: Array as PropType<Array<Column<unknown, unknown>>>,
+            type: Array as PropType<Array<Column<any, any>>>,
         },
     },
     methods: {
-        toggleColumn(toggledColumn: Column<unknown, unknown>) {
+        toggleColumn(toggledColumn: Column<any, any>) {
             this.$emit('update:modelValue', [
                 ...this.modelValue.map((col) => {
                     return new Column(
