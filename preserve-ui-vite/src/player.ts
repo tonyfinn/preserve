@@ -3,6 +3,7 @@ import EventEmitter from './common/events';
 import { PlayQueue, type QueueChangeEvent } from './queues/play-queue';
 
 import Hls from 'hls.js';
+import { markRaw, type Raw } from 'vue';
 import { NotificationService, NotificationType } from './common/notifications';
 import { type PlaybackState } from './api/interface';
 
@@ -60,8 +61,6 @@ export type PlaybackEvent =
     | EndEvent
     | TimeEvent;
 
-export type HlsInterface = Pick<Hls, keyof Hls>;
-
 export class AudioPlayer {
     useHls: boolean;
     playQueue: PlayQueue;
@@ -71,11 +70,17 @@ export class AudioPlayer {
     shuffleMode: ShuffleMode;
     volume: number;
 
-    playbackEvent: EventEmitter<PlaybackEvent> = new EventEmitter();
-    onQueueChange: EventEmitter<QueueChangeEvent> = new EventEmitter();
+    playbackEvent: Raw<EventEmitter<PlaybackEvent>> = markRaw(
+        new EventEmitter<PlaybackEvent>()
+    );
+    onQueueChange: Raw<EventEmitter<QueueChangeEvent>> = markRaw(
+        new EventEmitter<QueueChangeEvent>()
+    );
 
     _shuffleOrder: Array<number> = [];
-    _hls: HlsInterface | null = null;
+    // hls.js needs to be marked raw or Vue will
+    // fail type checkes as it loses sight of internal private members
+    _hls: Raw<Hls> | null = null;
     _playbackStartDate: Date = new Date();
     _lastProgressReportTime: Date = new Date();
 
@@ -257,16 +262,18 @@ export class AudioPlayer {
             track,
             new Date().getTime().toString()
         );
-        this._hls = new Hls({
-            manifestLoadingTimeOut: 20000,
-            xhrSetup: (xhr, url) => {
-                xhr.open("GET", url);
-                for (var [name, value] of this._libraryManager.getPlaybackHeaders()) {
-                    xhr.setRequestHeader(name, value);
-                }
-                xhr.withCredentials = true;
-            },
-        });
+        this._hls = markRaw(
+            new Hls({
+                manifestLoadingTimeOut: 20000,
+                xhrSetup: (xhr, url) => {
+                    xhr.open("GET", url);
+                    for (var [name, value] of this._libraryManager.getPlaybackHeaders()) {
+                        xhr.setRequestHeader(name, value);
+                    }
+                    xhr.withCredentials = true;
+                },
+            })
+        );
         this._hls.loadSource(playbackUrl);
         this._hls.attachMedia(this._element);
         this._hls.on(Hls.Events.MANIFEST_PARSED, () => {
